@@ -1,6 +1,6 @@
 <?php
 
-use App\Mcp\Servers\WhisperMoneyServer;
+use App\Mcp\Servers\FinanzasPersonalesServer;
 use App\Mcp\Tools\CreateLabel;
 use App\Mcp\Tools\ListSpaces;
 use App\Models\User;
@@ -57,7 +57,7 @@ it('recognises the press account without inheriting the demo restrictions', func
 });
 
 it('lets the press account read through the MCP', function () {
-    WhisperMoneyServer::actingAs(pressAccount())
+    FinanzasPersonalesServer::actingAs(pressAccount())
         ->tool(ListSpaces::class)
         ->assertOk();
 });
@@ -66,7 +66,7 @@ it('lets the press account write through the MCP', function () {
     $press = pressAccount();
     $press->withAccessToken($press->createToken('mcp', ['mcp:read', 'mcp:write'])->accessToken);
 
-    WhisperMoneyServer::actingAs($press)
+    FinanzasPersonalesServer::actingAs($press)
         ->tool(CreateLabel::class, ['name' => 'Prensa', 'color' => 'blue'])
         ->assertOk();
 
@@ -76,7 +76,7 @@ it('lets the press account write through the MCP', function () {
 it('still refuses the MCP to the demo account', function () {
     $demo = User::factory()->create(['email' => 'demo@whisper.money']);
 
-    WhisperMoneyServer::actingAs($demo)
+    FinanzasPersonalesServer::actingAs($demo)
         ->tool(ListSpaces::class)
         ->assertHasErrors()
         ->assertSee('demo account cannot be connected');

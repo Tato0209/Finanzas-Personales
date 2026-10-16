@@ -3,7 +3,7 @@
 use App\Enums\CategoryType;
 use App\Jobs\ReassignTransactionsToBudgets;
 use App\Jobs\ReEvaluateTransactionRulesJob;
-use App\Mcp\Servers\WhisperMoneyServer;
+use App\Mcp\Servers\FinanzasPersonalesServer;
 use App\Mcp\Tools\LabelTransaction;
 use App\Models\Account;
 use App\Models\AutomationRule;
@@ -154,14 +154,14 @@ test('re-evaluating the rules over the whole history queues one silent job per c
 test('the MCP tool reassigns the transaction when it attaches and when it removes a label', function () {
     $this->user->withAccessToken($this->user->createToken('mcp', ['mcp:read', 'mcp:write'])->accessToken);
 
-    WhisperMoneyServer::actingAs($this->user)->tool(LabelTransaction::class, [
+    FinanzasPersonalesServer::actingAs($this->user)->tool(LabelTransaction::class, [
         'transaction_id' => $this->transaction->id,
         'add_label_ids' => [$this->label->id],
     ])->assertOk();
 
     expect(budgetsOf($this->transaction))->toBe([$this->labelPeriod->id]);
 
-    WhisperMoneyServer::actingAs($this->user)->tool(LabelTransaction::class, [
+    FinanzasPersonalesServer::actingAs($this->user)->tool(LabelTransaction::class, [
         'transaction_id' => $this->transaction->id,
         'remove_label_ids' => [$this->label->id],
     ])->assertOk();

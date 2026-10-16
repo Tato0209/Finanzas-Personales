@@ -11,5 +11,6 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         config(['subscriptions.enabled' => false]);
+        app()->setLocale('en');
     }
 }

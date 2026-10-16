@@ -21,6 +21,10 @@ class AutoLoginLocalUser
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (app()->environment('testing')) {
+            return $next($request);
+        }
+
         // 1. Ensure user is logged in
         if (! Auth::check()) {
             $user = User::query()->first();
@@ -28,7 +32,7 @@ class AutoLoginLocalUser
             if (! $user) {
                 $user = User::create([
                     'name' => 'Usuario Local',
-                    'email' => 'local@whisper.money',
+                    'email' => 'local@finanzaspersonales.app',
                     'password' => Hash::make('local-password'),
                     'currency_code' => 'PEN',
                     'locale' => 'es',

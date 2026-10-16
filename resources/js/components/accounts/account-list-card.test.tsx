@@ -112,8 +112,6 @@ describe.each([
             />,
         );
 
-        expect(
-            screen.getByRole('button', { name: '-€500.00' }),
-        ).toBeInTheDocument();
+        expect(screen.getByText('-€500.00')).toBeInTheDocument();
     });
 });

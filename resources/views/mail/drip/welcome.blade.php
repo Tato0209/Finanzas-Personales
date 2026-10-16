@@ -1,9 +1,9 @@
 <x-mail::message>
-# {{ __('Welcome to Whisper Money, :name!', ['name' => $userName]) }}
+# {{ __('Welcome to Finanzas Personales, :name!', ['name' => $userName]) }}
 
-{{ __("Hi! We're Victor and Álvaro, the founders of Whisper Money. We wanted to personally welcome you and thank you for joining us.") }}
+{{ __("Hi! We're Victor and Álvaro, the founders of Finanzas Personales. We wanted to personally welcome you and thank you for joining us.") }}
 
-{{ __("We built Whisper Money to help you truly understand your finances — without giving up your privacy to do it. Here's what you can look forward to:") }}
+{{ __("We built Finanzas Personales to help you truly understand your finances — without giving up your privacy to do it. Here's what you can look forward to:") }}
 
 ## {{ __('Understand Your Finances') }}
 
@@ -11,7 +11,7 @@
 
 ## {{ __('Be Smart About Spending & Investing') }}
 
-{{ __('Set budgets, track your goals, and see how your money is working for you. Whether you\'re cutting costs or growing your wealth, Whisper Money helps you make better decisions.') }}
+{{ __('Set budgets, track your goals, and see how your money is working for you. Whether you\'re cutting costs or growing your wealth, Finanzas Personales helps you make better decisions.') }}
 
 ## {{ __('Everything in One Place') }}
 
@@ -30,11 +30,11 @@
 
 {{ __('If you have any questions or run into any issues, **just reply to this email**. We personally read every message and we\'re here to help!') }}
 
-{{ __('Thanks for giving Whisper Money a try. It means a lot to us.') }}
+{{ __('Thanks for giving Finanzas Personales a try. It means a lot to us.') }}
 
 {{ __('Best,') }}<br>
 {{ __('Álvaro & Víctor') }}<br>
-{{ __('Founders of Whisper Money') }}
+{{ __('Founders of Finanzas Personales') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

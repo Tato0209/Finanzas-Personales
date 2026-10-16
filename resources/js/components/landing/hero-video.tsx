@@ -123,7 +123,7 @@ function ProductTourDialog({
                 className="pointer-events-none! w-[min(85rem,calc(100vw-2rem),calc((100dvh-10rem)*16/9))] max-w-none gap-4 overflow-visible border-0 bg-transparent p-0 shadow-none sm:max-w-none"
             >
                 <DialogTitle className="sr-only">
-                    {__('Whisper Money product video')}
+                    {__('Finanzas Personales product video')}
                 </DialogTitle>
                 <div className="flex justify-end">
                     <DialogClose

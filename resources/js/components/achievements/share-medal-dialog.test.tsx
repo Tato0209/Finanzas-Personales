@@ -87,7 +87,7 @@ describe('ShareMedalDialog', () => {
         );
         expect(save).toHaveAttribute(
             'download',
-            'whisper-money-monthly_saving-4-feed-light.png',
+            'finanzas-personales-monthly_saving-4-feed-light.png',
         );
     });
 

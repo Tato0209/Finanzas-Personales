@@ -1,6 +1,6 @@
 # Primeros pasos
 
-Whisper Money te ayuda a entender dónde está tu dinero, dónde se fue y qué cambió con el tiempo.
+Finanzas Personales te ayuda a entender dónde está tu dinero, dónde se fue y qué cambió con el tiempo.
 
 {{TOC}}
 
@@ -114,7 +114,7 @@ Empieza por lo básico.
 
 ## Preguntas frecuentes
 
-### ¿Necesito presupuestos para usar Whisper Money?
+### ¿Necesito presupuestos para usar Finanzas Personales?
 
 No. Puedes empezar con cuentas, transacciones y categorías. Añade presupuestos después si quieres límites.
 

@@ -95,7 +95,7 @@ distinguirlas.
 
 Cada informe puede dibujar unas cuantas tarjetas: una racha, una tasa de ahorro,
 un objetivo de ahorro, un cambio de patrimonio neto o dónde se fue el dinero.
-Whisper Money elige la que más tiene que contar y la marca, y las demás se
+Finanzas Personales elige la que más tiene que contar y la marca, y las demás se
 quedan disponibles al lado.
 
 **Compartir** en una tarjeta abre el mismo diálogo que usa una
@@ -109,7 +109,7 @@ archivo, y a dónde va lo decides tú.
 **Crear un enlace público** genera una dirección que puede abrir cualquiera.
 Hasta que lo pulsas, esa dirección no existe.
 
-La página que hay detrás lleva la tarjeta y un enlace a Whisper Money, y nada
+La página que hay detrás lleva la tarjeta y un enlace a Finanzas Personales, y nada
 más: ni nombre, ni importes, ni desglose, ni forma de llegar a tu cuenta. Además
 pide a los buscadores que la dejen en paz. Existe por un solo motivo: pegar un
 enlace en WhatsApp o en X despliega la imagen, y así no tienes que descargarla y
@@ -157,7 +157,7 @@ tarjeta o guardar una imagen no publica nada.
 
 ### ¿La página pública enseña mi nombre o mis saldos?
 
-No. Enseña la única tarjeta que has compartido y un enlace a Whisper Money. No
+No. Enseña la única tarjeta que has compartido y un enlace a Finanzas Personales. No
 lleva tu nombre, ni desglose, ni ninguna vía de entrada a tu cuenta.
 
 ### ¿Puedo deshacer lo que he compartido?

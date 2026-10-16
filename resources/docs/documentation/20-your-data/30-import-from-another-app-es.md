@@ -82,7 +82,7 @@ envía el banco.
 
 ### Columnas
 
-Cada dato de una transacción sale de una columna de tu archivo. Whisper Money
+Cada dato de una transacción sale de una columna de tu archivo. Finanzas Personales
 adivina lo que puede, tú corriges el resto, y lo recuerda para el próximo archivo
 de la misma app.
 

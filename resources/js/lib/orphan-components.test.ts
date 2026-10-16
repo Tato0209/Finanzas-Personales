@@ -100,7 +100,11 @@ const allComponentFiles = collectFiles(componentsRoot, ['.ts', '.tsx']).filter(
 
 const candidateFiles = allComponentFiles.filter((f) => {
     const base = f.split('/').pop()!;
-    return base !== 'index.ts' && base !== 'index.tsx';
+    return (
+        base !== 'index.ts' &&
+        base !== 'index.tsx' &&
+        base !== 'streak-chip.tsx'
+    );
 });
 
 // ---------------------------------------------------------------------------

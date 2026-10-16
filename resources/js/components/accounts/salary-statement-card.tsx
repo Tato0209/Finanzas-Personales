@@ -19,7 +19,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type { Account, CurrencyCode, SalaryStatement } from '@/types/account';
-import { formatCurrency } from '@/utils/currency';
 import { __ } from '@/utils/i18n';
 import { router } from '@inertiajs/react';
 import {
@@ -34,7 +33,6 @@ import {
     Pencil,
     PiggyBank,
     Printer,
-    Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -151,7 +149,11 @@ export function SalaryStatementCard({
                         </SelectTrigger>
                         <SelectContent>
                             {months.map((m) => (
-                                <SelectItem key={m} value={m} className="text-xs">
+                                <SelectItem
+                                    key={m}
+                                    value={m}
+                                    className="text-xs"
+                                >
                                     {m === statement.month
                                         ? statement.month_name
                                         : m}
@@ -191,9 +193,7 @@ export function SalaryStatementCard({
                             <AlertCircle className="h-6 w-6 text-primary" />
                             <div>
                                 <p className="text-sm font-medium">
-                                    {__(
-                                        'Aún no has registrado tu salario de',
-                                    )}{' '}
+                                    {__('Aún no has registrado tu salario de')}{' '}
                                     <span className="font-semibold text-primary">
                                         {statement.month_name}
                                     </span>
@@ -304,14 +304,18 @@ export function SalaryStatementCard({
                                     }`}
                                 >
                                     <AmountDisplay
-                                        amountInCents={statement.remaining_balance}
+                                        amountInCents={
+                                            statement.remaining_balance
+                                        }
                                         currencyCode={currencyCode}
                                     />
                                 </div>
                                 <span className="text-[10px] text-muted-foreground">
                                     {isDeficit
                                         ? __('Sobregasto este mes')
-                                        : __('Disponible para gastar o ahorrar')}
+                                        : __(
+                                              'Disponible para gastar o ahorrar',
+                                          )}
                                 </span>
                             </div>
 
@@ -386,14 +390,26 @@ export function SalaryStatementCard({
 
                         <div className="my-6 space-y-4">
                             <div className="space-y-2">
-                                <label htmlFor="monthly-salary-input" className="text-xs font-medium text-foreground">
+                                <label
+                                    htmlFor="monthly-salary-input"
+                                    className="text-xs font-medium text-foreground"
+                                >
                                     {__('Monto del Salario')} (
-                                    {(currencyCode || account.currency_code || 'USD').toUpperCase()})
+                                    {(
+                                        currencyCode ||
+                                        account.currency_code ||
+                                        'USD'
+                                    ).toUpperCase()}
+                                    )
                                 </label>
                                 <AmountInput
                                     id="monthly-salary-input"
                                     value={newSalaryAmount}
-                                    currencyCode={currencyCode || account.currency_code || 'USD'}
+                                    currencyCode={
+                                        currencyCode ||
+                                        account.currency_code ||
+                                        'USD'
+                                    }
                                     onChange={(val) =>
                                         setNewSalaryAmount(val || 0)
                                     }
@@ -551,9 +567,7 @@ function SalaryMonthlyStatementModal({
 
                         {statement.categories_breakdown.length === 0 ? (
                             <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-                                {__(
-                                    'No hay gastos registrados en este mes.',
-                                )}
+                                {__('No hay gastos registrados en este mes.')}
                             </p>
                         ) : (
                             <div className="space-y-2.5">
@@ -585,7 +599,9 @@ function SalaryMonthlyStatementModal({
                                             <div className="flex items-center gap-2">
                                                 <span className="font-semibold text-foreground">
                                                     <AmountDisplay
-                                                        amountInCents={cat.total}
+                                                        amountInCents={
+                                                            cat.total
+                                                        }
                                                         currencyCode={
                                                             currencyCode
                                                         }

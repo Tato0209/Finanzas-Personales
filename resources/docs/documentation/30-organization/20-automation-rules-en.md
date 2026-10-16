@@ -141,7 +141,7 @@ Use apply or re-evaluate when:
 
 ## Suggested rules
 
-Instead of writing every rule yourself, Whisper Money can read the merchants that
+Instead of writing every rule yourself, Finanzas Personales can read the merchants that
 repeat in your transactions and suggest rules for them. You review each
 suggestion and decide whether to keep it, and nothing is created until you
 accept it.

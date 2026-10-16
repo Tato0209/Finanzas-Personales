@@ -18,7 +18,7 @@
 
 {{ __('Hi :name,', ['name' => $user->name]) }}
 
-{{ __('On 1 October Whisper Money goes from €3.99 to €8.99 a month. This is the last email I will send you about it, and your last chance to subscribe at the price you see today: you have until Wednesday 30 September.') }}
+{{ __('On 1 October Finanzas Personales goes from €3.99 to €8.99 a month. This is the last email I will send you about it, and your last chance to subscribe at the price you see today: you have until Wednesday 30 September.') }}
 
 <x-mail::table>
 | {{ __('Plan') }}        | {{ __('Today') }}  | {{ __('From 1 October') }} |
@@ -29,7 +29,7 @@
 
 {{ __('Your price lives inside your subscription, not on the pricing page. Subscribe now and yours stays at €3.99 a month, or €23.88 a year, for as long as you keep it. The increase only applies to subscriptions created afterwards.') }}
 
-{{ __('It is going up because bank connections and AI are what make Whisper Money worth opening, and both cost us more every month. There are two of us, Álvaro and me, and we would like to keep doing this for a long time.') }}
+{{ __('It is going up because bank connections and AI are what make Finanzas Personales worth opening, and both cost us more every month. There are two of us, Álvaro and me, and we would like to keep doing this for a long time.') }}
 
 <x-mail::button :url="route('subscribe')">
 {{ __('Keep the €3.99 price') }}
@@ -40,7 +40,7 @@
 {{ __('And if the free plan is what works for you, stay on it. It is not going anywhere, and I am glad to have you here either way.') }}
 
 Víctor Falcón Ruíz<br>
-{{ __('Co-founder and solo developer, Whisper Money') }}
+{{ __('Co-founder and solo developer, Finanzas Personales') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

@@ -31,7 +31,7 @@ function deferredVisit(only: string[]) {
     return {
         detail: {
             visit: {
-                url: new URL('https://whisper.money/dashboard'),
+                url: new URL('https://finanzaspersonales.local/dashboard'),
                 only,
                 deferredProps: true,
             },
@@ -95,7 +95,7 @@ describe('installDeferredPropsRecovery', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://whisper.money/dashboard'),
+                    url: new URL('https://finanzaspersonales.local/dashboard'),
                     only: ['dashboard'],
                 },
             },
@@ -128,7 +128,9 @@ describe('installDeferredPropsRecovery', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://whisper.money/settings/accounts'),
+                    url: new URL(
+                        'https://finanzaspersonales.local/settings/accounts',
+                    ),
                     only: [],
                 },
             },

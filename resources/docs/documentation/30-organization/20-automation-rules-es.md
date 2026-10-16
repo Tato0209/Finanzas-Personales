@@ -144,7 +144,7 @@ Usa aplicar o reevaluar cuando:
 
 ## Reglas sugeridas
 
-En lugar de escribir todas las reglas a mano, Whisper Money puede leer los
+En lugar de escribir todas las reglas a mano, Finanzas Personales puede leer los
 comercios que se repiten en tus transacciones y sugerir reglas para ellos. Tú
 revisas cada sugerencia y decides si la quieres, y no se crea nada hasta que la
 aceptas.

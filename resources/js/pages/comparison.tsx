@@ -82,7 +82,7 @@ function ComparisonTable({
                             {page.rival}
                         </th>
                         <th className="w-2/5 py-3 font-semibold">
-                            Whisper Money
+                            Finanzas Personales
                         </th>
                     </tr>
                 </thead>
@@ -98,7 +98,7 @@ function ComparisonTable({
                             <td className="py-4 pr-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {row.rival}
                             </td>
-                            <td className="py-4">{row.whisper}</td>
+                            <td className="py-4">{row.finanzas}</td>
                         </tr>
                     ))}
                 </tbody>

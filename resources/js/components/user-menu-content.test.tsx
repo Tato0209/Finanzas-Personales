@@ -1,5 +1,5 @@
 import { type User } from '@/types';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserMenuContent } from './user-menu-content';
@@ -89,86 +89,24 @@ const user: User = {
 };
 
 describe('UserMenuContent', () => {
-    it('opens the documentation in a new tab', () => {
-        render(
-            <UserMenuContent
-                user={user}
-                onOpenSupport={vi.fn()}
-                onOpenIntegrationRequests={vi.fn()}
-            />,
-        );
-
-        const documentation = screen.getByRole('link', {
-            name: /documentation/i,
-        });
-
-        expect(documentation.getAttribute('href')).toBe('/documentation');
-        expect(documentation.getAttribute('target')).toBe('_blank');
-    });
-
-    it('shows community above feedback in the user dropdown', () => {
-        render(
-            <UserMenuContent
-                user={user}
-                onOpenSupport={vi.fn()}
-                onOpenIntegrationRequests={vi.fn()}
-            />,
-        );
-
-        const community = screen.getByRole('link', { name: /community/i });
-        const feedback = screen.getByRole('link', { name: /feedback/i });
-
-        expect(community.getAttribute('href')).toBe(
-            'https://discord.gg/m8hUhx6D9D',
-        );
-        expect(community.compareDocumentPosition(feedback)).toBe(
-            Node.DOCUMENT_POSITION_FOLLOWING,
-        );
-    });
-
-    it('links feedback and roadmap to UserJot', () => {
-        render(
-            <UserMenuContent
-                user={user}
-                onOpenSupport={vi.fn()}
-                onOpenIntegrationRequests={vi.fn()}
-            />,
-        );
+    it('renders monthly summaries, appearance, and settings', () => {
+        render(<UserMenuContent user={user} />);
 
         expect(
-            screen
-                .getByRole('link', { name: /feedback/i })
-                .getAttribute('href'),
-        ).toBe('https://whispermoney.userjot.com/');
-        expect(
-            screen.getByRole('link', { name: /roadmap/i }).getAttribute('href'),
-        ).toBe('https://whispermoney.userjot.com/roadmap');
+            screen.getByRole('link', { name: /monthly summaries/i }),
+        ).toBeDefined();
+        expect(screen.getByRole('link', { name: /appearance/i })).toBeDefined();
+        expect(screen.getByRole('link', { name: /settings/i })).toBeDefined();
     });
 
-    it('triggers the support callback when the support item is clicked', () => {
-        const onOpenSupport = vi.fn();
+    it('renders the log out button', () => {
+        render(<UserMenuContent user={user} />);
 
-        render(
-            <UserMenuContent
-                user={user}
-                onOpenSupport={onOpenSupport}
-                onOpenIntegrationRequests={vi.fn()}
-            />,
-        );
-
-        fireEvent.click(screen.getByText('Support'));
-
-        expect(onOpenSupport).toHaveBeenCalledOnce();
+        expect(screen.getByRole('link', { name: /log out/i })).toBeDefined();
     });
 
     it('hides the admin link from everyone but the admin', () => {
-        render(
-            <UserMenuContent
-                user={user}
-                onOpenSupport={vi.fn()}
-                onOpenIntegrationRequests={vi.fn()}
-            />,
-        );
+        render(<UserMenuContent user={user} />);
 
         expect(screen.queryByText('Admin')).toBeNull();
     });
@@ -176,13 +114,7 @@ describe('UserMenuContent', () => {
     it('links the admin to /admin', () => {
         isAdmin = true;
 
-        render(
-            <UserMenuContent
-                user={user}
-                onOpenSupport={vi.fn()}
-                onOpenIntegrationRequests={vi.fn()}
-            />,
-        );
+        render(<UserMenuContent user={user} />);
 
         expect(
             screen.getByRole('link', { name: /admin/i }).getAttribute('href'),

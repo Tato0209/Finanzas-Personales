@@ -64,9 +64,9 @@ class SalaryStatementService
 
                 return [
                     'category_id' => $category?->id,
-                    'name' => $category?->name ?? 'Sin categoría',
-                    'icon' => $category?->icon ?? 'help-circle',
-                    'color' => $category?->color ?? '#94a3b8',
+                    'name' => $category->name ?? 'Sin categoría',
+                    'icon' => $category->icon ?? 'help-circle',
+                    'color' => $category->color ?? '#94a3b8',
                     'total' => $catTotal,
                     'percentage' => $percentage,
                     'count' => $group->count(),

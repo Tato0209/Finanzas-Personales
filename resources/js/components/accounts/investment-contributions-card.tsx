@@ -344,7 +344,7 @@ export function InvestmentContributionsCard({
                                     {/* Cabecera del mes */}
                                     <div className="flex items-center justify-between bg-muted/40 px-4 py-2.5 text-xs">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-semibold capitalize text-foreground">
+                                            <span className="font-semibold text-foreground capitalize">
                                                 {monthGroup.month_name}
                                             </span>
                                             <Badge
@@ -376,7 +376,9 @@ export function InvestmentContributionsCard({
                                                 <div className="space-y-0.5">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-xs font-medium text-foreground">
-                                                            {item.formatted_date}
+                                                            {
+                                                                item.formatted_date
+                                                            }
                                                         </span>
                                                         {item.notes && (
                                                             <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
@@ -506,7 +508,7 @@ export function InvestmentContributionsCard({
                             </div>
 
                             {/* Opciones de sincronización */}
-                            <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+                            <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
                                 <div className="flex items-start space-x-2.5">
                                     <Checkbox
                                         id="add-to-balance"
@@ -518,7 +520,7 @@ export function InvestmentContributionsCard({
                                     <div className="grid gap-1 leading-none">
                                         <label
                                             htmlFor="add-to-balance"
-                                            className="text-xs font-medium cursor-pointer text-foreground"
+                                            className="cursor-pointer text-xs font-medium text-foreground"
                                         >
                                             {__(
                                                 'Sumar al valor actual del balance',
@@ -543,7 +545,7 @@ export function InvestmentContributionsCard({
                                     <div className="grid gap-1 leading-none">
                                         <label
                                             htmlFor="add-to-invested"
-                                            className="text-xs font-medium cursor-pointer text-foreground"
+                                            className="cursor-pointer text-xs font-medium text-foreground"
                                         >
                                             {__(
                                                 'Actualizar capital invertido acumulado',
@@ -652,7 +654,7 @@ export function InvestmentContributionsCard({
                                     <div className="grid gap-1 leading-none">
                                         <label
                                             htmlFor="sync-balance-edit"
-                                            className="text-xs font-medium cursor-pointer text-foreground"
+                                            className="cursor-pointer text-xs font-medium text-foreground"
                                         >
                                             {__(
                                                 'Ajustar balance e inversión por la diferencia',
@@ -730,7 +732,7 @@ export function InvestmentContributionsCard({
                                 <div className="grid gap-1 leading-none">
                                     <label
                                         htmlFor="adjust-balance-delete"
-                                        className="text-xs font-medium cursor-pointer text-foreground"
+                                        className="cursor-pointer text-xs font-medium text-foreground"
                                     >
                                         {__(
                                             'Restar también este monto del balance e inversión actual',

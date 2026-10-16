@@ -1,6 +1,6 @@
 # Importar transacciones
 
-Importar trae un archivo del banco a Whisper Money cuando la sincronización automática no está disponible para ese banco, o cuando prefieres hacerlo tú.
+Importar trae un archivo del banco a Finanzas Personales cuando la sincronización automática no está disponible para ese banco, o cuando prefieres hacerlo tú.
 
 Así se importa un archivo a una cuenta. Para traer la exportación entera de otra
 app, con muchas cuentas y sus categorías, usa
@@ -35,7 +35,7 @@ El panel pregunta primero a qué cuenta pertenece el archivo, y después pide el
 
 ## Columnas necesarias
 
-Whisper Money lee la fila de cabecera y adivina qué columna es cada cosa. Sus suposiciones son tuyas para corregirlas, y el mapeo se recuerda por cuenta para la próxima vez.
+Finanzas Personales lee la fila de cabecera y adivina qué columna es cada cosa. Sus suposiciones son tuyas para corregirlas, y el mapeo se recuerda por cuenta para la próxima vez.
 
 ![El paso de mapeo de columnas, con cada columna del archivo emparejada con un campo de la transacción](/docs/documentation/import-transactions-mapping.png)
 
@@ -46,7 +46,7 @@ Whisper Money lee la fila de cabecera y adivina qué columna es cada cosa. Sus s
 
 La fecha de la transacción.
 
-Whisper Money puede detectar formatos comunes, pero puedes ajustarlo si hace falta.
+Finanzas Personales puede detectar formatos comunes, pero puedes ajustarlo si hace falta.
 
 </div>
 
@@ -127,7 +127,7 @@ Algunos bancos exportan gastos como números positivos. Revisa la vista previa a
 
 ### ¿Puedo importar el mismo archivo dos veces?
 
-Sí. Antes de la vista previa, Whisper Money compara cada fila con las
+Sí. Antes de la vista previa, Finanzas Personales compara cada fila con las
 transacciones que ya tiene la cuenta y marca las que coinciden en el mismo día,
 importe y descripción. Las filas marcadas se desmarcan por ti, así que volver a
 importar el archivo trae solo lo nuevo. El número se muestra encima de la vista

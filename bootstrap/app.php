@@ -12,7 +12,6 @@ use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\SetSentryUser;
 use App\Http\Middleware\TrackLastActiveAt;
 use App\Jobs\SyncBankingConnectionJob;
-use App\Services\AuthEntryPointService;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

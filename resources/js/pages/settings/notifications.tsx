@@ -93,7 +93,7 @@ export default function Notifications({
             checked: notifyMarketing,
             label: __('Product news and offers'),
             description: __(
-                "Occasional emails about what's new, tips to get more out of Whisper Money, and the odd offer. Never your account or bank alerts.",
+                "Occasional emails about what's new, tips to get more out of Finanzas Personales, and the odd offer. Never your account or bank alerts.",
             ),
         },
         {

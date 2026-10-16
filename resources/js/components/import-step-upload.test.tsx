@@ -42,7 +42,7 @@ describe('isSupportedImportFile', () => {
         'budget.xls',
         'budget.xlsx',
         'budget.numbers',
-        'Copia de monefy_whisper_import.numbers',
+        'Copia de monefy_finanzas_import.numbers',
         'BUDGET.NUMBERS',
         'export.2026.numbers',
     ])('accepts %s', (name) => {

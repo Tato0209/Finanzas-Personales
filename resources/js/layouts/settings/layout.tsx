@@ -3,8 +3,6 @@ import { index as automationRulesIndex } from '@/actions/App/Http/Controllers/Se
 import { index as categoriesIndex } from '@/actions/App/Http/Controllers/Settings/CategoryController';
 import { index as fullImportIndex } from '@/actions/App/Http/Controllers/Settings/FullImportController';
 import { index as labelsIndex } from '@/actions/App/Http/Controllers/Settings/LabelController';
-import { index as mcpIndex } from '@/actions/App/Http/Controllers/Settings/McpTokenController';
-import { index as notificationsIndex } from '@/actions/App/Http/Controllers/Settings/NotificationPreferenceController';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +20,6 @@ import { cn, isSameUrl, resolveUrl } from '@/lib/utils';
 import { edit as editAccount } from '@/routes/account';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editDeleteAccount } from '@/routes/delete-account';
-import { billing } from '@/routes/settings';
 import {
     NavDivider,
     NavSectionHeader,

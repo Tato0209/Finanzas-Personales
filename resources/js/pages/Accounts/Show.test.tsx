@@ -351,7 +351,10 @@ describe('AccountShow', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Update balance' }));
 
         expect(updateBalanceDialog).toHaveBeenLastCalledWith(
-            expect.objectContaining({ open: true, account: connectedInvestmentAccount }),
+            expect.objectContaining({
+                open: true,
+                account: connectedInvestmentAccount,
+            }),
         );
     });
 
@@ -385,7 +388,10 @@ describe('AccountShow', () => {
         fireEvent.click(within(menu).getByText('See balances'));
 
         expect(balancesModal).toHaveBeenLastCalledWith(
-            expect.objectContaining({ open: true, account: connectedInvestmentAccount }),
+            expect.objectContaining({
+                open: true,
+                account: connectedInvestmentAccount,
+            }),
         );
     });
 

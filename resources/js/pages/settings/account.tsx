@@ -1,14 +1,9 @@
-import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
-import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
-import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PasswordInput } from '@/components/ui/password-input';
 import {
     Select,
     SelectContent,
@@ -16,13 +11,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { useLocale } from '@/hooks/use-locale';
-import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit as accountEdit } from '@/routes/account';
-import { disable, enable } from '@/routes/two-factor';
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { LANGUAGE_OPTIONS } from '@/types/language';
@@ -30,8 +22,7 @@ import { formatLocaleOptions } from '@/utils/format-locale';
 import { __ } from '@/utils/i18n';
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { ShieldBan, ShieldCheck } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 
 /**
  * One labelled dropdown in the profile form. Three of these sit in a row —
@@ -90,8 +81,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Account({
     mustVerifyEmail,
     status,
-    requiresConfirmation = false,
-    twoFactorEnabled = false,
 }: {
     mustVerifyEmail: boolean;
     status?: string;
@@ -115,20 +104,6 @@ export default function Account({
             })),
         [currencies.profile],
     );
-    const passwordInput = useRef<HTMLInputElement>(null);
-    const currentPasswordInput = useRef<HTMLInputElement>(null);
-
-    const {
-        qrCodeSvg,
-        hasSetupData,
-        manualSetupKey,
-        clearSetupData,
-        fetchSetupData,
-        recoveryCodesList,
-        fetchRecoveryCodes,
-        errors: twoFactorErrors,
-    } = useTwoFactorAuth();
-    const [showSetupModal, setShowSetupModal] = useState<boolean>(false);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

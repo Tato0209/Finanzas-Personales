@@ -1,5 +1,4 @@
 import { index as adminIndex } from '@/actions/App/Http/Controllers/AdminController';
-import DiscordIcon from '@/components/icons/DiscordIcon';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -10,42 +9,22 @@ import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
 import accounts from '@/routes/accounts';
-import { index as progress } from '@/routes/achievements';
 import { edit as editAppearance } from '@/routes/appearance';
-import documentation from '@/routes/documentation';
 import { index as monthlySummaries } from '@/routes/monthly-summaries';
 import { type SharedData, type User } from '@/types';
 import { __ } from '@/utils/i18n';
 import { Link, router, usePage } from '@inertiajs/react';
-import {
-    Award,
-    BookOpen,
-    Eye,
-    EyeOff,
-    FileText,
-    Landmark,
-    LifeBuoy,
-    LogOut,
-    Map,
-    MessageSquare,
-    Monitor,
-    Settings,
-    Shield,
-} from 'lucide-react';
+import { FileText, LogOut, Monitor, Settings, Shield } from 'lucide-react';
 
 interface UserMenuContentProps {
     user: User;
-    onOpenSupport: () => void;
-    onOpenIntegrationRequests: () => void;
+    onOpenSupport?: () => void;
+    onOpenIntegrationRequests?: () => void;
 }
 
-export function UserMenuContent({
-    user,
-    onOpenSupport,
-    onOpenIntegrationRequests,
-}: UserMenuContentProps) {
+export function UserMenuContent({ user }: UserMenuContentProps) {
     const cleanup = useMobileNavigation();
-    const { auth, version, achievements } = usePage<SharedData>().props;
+    const { auth, version } = usePage<SharedData>().props;
 
     const handleLogout = () => {
         cleanup();
@@ -118,6 +97,18 @@ export function UserMenuContent({
                         </Link>
                     </DropdownMenuItem>
                 )}
+                <DropdownMenuItem asChild>
+                    <Link
+                        className="block w-full"
+                        method="post"
+                        href={logout()}
+                        as="button"
+                        onClick={handleLogout}
+                    >
+                        <LogOut className="mr-2" />
+                        {__('Log out')}
+                    </Link>
+                </DropdownMenuItem>
             </DropdownMenuGroup>
 
             <DropdownMenuSeparator />

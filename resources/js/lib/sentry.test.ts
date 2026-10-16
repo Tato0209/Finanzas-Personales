@@ -31,7 +31,7 @@ describe('isPageLeaveAbortNoise', () => {
         Object.defineProperty(window, 'location', {
             configurable: true,
             writable: true,
-            value: { href: 'https://whisper.money/onboarding' },
+            value: { href: 'https://finanzaspersonales.local/onboarding' },
         });
     });
 
@@ -60,7 +60,7 @@ describe('isPageLeaveAbortNoise', () => {
         // so a bare "Network error" is not what actually reaches Sentry.
         [
             'HttpNetworkError',
-            'Network error (https://whisper.money/onboarding?step=create-account)',
+            'Network error (https://finanzaspersonales.local/onboarding?step=create-account)',
         ],
         ['TypeError', 'Failed to fetch'],
         ['TypeError', 'Load failed'],
@@ -102,7 +102,7 @@ describe('isPageLeaveAbortNoise', () => {
             isPageLeaveAbortNoise(
                 exceptionEvent(
                     'TypeError',
-                    'Failed to fetch dynamically imported module: https://whisper.money/build/assets/accounts-BO3xxENF.js',
+                    'Failed to fetch dynamically imported module: https://finanzaspersonales.local/build/assets/accounts-BO3xxENF.js',
                 ),
             ),
         ).toBe(false);
@@ -124,7 +124,7 @@ describe('isChunkLoadErrorEvent', () => {
                 values: [
                     {
                         type: 'TypeError',
-                        value: 'Failed to fetch dynamically imported module: https://whisper.money/build/assets/accounts-BO3xxENF.js',
+                        value: 'Failed to fetch dynamically imported module: https://finanzaspersonales.local/build/assets/accounts-BO3xxENF.js',
                     },
                 ],
             },
@@ -480,13 +480,15 @@ describe('isUnattendedRequestNoise', () => {
         // Hovering the sidebar prefetches Cashflow from whatever page you are on.
         listeners.prefetching?.({
             detail: {
-                visit: { url: new URL('https://whisper.money/cashflow') },
+                visit: {
+                    url: new URL('https://finanzaspersonales.local/cashflow'),
+                },
             },
         });
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://whisper.money/cashflow'),
+                networkError('https://finanzaspersonales.local/cashflow'),
             ),
         ).toBe(true);
     });
@@ -500,7 +502,7 @@ describe('isUnattendedRequestNoise', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://whisper.money/onboarding'),
+                    url: new URL('https://finanzaspersonales.local/onboarding'),
                     prefetch: false,
                     poll: true,
                 },
@@ -509,7 +511,7 @@ describe('isUnattendedRequestNoise', () => {
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://whisper.money/onboarding'),
+                networkError('https://finanzaspersonales.local/onboarding'),
             ),
         ).toBe(true);
     });
@@ -522,7 +524,7 @@ describe('isUnattendedRequestNoise', () => {
         // suppression must not swallow.
         expect(
             isUnattendedRequestNoise(
-                networkError('https://whisper.money/budgets'),
+                networkError('https://finanzaspersonales.local/budgets'),
             ),
         ).toBe(false);
     });
@@ -533,7 +535,9 @@ describe('isUnattendedRequestNoise', () => {
 
         listeners.prefetching?.({
             detail: {
-                visit: { url: new URL('https://whisper.money/cashflow') },
+                visit: {
+                    url: new URL('https://finanzaspersonales.local/cashflow'),
+                },
             },
         });
 
@@ -541,7 +545,7 @@ describe('isUnattendedRequestNoise', () => {
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://whisper.money/cashflow'),
+                networkError('https://finanzaspersonales.local/cashflow'),
             ),
         ).toBe(false);
     });
@@ -565,7 +569,9 @@ describe('isUnattendedRequestNoise', () => {
 
         listeners.prefetching?.({
             detail: {
-                visit: { url: new URL('https://whisper.money/cashflow') },
+                visit: {
+                    url: new URL('https://finanzaspersonales.local/cashflow'),
+                },
             },
         });
 
@@ -574,7 +580,7 @@ describe('isUnattendedRequestNoise', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://whisper.money/cashflow'),
+                    url: new URL('https://finanzaspersonales.local/cashflow'),
                     prefetch: false,
                 },
             },
@@ -582,7 +588,7 @@ describe('isUnattendedRequestNoise', () => {
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://whisper.money/cashflow'),
+                networkError('https://finanzaspersonales.local/cashflow'),
             ),
         ).toBe(false);
     });
@@ -594,20 +600,22 @@ describe('isUnattendedRequestNoise', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://whisper.money/budgets'),
+                    url: new URL('https://finanzaspersonales.local/budgets'),
                     prefetch: false,
                 },
             },
         });
         listeners.prefetching?.({
             detail: {
-                visit: { url: new URL('https://whisper.money/cashflow') },
+                visit: {
+                    url: new URL('https://finanzaspersonales.local/cashflow'),
+                },
             },
         });
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://whisper.money/cashflow'),
+                networkError('https://finanzaspersonales.local/cashflow'),
             ),
         ).toBe(true);
     });

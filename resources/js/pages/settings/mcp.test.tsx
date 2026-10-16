@@ -6,8 +6,8 @@ import McpPage from './mcp';
 const pageProps = vi.hoisted(() => ({
     auth: { hasProPlan: true },
     tokens: [],
-    serverUrl: 'https://whisper.money/mcp',
-    oauthUrl: 'https://whisper.money/mcp/oauth',
+    serverUrl: 'https://finanzaspersonales.local/mcp',
+    oauthUrl: 'https://finanzaspersonales.local/mcp/oauth',
     subscribeUrl: '/subscribe',
     newToken: null as string | null,
 }));
@@ -47,9 +47,9 @@ describe('MCP settings page', () => {
         );
 
         const commands = [
-            '/plugin marketplace add whisper-money/whisper-money',
-            '/plugin install whisper-money@whisper-money',
-            'claude mcp add --transport http whisper-money https://whisper.money/mcp --header "Authorization: Bearer <token>"',
+            '/plugin marketplace add finanzas-personales/finanzas-personales',
+            '/plugin install finanzas-personales@finanzas-personales',
+            'claude mcp add --transport http finanzas-personales https://finanzaspersonales.local/mcp --header "Authorization: Bearer <token>"',
         ].map((command) => screen.getByText(command));
 
         commands.slice(1).forEach((command, index) => {

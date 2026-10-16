@@ -47,12 +47,7 @@ export default function AppLogoIcon({
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
-            <circle
-                cx="16"
-                cy="6"
-                r="1.2"
-                fill="#10B981"
-            />
+            <circle cx="16" cy="6" r="1.2" fill="#10B981" />
         </svg>
     );
 }

@@ -11,7 +11,7 @@ const CLONE_ERROR_MESSAGE_PATTERN =
 //
 // The optional parenthesised tail is Inertia's: HttpError's constructor appends
 // the request URL, so its own wrapper arrives as
-// `Network error (https://whisper.money/onboarding)`. Matching that tail
+// `Network error (https://finanzaspersonales.local/onboarding)`. Matching that tail
 // explicitly rather than loosening to a prefix keeps "Failed to fetch
 // dynamically imported module: …" out — that is a chunk load, not an abort.
 const ABORTED_REQUEST_MESSAGE_PATTERN =

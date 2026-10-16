@@ -66,8 +66,8 @@ class InvestmentContributionService
 
         // Latest account balance and invested amount
         $latestBalanceRecord = $account->balances()->latest('balance_date')->first();
-        $latestMarketValue = $latestBalanceRecord?->balance ?? 0;
-        $investedAmount = $latestBalanceRecord?->invested_amount ?? $totalContributed;
+        $latestMarketValue = $latestBalanceRecord->balance ?? 0;
+        $investedAmount = $latestBalanceRecord->invested_amount ?? $totalContributed;
 
         $netGain = $latestMarketValue - $investedAmount;
         $gainPercentage = $investedAmount > 0

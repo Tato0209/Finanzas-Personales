@@ -25,6 +25,7 @@ export default function AppSidebarLayout({
                     breadcrumbs={breadcrumbs}
                     mobileLeading={mobileLeading}
                 />
+                <SubscriptionPaymentIssueBanner />
                 <div
                     className="mx-auto flex w-full max-w-page flex-1 flex-col"
                     data-testid="page-content"

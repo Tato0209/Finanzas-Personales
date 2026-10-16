@@ -47,7 +47,7 @@ export default function InstallAppButton() {
                     <DialogContent className="max-w-sm">
                         <DialogHeader>
                             <DialogTitle>
-                                {__('Install Whisper Money')}
+                                {__('Install Finanzas Personales')}
                             </DialogTitle>
                             <DialogDescription>
                                 {__(

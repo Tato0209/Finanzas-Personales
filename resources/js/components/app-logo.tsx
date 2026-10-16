@@ -6,7 +6,7 @@ export default function AppLogo({ mobile }: { mobile?: boolean }) {
         <div className="flex items-center gap-2.5">
             <div
                 className={cn([
-                    'flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/30 shadow-xs',
+                    'flex aspect-square size-8 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-600 shadow-xs dark:bg-emerald-500/20 dark:text-emerald-400',
                     { 'size-7': mobile },
                 ])}
             >
@@ -14,10 +14,10 @@ export default function AppLogo({ mobile }: { mobile?: boolean }) {
             </div>
             {!mobile && (
                 <div className="grid flex-1 text-left">
-                    <span className="truncate font-bold text-sm tracking-tight text-foreground font-sans">
+                    <span className="truncate font-sans text-sm font-bold tracking-tight text-foreground">
                         Finanzas Personales
                     </span>
-                    <span className="truncate text-[10px] text-muted-foreground font-medium -mt-0.5">
+                    <span className="-mt-0.5 truncate text-[10px] font-medium text-muted-foreground">
                         Control & Gestión
                     </span>
                 </div>

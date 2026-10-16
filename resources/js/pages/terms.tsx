@@ -7,11 +7,11 @@ export default function Terms() {
 
     return (
         <>
-            <Head title={__('Terms of Service - Whisper Money')}>
+            <Head title={__('Terms of Service - Finanzas Personales')}>
                 <meta
                     name="description"
                     content={__(
-                        'Terms of service for Whisper Money. Review the rules and regulations for using our secure personal finance platform.',
+                        'Terms of service for Finanzas Personales. Review the rules and regulations for using our secure personal finance platform.',
                     )}
                 />
 
@@ -20,13 +20,13 @@ export default function Terms() {
 
                 <meta
                     property="og:title"
-                    content={__('Terms of Service - Whisper Money')}
+                    content={__('Terms of Service - Finanzas Personales')}
                 />
 
                 <meta
                     property="og:description"
                     content={__(
-                        'Terms of service for Whisper Money. Review the rules and regulations for using our platform.',
+                        'Terms of service for Finanzas Personales. Review the rules and regulations for using our platform.',
                     )}
                 />
 
@@ -58,13 +58,13 @@ export default function Terms() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'These Terms of Service govern your use of the\n                                Whisper Money personal finance platform.',
+                                    'These Terms of Service govern your use of the\n                                Finanzas Personales personal finance platform.',
                                 )}
                             </p>
                             <div className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 <p>
                                     <strong>{__('Company Name:')}</strong>{' '}
-                                    Whisper Money
+                                    Finanzas Personales
                                 </p>
                                 <p>
                                     <strong>{__('Address:')}</strong> Calle Oca,
@@ -72,7 +72,7 @@ export default function Terms() {
                                 </p>
                                 <p>
                                     <strong>{__('Email:')}</strong>
-                                    {__('victor@whisper.money')}
+                                    {__('victor@finanzaspersonales.local')}
                                 </p>
                             </div>
                         </section>
@@ -83,12 +83,12 @@ export default function Terms() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'By creating an account or using Whisper Money,\n                                you agree to be bound by these Terms of Service\n                                and our Privacy Policy. If you do not agree to\n                                these terms, you may not use our service. These\n                                terms constitute a legally binding agreement\n                                between you and Whisper Money.',
+                                    'By creating an account or using Finanzas Personales,\n                                you agree to be bound by these Terms of Service\n                                and our Privacy Policy. If you do not agree to\n                                these terms, you may not use our service. These\n                                terms constitute a legally binding agreement\n                                between you and Finanzas Personales.',
                                 )}
                             </p>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'You must be at least 16 years old to use this\n                                service. By using Whisper Money, you represent\n                                and warrant that you meet this age requirement.',
+                                    'You must be at least 16 years old to use this\n                                service. By using Finanzas Personales, you represent\n                                and warrant that you meet this age requirement.',
                                 )}
                             </p>
                         </section>
@@ -99,7 +99,7 @@ export default function Terms() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'Whisper Money is a personal finance tracking\n                                application that allows you to:',
+                                    'Finanzas Personales is a personal finance tracking\n                                application that allows you to:',
                                 )}
                             </p>
                             <ul className="mb-4 list-disc pl-6 text-[#706f6c] dark:text-[#A1A09A]">
@@ -137,7 +137,7 @@ export default function Terms() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'When you create an account with Whisper Money,\n                                you agree to:',
+                                    'When you create an account with Finanzas Personales,\n                                you agree to:',
                                 )}
                             </p>
                             <ul className="mb-4 list-disc pl-6 text-[#706f6c] dark:text-[#A1A09A]">
@@ -184,7 +184,7 @@ export default function Terms() {
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 <strong>{__('Your Data:')}</strong>
                                 {__(
-                                    'You retain all\n                                ownership rights to the financial data and\n                                information you enter into Whisper Money. We do\n                                not claim any ownership over your personal\n                                financial information.',
+                                    'You retain all\n                                ownership rights to the financial data and\n                                information you enter into Finanzas Personales. We do\n                                not claim any ownership over your personal\n                                financial information.',
                                 )}
                             </p>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
@@ -207,12 +207,12 @@ export default function Terms() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'The Whisper Money platform, including its\n                                software, design, text, graphics, logos, and\n                                other content (excluding your personal data), is\n                                owned by Whisper Money and protected by\n                                copyright, trademark, and other intellectual\n                                property laws. You may not copy, modify,\n                                distribute, sell, or lease any part of our\n                                service or software without our explicit written\n                                permission.',
+                                    'The Finanzas Personales platform, including its\n                                software, design, text, graphics, logos, and\n                                other content (excluding your personal data), is\n                                owned by Finanzas Personales and protected by\n                                copyright, trademark, and other intellectual\n                                property laws. You may not copy, modify,\n                                distribute, sell, or lease any part of our\n                                service or software without our explicit written\n                                permission.',
                                 )}
                             </p>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'The Whisper Money name and logo are trademarks\n                                of Whisper Money. You may not use these\n                                trademarks without our prior written consent.',
+                                    'The Finanzas Personales name and logo are trademarks\n                                of Finanzas Personales. You may not use these\n                                trademarks without our prior written consent.',
                                 )}
                             </p>
                         </section>
@@ -297,7 +297,7 @@ export default function Terms() {
                                 <strong>
                                     {__('Financial Advice Disclaimer:')}
                                 </strong>{' '}
-                                Whisper Money is a tool for tracking and
+                                Finanzas Personales is a tool for tracking and
                                 organizing your financial information. It does
                                 not provide financial, investment, tax, or legal
                                 advice. You should consult with qualified
@@ -331,12 +331,13 @@ export default function Terms() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 To the maximum extent permitted by applicable
-                                law, Whisper Money, its directors, employees,
-                                and affiliates shall not be liable for any
-                                indirect, incidental, special, consequential, or
-                                punitive damages, including without limitation:
-                                loss of profits, data, use, goodwill, or other
-                                intangible losses resulting from:
+                                law, Finanzas Personales, its directors,
+                                employees, and affiliates shall not be liable
+                                for any indirect, incidental, special,
+                                consequential, or punitive damages, including
+                                without limitation: loss of profits, data, use,
+                                goodwill, or other intangible losses resulting
+                                from:
                             </p>
                             <ul className="mb-4 list-disc pl-6 text-[#706f6c] dark:text-[#A1A09A]">
                                 <li>
@@ -390,7 +391,7 @@ export default function Terms() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'You agree to indemnify, defend, and hold\n                                harmless Whisper Money and its officers,\n                                directors, employees, and agents from any\n                                claims, liabilities, damages, losses, and\n                                expenses, including reasonable legal fees,\n                                arising out of or related to your use of the\n                                service, violation of these Terms, or violation\n                                of any rights of another party.',
+                                    'You agree to indemnify, defend, and hold\n                                harmless Finanzas Personales and its officers,\n                                directors, employees, and agents from any\n                                claims, liabilities, damages, losses, and\n                                expenses, including reasonable legal fees,\n                                arising out of or related to your use of the\n                                service, violation of these Terms, or violation\n                                of any rights of another party.',
                                 )}
                             </p>
                         </section>
@@ -416,7 +417,7 @@ export default function Terms() {
                             </p>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'We encourage you to contact us directly at\n                                victor@whisper.money to resolve any disputes\n                                before initiating legal proceedings.',
+                                    'We encourage you to contact us directly at\n                                victor@finanzaspersonales.local to resolve any disputes\n                                before initiating legal proceedings.',
                                 )}
                             </p>
                         </section>
@@ -460,7 +461,7 @@ export default function Terms() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'These Terms, together with our Privacy Policy,\n                                constitute the entire agreement between you and\n                                Whisper Money regarding the use of our service\n                                and supersede any prior agreements or\n                                understandings, whether written or oral.',
+                                    'These Terms, together with our Privacy Policy,\n                                constitute the entire agreement between you and\n                                Finanzas Personales regarding the use of our service\n                                and supersede any prior agreements or\n                                understandings, whether written or oral.',
                                 )}
                             </p>
                         </section>
@@ -477,11 +478,12 @@ export default function Terms() {
                             <div className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 <p>
                                     <strong>{__('Email:')}</strong>
-                                    {__('victor@whisper.money')}
+                                    {__('victor@finanzaspersonales.local')}
                                 </p>
                                 <p>
-                                    <strong>{__('Address:')}</strong> Whisper
-                                    Money, Calle Oca, Madrid - 28025, Spain
+                                    <strong>{__('Address:')}</strong> Finanzas
+                                    Personales Money, Calle Oca, Madrid - 28025,
+                                    Spain
                                 </p>
                             </div>
                         </section>

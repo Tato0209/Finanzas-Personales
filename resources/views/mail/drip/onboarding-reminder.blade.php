@@ -1,7 +1,7 @@
 <x-mail::message>
 # {{ __('Hey :name, is everything okay?', ['name' => $userName]) }}
 
-{{ __("Hi! We're Victor and Álvaro, the founders of Whisper Money. We noticed you signed up but haven't completed your setup yet. We wanted to check in personally and see if something went wrong or if you need any help.") }}
+{{ __("Hi! We're Victor and Álvaro, the founders of Finanzas Personales. We noticed you signed up but haven't completed your setup yet. We wanted to check in personally and see if something went wrong or if you need any help.") }}
 
 {{ __("We know setting up a new app can be overwhelming, and we want to make sure you have everything you need to get started.") }}
 
@@ -20,11 +20,11 @@
 {{ __('Continue Setup') }}
 </x-mail::button>
 
-{{ __("Looking forward to hearing from you! And if you decide Whisper Money isn't for you, that's totally fine - but we'd love to know why so we can improve.") }}
+{{ __("Looking forward to hearing from you! And if you decide Finanzas Personales isn't for you, that's totally fine - but we'd love to know why so we can improve.") }}
 
 {{ __('Best,') }}<br>
 {{ __('Álvaro & Víctor') }}<br>
-{{ __('Founders of Whisper Money') }}
+{{ __('Founders of Finanzas Personales') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

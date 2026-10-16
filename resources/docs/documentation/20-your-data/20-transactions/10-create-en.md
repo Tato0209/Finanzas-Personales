@@ -35,7 +35,7 @@ A transaction created by hand is matched against your automation rules like any 
 
 ### Why is the amount saved as a negative number?
 
-Because money going out is a negative amount everywhere in Whisper Money. Reports, budgets and cashflow all rely on the sign. You never type it yourself: the **Expense / Income** toggle in the dialog sets it for you.
+Because money going out is a negative amount everywhere in Finanzas Personales. Reports, budgets and cashflow all rely on the sign. You never type it yourself: the **Expense / Income** toggle in the dialog sets it for you.
 
 ### Can I create a transaction in a different currency?
 

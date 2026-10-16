@@ -55,7 +55,7 @@ export function ShareMedalDialog({
                 ).toString()}`
             }
             filename={({ format, theme }) =>
-                `whisper-money-${medal.key.replace('.', '-')}-${format}-${theme}.png`
+                `finanzas-personales-${medal.key.replace('.', '-')}-${format}-${theme}.png`
             }
             controls={
                 hasAmount(medal) && (

@@ -1,7 +1,7 @@
 export type ComparisonRow = {
     dimension: string;
     rival: string;
-    whisper: string;
+    finanzas: string;
 };
 
 export type ComparisonStep = {

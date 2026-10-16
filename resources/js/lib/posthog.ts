@@ -13,7 +13,10 @@ const getPostHogApiKey = (): string | undefined => {
 };
 
 const getPostHogHost = (): string => {
-    return import.meta.env.VITE_POSTHOG_HOST || 'https://t.whisper.money';
+    return (
+        import.meta.env.VITE_POSTHOG_HOST ||
+        'https://t.finanzaspersonales.local'
+    );
 };
 
 const getPostHogUiHost = (): string => {

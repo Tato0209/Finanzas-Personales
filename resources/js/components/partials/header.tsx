@@ -13,7 +13,9 @@ function useGitHubStars(): number | null {
     const [stars, setStars] = useState<number | null>(null);
 
     useEffect(() => {
-        fetch('https://api.github.com/repos/whisper-money/whisper-money')
+        fetch(
+            'https://api.github.com/repos/finanzas-personales/finanzas-personales',
+        )
             .then((res) => res.json())
             .then((data) => {
                 if (typeof data.stargazers_count === 'number') {
@@ -63,7 +65,9 @@ function Logo({ className }: { className?: string }) {
     const content = (
         <>
             <BirdIcon className="size-5 text-[#1b1b18] dark:text-[#EDEDEC]" />
-            <span className="font-medium whitespace-nowrap">Whisper Money</span>
+            <span className="font-medium whitespace-nowrap">
+                Finanzas Personales
+            </span>
         </>
     );
 
@@ -140,7 +144,7 @@ export default function Header({
                         {!hideExternalButtons && (
                             <>
                                 <a
-                                    href="https://github.com/whisper-money/whisper-money"
+                                    href="https://github.com/finanzas-personales/finanzas-personales"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >

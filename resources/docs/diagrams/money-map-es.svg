@@ -1,5 +1,5 @@
 <svg viewBox="0 0 720 280" role="img" aria-labelledby="money-map-es-title money-map-es-desc" xmlns="http://www.w3.org/2000/svg">
-    <title id="money-map-es-title">Cómo encajan las piezas de Whisper Money</title>
+    <title id="money-map-es-title">Cómo encajan las piezas de Finanzas Personales</title>
     <desc id="money-map-es-desc">Las cuentas alimentan las transacciones; las transacciones se organizan en categorías y etiquetas, y de ahí salen el flujo de efectivo y los presupuestos. Las reglas de automatización actúan sobre la transacción al llegar.</desc>
     <defs>
         <marker id="money-map-es-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">

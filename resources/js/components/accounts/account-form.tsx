@@ -363,7 +363,7 @@ export function AccountForm({
                     </p>
                 )}
                 {selectedType === 'salary' && (
-                    <p className="pl-1 text-xs text-primary/80 font-medium">
+                    <p className="pl-1 text-xs font-medium text-primary/80">
                         {__(
                             'Cuenta para control mensual de salario. Cada mes inicia en 0 y podrás registrar tu salario para descontar los gastos mes a mes con su extracto correspondiente.',
                         )}

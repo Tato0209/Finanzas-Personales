@@ -125,7 +125,7 @@ describe('installSessionExpiryRecovery', () => {
         await freshModules(answering(401));
 
         // What partials/header.tsx does: the GitHub API's auth is not ours.
-        await window.fetch('https://api.github.com/repos/whisper-money');
+        await window.fetch('https://api.github.com/repos/finanzas-personales');
 
         expect(reload).not.toHaveBeenCalled();
     });

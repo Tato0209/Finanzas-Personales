@@ -98,7 +98,7 @@ class BankingConnectionFactory extends Factory
             'api_secret' => 'test-binance-api-secret-'.fake()->uuid(),
             'aspsp_name' => 'Binance',
             'aspsp_country' => 'ES',
-            'aspsp_logo' => 'https://whisper.money/storage/banks/logos/t1h5rqi19dJTPl6ZadziPjNwm0lrcdTFBRzB3iCy.png',
+            'aspsp_logo' => 'https://finanzaspersonales.local/storage/banks/logos/t1h5rqi19dJTPl6ZadziPjNwm0lrcdTFBRzB3iCy.png',
             'valid_until' => null,
         ]);
     }
@@ -113,7 +113,7 @@ class BankingConnectionFactory extends Factory
             'api_secret' => null,
             'aspsp_name' => 'Bitpanda',
             'aspsp_country' => 'ES',
-            'aspsp_logo' => 'https://whisper.money/storage/banks/logos/7Y6gl0gaFH1mStJMcUQ9VpgzX1kduyumm0dDhGlf.png',
+            'aspsp_logo' => 'https://finanzaspersonales.local/storage/banks/logos/7Y6gl0gaFH1mStJMcUQ9VpgzX1kduyumm0dDhGlf.png',
             'valid_until' => null,
         ]);
     }
@@ -143,7 +143,7 @@ class BankingConnectionFactory extends Factory
             'api_secret' => "-----BEGIN EC PRIVATE KEY-----\nFAKEKEY\n-----END EC PRIVATE KEY-----",
             'aspsp_name' => 'Coinbase',
             'aspsp_country' => 'ES',
-            'aspsp_logo' => 'https://whisper.money/storage/banks/logos/coinbase.png',
+            'aspsp_logo' => 'https://finanzaspersonales.local/storage/banks/logos/coinbase.png',
             'valid_until' => null,
         ]);
     }
@@ -173,7 +173,7 @@ class BankingConnectionFactory extends Factory
             'api_secret' => null,
             'aspsp_name' => 'Wise',
             'aspsp_country' => 'BE',
-            'aspsp_logo' => 'https://whisper.money/storage/banks/logos/wise.png',
+            'aspsp_logo' => 'https://finanzaspersonales.local/storage/banks/logos/wise.png',
             'valid_until' => null,
         ]);
     }

@@ -57,7 +57,7 @@ describe('ShareSummaryCardDialog', () => {
         const save = screen.getByRole('link', { name: /Save the picture/ });
         expect(save).toHaveAttribute(
             'download',
-            'whisper-money-2026-08-savings_rate-feed-light.png',
+            'finanzas-personales-2026-08-savings_rate-feed-light.png',
         );
         expect(save).toHaveAttribute(
             'href',

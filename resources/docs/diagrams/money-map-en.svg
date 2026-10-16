@@ -1,5 +1,5 @@
 <svg viewBox="0 0 720 280" role="img" aria-labelledby="money-map-en-title money-map-en-desc" xmlns="http://www.w3.org/2000/svg">
-    <title id="money-map-en-title">How the pieces of Whisper Money fit together</title>
+    <title id="money-map-en-title">How the pieces of Finanzas Personales fit together</title>
     <desc id="money-map-en-desc">Accounts feed transactions; transactions get organised into categories and labels, and those produce cashflow and budgets. Automation rules act on a transaction as it arrives.</desc>
     <defs>
         <marker id="money-map-en-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">

@@ -68,7 +68,7 @@ What is yours to set per part is the **amount**, the **category** and the
 **labels**. Parts start out carrying the labels the whole transaction had, so
 nothing is silently dropped; take them off part by part where they do not belong.
 
-What stays behind is the bank's own reference. A part is a row Whisper Money
+What stays behind is the bank's own reference. A part is a row Finanzas Personales
 made, not something your bank sent, and it never pretends otherwise.
 
 ## Where the original goes
@@ -112,7 +112,7 @@ Merging always works, even for a transaction you split a long time ago.
 
 ## Splitting from your assistant
 
-If you have connected Whisper Money to an AI assistant, splitting and merging
+If you have connected Finanzas Personales to an AI assistant, splitting and merging
 are available there too, with the same rules: the parts must add up, and they
 must all move money the same way.
 

@@ -217,6 +217,8 @@ export default function AccountShow({
     const isLoan = account.type === 'loan';
     const isRealEstate = account.type === 'real_estate';
     const isSalary = account.type === 'salary';
+    const isInvestment = account.type === 'investment';
+    const canUpdateBalance = isInvestment || isRealEstate || isLoan;
     const realEstateDetail = account.real_estate_detail;
     const loanDetail = account.loan_detail;
     const linkedLoanAccount = account.linked_loan_account;
@@ -358,7 +360,7 @@ export default function AccountShow({
                         </ButtonGroup>
                     ) : (
                         <ButtonGroup>
-                            {!isCreditCard && (
+                            {canUpdateBalance && (
                                 <>
                                     <Button
                                         variant="outline"
@@ -379,7 +381,7 @@ export default function AccountShow({
                                 </>
                             )}
                             <MoreOptionsMenu>
-                                {!isCreditCard && (
+                                {canUpdateBalance && (
                                     <DropdownMenuItem
                                         onClick={() => setBalancesOpen(true)}
                                     >
@@ -419,7 +421,11 @@ export default function AccountShow({
                     <AccountBalanceChart
                         account={account}
                         refreshKey={chartRefreshKey}
-                        onBalanceClick={() => setUpdateBalanceOpen(true)}
+                        onBalanceClick={
+                            canUpdateBalance
+                                ? () => setUpdateBalanceOpen(true)
+                                : undefined
+                        }
                         onDataLoaded={handleChartDataLoaded}
                     />
                 )}
@@ -546,7 +552,7 @@ export default function AccountShow({
                 onOpenChange={setArchiveOpen}
             />
 
-            {!isCreditCard && (
+            {canUpdateBalance && (
                 <UpdateBalanceDialog
                     account={account}
                     open={updateBalanceOpen}

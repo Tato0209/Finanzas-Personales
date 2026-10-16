@@ -1,6 +1,6 @@
 # Cuentas
 
-Las cuentas son la base de Whisper Money. Guardan saldos, transacciones e historial.
+Las cuentas son la base de Finanzas Personales. Guardan saldos, transacciones e historial.
 
 {{TOC}}
 
@@ -141,7 +141,7 @@ Usa saldos para:
 
 ## Saldos, valores de mercado e importes debidos
 
-Whisper Money usa palabras distintas según el tipo de cuenta.
+Finanzas Personales usa palabras distintas según el tipo de cuenta.
 
 - Las cuentas normales usan **saldo**.
 - Las cuentas de préstamo usan **importe debido**.
@@ -228,11 +228,11 @@ calculan al leerlos, así que recogen la parte nueva por su cuenta.
 
 ### ¿Por qué mi préstamo reduce el patrimonio neto?
 
-Un préstamo es dinero que debes. Whisper Money lo resta de tus activos al calcular el patrimonio neto.
+Un préstamo es dinero que debes. Finanzas Personales lo resta de tus activos al calcular el patrimonio neto.
 
 ### ¿Por qué mi tarjeta de crédito no reduce el patrimonio neto?
 
-Una tarjeta de crédito es una cuenta de gasto, no patrimonio. Whisper Money sigue
+Una tarjeta de crédito es una cuenta de gasto, no patrimonio. Finanzas Personales sigue
 lo que debes en la propia tarjeta y lo deja fuera del total de patrimonio neto,
 así que pagar la tarjeta no mueve esa cifra.
 

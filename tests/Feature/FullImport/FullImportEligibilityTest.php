@@ -104,9 +104,9 @@ it('keeps the Settings page, and undo, past the window while an import can be un
 });
 
 it('is blocked on the shared demo and press accounts', function (string $configKey) {
-    config([$configKey => 'shared@whisper.money']);
+    config([$configKey => 'shared@finanzaspersonales.local']);
 
-    $user = User::factory()->create(['email' => 'shared@whisper.money', 'onboarded_at' => null]);
+    $user = User::factory()->create(['email' => 'shared@finanzaspersonales.local', 'onboarded_at' => null]);
 
     expect($user->canUseFullImport())->toBeFalse()
         ->and($user->canSeeFullImportSettings())->toBeFalse();

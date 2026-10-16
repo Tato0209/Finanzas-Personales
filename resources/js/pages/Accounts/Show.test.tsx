@@ -159,6 +159,11 @@ const investmentAccount = {
     type: 'investment' as const,
 };
 
+const connectedInvestmentAccount = {
+    ...investmentAccount,
+    banking_connection_id: 'connection-1',
+};
+
 const investmentChartData = (
     currentValue: number,
     invested: number,
@@ -340,18 +345,29 @@ describe('AccountShow', () => {
         );
     });
 
-    it('opens the update balance dialog for connected accounts', () => {
-        renderPage(connectedAccount);
+    it('opens the update balance dialog for connected investment accounts', () => {
+        renderPage(connectedInvestmentAccount);
 
         fireEvent.click(screen.getByRole('button', { name: 'Update balance' }));
 
         expect(updateBalanceDialog).toHaveBeenLastCalledWith(
-            expect.objectContaining({ open: true, account: connectedAccount }),
+            expect.objectContaining({ open: true, account: connectedInvestmentAccount }),
         );
     });
 
-    it('opens the import balances drawer for connected accounts', () => {
+    it('does not show update balance for transactional accounts like checking', () => {
         renderPage(connectedAccount);
+
+        expect(
+            screen.queryByRole('button', { name: 'Update balance' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Import balances' }),
+        ).not.toBeInTheDocument();
+    });
+
+    it('opens the import balances drawer for connected investment accounts', () => {
+        renderPage(connectedInvestmentAccount);
 
         fireEvent.click(
             screen.getByRole('button', { name: 'Import balances' }),
@@ -362,14 +378,14 @@ describe('AccountShow', () => {
         );
     });
 
-    it('opens the balance history for connected accounts', async () => {
-        renderPage(connectedAccount);
+    it('opens the balance history for connected investment accounts', async () => {
+        renderPage(connectedInvestmentAccount);
 
         const menu = await openMoreOptionsMenu();
         fireEvent.click(within(menu).getByText('See balances'));
 
         expect(balancesModal).toHaveBeenLastCalledWith(
-            expect.objectContaining({ open: true, account: connectedAccount }),
+            expect.objectContaining({ open: true, account: connectedInvestmentAccount }),
         );
     });
 

@@ -31,7 +31,7 @@ function ibFakeFlex(array $accountIds = ['U1234567']): void
 
     Http::fake([
         '*SendRequest*' => Http::response('<FlexStatementResponse><Status>Success</Status><ReferenceCode>999</ReferenceCode></FlexStatementResponse>'),
-        '*GetStatement*' => Http::response('<FlexQueryResponse queryName="Whisper" type="AF"><FlexStatements count="1">'.$statements.'</FlexStatements></FlexQueryResponse>'),
+        '*GetStatement*' => Http::response('<FlexQueryResponse queryName="FinanzasPersonales" type="AF"><FlexStatements count="1">'.$statements.'</FlexStatements></FlexQueryResponse>'),
     ]);
 }
 
@@ -172,7 +172,7 @@ test('a valid but empty flex statement returns 422 without creating a connection
     $user = User::factory()->onboarded()->create();
     Http::fake([
         '*SendRequest*' => Http::response('<FlexStatementResponse><Status>Success</Status><ReferenceCode>999</ReferenceCode></FlexStatementResponse>'),
-        '*GetStatement*' => Http::response('<FlexQueryResponse queryName="Whisper" type="AF"><FlexStatements count="0"></FlexStatements></FlexQueryResponse>'),
+        '*GetStatement*' => Http::response('<FlexQueryResponse queryName="FinanzasPersonales" type="AF"><FlexStatements count="0"></FlexStatements></FlexQueryResponse>'),
     ]);
 
     $this->actingAs($user)->postJson('/open-banking/interactive-brokers/connect', ibConnect())

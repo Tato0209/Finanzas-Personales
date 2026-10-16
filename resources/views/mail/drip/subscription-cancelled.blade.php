@@ -1,13 +1,13 @@
 <x-mail::message>
 # {{ __("We're sorry to see you go, :name", ['name' => $userName]) }}
 
-{{ __("Hi! It's Victor and Álvaro, the founders of Whisper Money. We noticed you've cancelled your subscription, and we wanted to reach out personally.") }}
+{{ __("Hi! It's Victor and Álvaro, the founders of Finanzas Personales. We noticed you've cancelled your subscription, and we wanted to reach out personally.") }}
 
-{{ __('First, thank you for giving Whisper Money a try. We hope it helped you get a better handle on your finances while keeping your data private.') }}
+{{ __('First, thank you for giving Finanzas Personales a try. We hope it helped you get a better handle on your finances while keeping your data private.') }}
 
 ## {{ __('Before you go...') }}
 
-{{ __("If there's anything that didn't work well for you, or if you have suggestions for improvement, we'd genuinely love to hear about it. As the founders, your feedback is invaluable in making Whisper Money better.") }}
+{{ __("If there's anything that didn't work well for you, or if you have suggestions for improvement, we'd genuinely love to hear about it. As the founders, your feedback is invaluable in making Finanzas Personales better.") }}
 
 {{ __("If you'd like to come back, here's a special offer just for you:") }}
 
@@ -27,5 +27,5 @@
 
 {{ __('Best,') }}<br>
 {{ __('Álvaro & Víctor') }}<br>
-{{ __('Founders of Whisper Money') }}
+{{ __('Founders of Finanzas Personales') }}
 </x-mail::message>

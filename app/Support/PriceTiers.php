@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * The price Whisper Money charges for the paid plan, as complete tiers.
+ * The price Finanzas Personales charges for the paid plan, as complete tiers.
  *
  * A tier welds the displayed price, the struck-through price and the Stripe
  * lookup key together, because the amount actually charged lives in Stripe
@@ -25,14 +25,14 @@ final class PriceTiers
     private const TIERS = [
         // The price the experiment in #980 settled on, and the current one.
         'high' => [
-            'monthly' => ['price' => 8.99, 'original_price' => null, 'stripe_lookup_key' => 'whisper_pro_monthly_high'],
-            'yearly' => ['price' => 53.94, 'original_price' => 107.88, 'stripe_lookup_key' => 'whisper_pro_yearly_high'],
+            'monthly' => ['price' => 8.99, 'original_price' => null, 'stripe_lookup_key' => 'finanzas_pro_monthly_high'],
+            'yearly' => ['price' => 53.94, 'original_price' => 107.88, 'stripe_lookup_key' => 'finanzas_pro_yearly_high'],
         ],
         // The pre-experiment price, kept switchable so it can be rolled back to
         // without a deploy.
         'low' => [
-            'monthly' => ['price' => 3.99, 'original_price' => null, 'stripe_lookup_key' => 'whisper_pro_monthly'],
-            'yearly' => ['price' => 23.88, 'original_price' => 47.88, 'stripe_lookup_key' => 'whisper_pro_yearly'],
+            'monthly' => ['price' => 3.99, 'original_price' => null, 'stripe_lookup_key' => 'finanzas_pro_monthly'],
+            'yearly' => ['price' => 23.88, 'original_price' => 47.88, 'stripe_lookup_key' => 'finanzas_pro_yearly'],
         ],
     ];
 

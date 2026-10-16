@@ -88,7 +88,7 @@ abstract class DripMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         $from = new Address(
-            config('mail.drip_from.address', 'hi@whisper.money'),
+            config('mail.drip_from.address', 'hi@finanzaspersonales.local'),
             config('mail.drip_from.name', 'Álvaro and Víctor'),
         );
 

@@ -1,6 +1,6 @@
 # Conector de IA
 
-El Conector de IA permite que un asistente que ya usas, Claude o ChatGPT, lea tus datos de Whisper Money y los modifique, para que puedas preguntar por tu dinero en lenguaje normal en lugar de ir pasando por pantallas.
+El Conector de IA permite que un asistente que ya usas, Claude o ChatGPT, lea tus datos de Finanzas Personales y los modifique, para que puedas preguntar por tu dinero en lenguaje normal en lugar de ir pasando por pantallas.
 
 {{TOC}}
 
@@ -9,17 +9,17 @@ El Conector de IA permite que un asistente que ya usas, Claude o ChatGPT, lea tu
 1. Abre **Ajustes → Conector de IA**.
 2. Elige tu app en **Cómo conectar** y copia la URL que aparece.
 3. En Claude o ChatGPT, añade esa URL como conector personalizado.
-4. Inicia sesión y aprueba la conexión en la pantalla de Whisper Money que se
+4. Inicia sesión y aprueba la conexión en la pantalla de Finanzas Personales que se
    abre.
 5. Pregúntale algo: «¿cuánto me he gastado este mes en la compra?»
 
-En ChatGPT puedes saltarte la URL y conectar Whisper Money desde su directorio
+En ChatGPT puedes saltarte la URL y conectar Finanzas Personales desde su directorio
 de apps, y en Claude Code instalas nuestro plugin. Todos los caminos están
 descritos más abajo, con el motivo por el que podrías preferir uno.
 
 Haz esta parte en un ordenador. Iniciar sesión y aprobar funciona bien en el
 navegador de un ordenador, pero suele fallar en el navegador interno del móvil.
-Una vez conectado, hablar con Whisper Money desde el móvil funciona con
+Una vez conectado, hablar con Finanzas Personales desde el móvil funciona con
 normalidad.
 
 El Conector de IA forma parte del plan de pago.
@@ -34,14 +34,14 @@ No necesitas saber nada de él para usar esto. Lo que importa es qué significa 
 la práctica:
 
 - El asistente no se lleva una copia de tu base de datos. Le hace una pregunta a
-  Whisper Money en el momento en que necesita una respuesta, y recibe solo esa
+  Finanzas Personales en el momento en que necesita una respuesta, y recibe solo esa
   respuesta.
 - Cada petición se hace como tú. Ve exactamente lo que ve tu cuenta, y nada de
   la de nadie más.
 - Tú decides cuándo existe la conexión. No hay nada conectado hasta que lo
   conectas, y quitarlo corta el acceso al instante.
 
-Whisper Money expone 34 de esas preguntas y acciones, llamadas herramientas: 11
+Finanzas Personales expone 34 de esas preguntas y acciones, llamadas herramientas: 11
 que leen tus datos y 23 que los modifican. El asistente elige las que necesita
 por su cuenta; tú escribes en lenguaje normal.
 
@@ -164,9 +164,9 @@ Vale para Claude Desktop y para Claude en la web.
    personalizado**.
 3. Ponle un nombre y pega la URL de **Ajustes → Conector de IA**, la que termina
    en `/mcp/oauth`.
-4. Aprueba la conexión en la pantalla de Whisper Money que se abre.
+4. Aprueba la conexión en la pantalla de Finanzas Personales que se abre.
 
-Inicias sesión con tu cuenta de Whisper Money y apruebas la conexión en una
+Inicias sesión con tu cuenta de Finanzas Personales y apruebas la conexión en una
 pantalla que servimos nosotros. No hay ningún token que crear ni pegar, y Claude
 nunca ve tu contraseña.
 
@@ -176,11 +176,11 @@ Hay dos formas de entrar. Son alternativas, no pasos, así que elige una.
 
 ### Desde el directorio de apps de ChatGPT
 
-Whisper Money es una app aprobada en ChatGPT, así que este es el camino corto y
+Finanzas Personales es una app aprobada en ChatGPT, así que este es el camino corto y
 no necesita el modo desarrollador.
 
-1. Busca Whisper Money en el directorio de apps de ChatGPT y conéctala ahí.
-2. Inicia sesión y aprueba la conexión en la pantalla de Whisper Money que se
+1. Busca Finanzas Personales en el directorio de apps de ChatGPT y conéctala ahí.
+2. Inicia sesión y aprueba la conexión en la pantalla de Finanzas Personales que se
    abre.
 
 Si no te aparece en el directorio, usa el conector personalizado de abajo. Ese
@@ -201,7 +201,7 @@ cómodo.
    desarrollador**.
 2. En **Plugins**, haz clic en el botón **+** de arriba a la derecha.
 3. Ponle un nombre y pega la misma URL que termina en `/mcp/oauth`.
-4. Aprueba la conexión en la pantalla de Whisper Money que se abre.
+4. Aprueba la conexión en la pantalla de Finanzas Personales que se abre.
 
 ### Actualizar un conector personalizado
 
@@ -233,33 +233,33 @@ basta con una de las dos secciones anteriores.
 
 ### Con el plugin
 
-Whisper Money tiene un plugin para Claude Code, y es la forma que recomendamos.
+Finanzas Personales tiene un plugin para Claude Code, y es la forma que recomendamos.
 Inicia sesión por el navegador igual que Claude Desktop, así que no hay ningún
 token que crear ni pegar.
 
 1. Dentro de Claude Code, añade nuestro marketplace e instala el plugin:
 
     ```text
-    /plugin marketplace add whisper-money/whisper-money
-    /plugin install whisper-money@whisper-money
+    /plugin marketplace add finanzas-personales/finanzas-personales
+    /plugin install finanzas-personales@finanzas-personales
     ```
 
-2. Ejecuta `/mcp`, elige Whisper Money en la lista e inicia sesión. Desde una
-   terminal, `claude mcp login plugin:whisper-money:whisper-money` hace lo
+2. Ejecuta `/mcp`, elige Finanzas Personales en la lista e inicia sesión. Desde una
+   terminal, `claude mcp login plugin:finanzas-personales:finanzas-personales` hace lo
    mismo.
-3. El navegador abre el inicio de sesión de Whisper Money. Aprueba la conexión
+3. El navegador abre el inicio de sesión de Finanzas Personales. Aprueba la conexión
    en la pantalla que aparece después, y Claude Code queda conectado.
 
-Después, `claude mcp list` muestra `plugin:whisper-money:whisper-money` como
+Después, `claude mcp list` muestra `plugin:finanzas-personales:finanzas-personales` como
 conectado. Igual que una conexión de Claude o de ChatGPT, puede leer tus datos y
 modificarlos.
 
 El plugin trae además dos skills: una con recetas para las herramientas de
-Whisper Money y otra que lee esta documentación cuando preguntas cómo funciona
+Finanzas Personales y otra que lee esta documentación cuando preguntas cómo funciona
 la app.
 
-Si ya habías añadido Whisper Money con un token con el nombre `whisper-money`,
-ejecuta `claude mcp remove whisper-money` para no acabar con dos copias.
+Si ya habías añadido Finanzas Personales con un token con el nombre `finanzas-personales`,
+ejecuta `claude mcp remove finanzas-personales` para no acabar con dos copias.
 
 ### Con un token
 
@@ -271,7 +271,7 @@ Abre la sección **Conectar con Claude Code** en **Ajustes → Conector de IA**,
 crea un token y ejecuta:
 
 ```text
-claude mcp add --transport http whisper-money https://whisper.money/mcp --header "Authorization: Bearer <token>"
+claude mcp add --transport http finanzas-personales https://finanzaspersonales.local/mcp --header "Authorization: Bearer <token>"
 ```
 
 Copia el comando exacto de la página en lugar de este, y pon tu propio token en
@@ -342,7 +342,7 @@ escritura.
 
 ## Privacidad
 
-Whisper Money no comparte tus datos con nadie. Esta es la única función en la
+Finanzas Personales no comparte tus datos con nadie. Esta es la única función en la
 que los datos salen de la app, así que aquí está exactamente qué pasa.
 
 - No se conecta nada hasta que lo conectas tú, desde tus propios ajustes.
@@ -352,7 +352,7 @@ que los datos salen de la app, así que aquí está exactamente qué pasa.
   ellas.
 - Solo se envía lo que tu pregunta necesita. Preguntar por la compra del mes
   pasado no entrega tu historial completo.
-- Cuando quieras salir, quitas Whisper Money de las apps conectadas dentro de
+- Cuando quieras salir, quitas Finanzas Personales de las apps conectadas dentro de
   Claude o de ChatGPT. En Claude Code, cierras la sesión del plugin, o revocas
   el token si te conectaste con uno. Deja de responder al instante.
 
@@ -413,9 +413,9 @@ las otras como estaban.
 
 ### ¿Cómo lo desconecto?
 
-En Claude o en ChatGPT, quita Whisper Money de la lista de apps o plugins
+En Claude o en ChatGPT, quita Finanzas Personales de la lista de apps o plugins
 conectados. Para el plugin de Claude Code, ejecuta
-`claude mcp logout plugin:whisper-money:whisper-money`. Para un token de Claude
+`claude mcp logout plugin:finanzas-personales:finanzas-personales`. Para un token de Claude
 Code, revócalo en **Ajustes → Conector de IA**. Después no hay nada que deshacer
 por nuestra parte.
 

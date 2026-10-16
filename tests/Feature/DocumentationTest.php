@@ -180,7 +180,7 @@ it('serves an index of every page at /documentation.md, rather than the first pa
         ->assertHeader('Content-Type', 'text/markdown; charset=UTF-8')
         ->getContent();
 
-    expect($body)->toStartWith('# Whisper Money documentation')
+    expect($body)->toStartWith('# Finanzas Personales documentation')
         ->and($body)->not->toContain('# Getting started');
 
     foreach (publishedSlugs() as $slug) {
@@ -199,7 +199,7 @@ it('indexes the pages under the section that groups them, nested under their par
 it('writes the index in the language asked for', function () {
     $body = $this->get(route('documentation.index.markdown', ['lang' => 'es']))->assertOk()->getContent();
 
-    expect($body)->toStartWith('# Documentación de Whisper Money')
+    expect($body)->toStartWith('# Documentación de Finanzas Personales')
         ->and($body)->toContain('## Tus datos')
         ->and($body)->toContain(route('documentation.markdown', ['slug' => 'transactions', 'lang' => 'es']));
 });

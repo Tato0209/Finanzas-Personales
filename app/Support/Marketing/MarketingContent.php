@@ -88,10 +88,10 @@ final class MarketingContent
      */
     public const API_PROVIDERS = [
         'Indexa Capital' => ['country' => 'ES', 'logo' => '/images/banks/logos/indexa-capital.jpg'],
-        'Binance' => ['country' => self::WORLDWIDE, 'logo' => 'https://whisper.money/storage/banks/logos/t1h5rqi19dJTPl6ZadziPjNwm0lrcdTFBRzB3iCy.png'],
-        'Bitpanda' => ['country' => self::WORLDWIDE, 'logo' => 'https://whisper.money/storage/banks/logos/7Y6gl0gaFH1mStJMcUQ9VpgzX1kduyumm0dDhGlf.png'],
+        'Binance' => ['country' => self::WORLDWIDE, 'logo' => 'https://finanzaspersonales.local/storage/banks/logos/t1h5rqi19dJTPl6ZadziPjNwm0lrcdTFBRzB3iCy.png'],
+        'Bitpanda' => ['country' => self::WORLDWIDE, 'logo' => 'https://finanzaspersonales.local/storage/banks/logos/7Y6gl0gaFH1mStJMcUQ9VpgzX1kduyumm0dDhGlf.png'],
         'Kraken' => ['country' => self::WORLDWIDE, 'logo' => '/images/banks/logos/kraken.png'],
-        'Coinbase' => ['country' => self::WORLDWIDE, 'logo' => 'https://whisper.money/storage/banks/logos/coinbase.png'],
+        'Coinbase' => ['country' => self::WORLDWIDE, 'logo' => 'https://finanzaspersonales.local/storage/banks/logos/coinbase.png'],
         'Wise' => ['country' => self::WORLDWIDE, 'logo' => '/images/banks/logos/wise.png'],
         'Interactive Brokers' => ['country' => self::WORLDWIDE, 'logo' => '/images/banks/logos/interactive-brokers.png'],
     ];
@@ -107,8 +107,8 @@ final class MarketingContent
         return $locale === 'es' ? [
             'dimension' => 'Dimensión',
             'head_to_head' => 'Cara a cara',
-            'changes' => 'Lo que cambia al pasar de :rival a Whisper Money',
-            'migration' => 'Cómo migrar de :rival a Whisper Money, paso a paso',
+            'changes' => 'Lo que cambia al pasar de :rival a Finanzas Personales',
+            'migration' => 'Cómo migrar de :rival a Finanzas Personales, paso a paso',
             'testimonials' => 'Lo que dicen quienes ya lo usan',
             'closing' => 'Únete a quienes migraron desde :rival',
             'cta' => 'Crear mi cuenta gratis',
@@ -118,8 +118,8 @@ final class MarketingContent
         ] : [
             'dimension' => 'Dimension',
             'head_to_head' => 'Head to head',
-            'changes' => 'What changes when you move from :rival to Whisper Money',
-            'migration' => 'How to migrate from :rival to Whisper Money, step by step',
+            'changes' => 'What changes when you move from :rival to Finanzas Personales',
+            'migration' => 'How to migrate from :rival to Finanzas Personales, step by step',
             'testimonials' => 'What people already using it say',
             'closing' => 'Join the people who moved from :rival',
             'cta' => 'Create my free account',
@@ -158,8 +158,8 @@ final class MarketingContent
     public static function landing(string $locale): array
     {
         return $locale === 'es' ? [
-            'title' => 'Whisper Money — finanzas personales privadas',
-            'summary' => 'Whisper Money reúne todas tus cuentas bancarias, brokers, cripto, inmuebles y préstamos en un solo sitio, calcula tu patrimonio neto y te deja presupuestar por categoría. Es una aplicación web instalable en el móvil, el código es público y no vendemos ni compartimos tus datos con terceros.',
+            'title' => 'Finanzas Personales — finanzas personales privadas',
+            'summary' => 'Finanzas Personales reúne todas tus cuentas bancarias, brokers, cripto, inmuebles y préstamos en un solo sitio, calcula tu patrimonio neto y te deja presupuestar por categoría. Es una aplicación web instalable en el móvil, el código es público y no vendemos ni compartimos tus datos con terceros.',
             'sections' => [
                 'Qué hace' => [
                     'Agrega cuentas de bancos españoles y europeos por PSD2, la normativa europea de banca abierta. La autorización se firma en la web de tu propio banco: no vemos ni almacenamos tus credenciales.',
@@ -185,8 +185,8 @@ final class MarketingContent
                 ],
             ],
         ] : [
-            'title' => 'Whisper Money — private personal finance',
-            'summary' => 'Whisper Money brings your bank accounts, brokers, crypto, property and loans together in one place, works out your net worth and lets you budget by category. It is a web app you can install on your phone, the code is public, and we do not sell or share your data with third parties.',
+            'title' => 'Finanzas Personales — private personal finance',
+            'summary' => 'Finanzas Personales brings your bank accounts, brokers, crypto, property and loans together in one place, works out your net worth and lets you budget by category. It is a web app you can install on your phone, the code is public, and we do not sell or share your data with third parties.',
             'sections' => [
                 'What it does' => [
                     'Aggregates Spanish and European bank accounts over PSD2, the European open banking regulation. You sign the authorisation on your own bank\'s website: we never see or store your credentials.',
@@ -297,8 +297,8 @@ final class MarketingContent
                     'name' => 'Marcus Oliveira',
                     'gravatar' => '3c4342baddf0beb8b0bd9fe89168e282',
                     'text' => [
-                        'en' => 'Thank you for developing Whisper Money. The focus on privacy and centralizing finances is an excellent proposition.',
-                        'es' => 'Gracias por desarrollar Whisper Money. El enfoque en la privacidad y en centralizar las finanzas es una propuesta excelente.',
+                        'en' => 'Thank you for developing Finanzas Personales. The focus on privacy and centralizing finances is an excellent proposition.',
+                        'es' => 'Gracias por desarrollar Finanzas Personales. El enfoque en la privacidad y en centralizar las finanzas es una propuesta excelente.',
                     ],
                 ],
                 [
@@ -313,37 +313,37 @@ final class MarketingContent
             'en' => [
                 'slug' => 'fintonic-alternative',
                 'rival' => 'Fintonic',
-                'title' => 'Fintonic Alternative (2026) | Whisper Money',
-                'description' => 'Fintonic is free because it earns by intermediating loans and insurance. Whisper Money is paid for by a subscription, aggregates your banks over PSD2 and adds investments and crypto. Comparison and migration guide.',
+                'title' => 'Fintonic Alternative (2026) | Finanzas Personales',
+                'description' => 'Fintonic is free because it earns by intermediating loans and insurance. Finanzas Personales is paid for by a subscription, aggregates your banks over PSD2 and adds investments and crypto. Comparison and migration guide.',
                 'heading' => 'Fintonic alternative',
                 'intro' => 'Fintonic is the app that got Spain used to checking its accounts from a phone. It is free, it sits on the Bank of Spain register and it aggregates banks over PSD2. What is worth looking at before you settle in is where its money comes from: its own site explains that it intermediates loans with more than forty lenders, along with insurance and interest-bearing accounts.',
                 'rows' => [
                     [
                         'dimension' => 'Price and business model',
                         'rival' => 'Free. Revenue comes from intermediating loans, insurance and interest-bearing accounts: "we intermediate for you with more than 40 entities", says its site (checked 18 August 2026).',
-                        'whisper' => 'A free plan and a paid subscription. We intermediate no financial product, so nobody pays us for what shows up on your screen.',
+                        'finanzas' => 'A free plan and a paid subscription. We intermediate no financial product, so nobody pays us for what shows up on your screen.',
                     ],
                     [
                         'dimension' => 'What is inside the app',
                         'rival' => 'Alongside the spending analysis, offers for loans, insurance and interest-bearing accounts.',
-                        'whisper' => 'Only your accounts and your numbers. No third-party offers.',
+                        'finanzas' => 'Only your accounts and your numbers. No third-party offers.',
                     ],
                     [
                         'dimension' => 'What you can aggregate',
                         'rival' => 'Accounts and cards at Spanish banks.',
-                        'whisper' => 'Banks over PSD2, plus brokers (Indexa Capital, Interactive Brokers), crypto (Binance, Bitpanda, Kraken, Coinbase) and Wise, all inside the same net worth.',
+                        'finanzas' => 'Banks over PSD2, plus brokers (Indexa Capital, Interactive Brokers), crypto (Binance, Bitpanda, Kraken, Coinbase) and Wise, all inside the same net worth.',
                     ],
                     [
                         'dimension' => 'What you can verify',
                         'rival' => 'Closed source: its privacy policy is all you get.',
-                        'whisper' => 'The code is public on GitHub, so you can read what the app does with your data instead of taking a promise on trust.',
+                        'finanzas' => 'The code is public on GitHub, so you can read what the app does with your data instead of taking a promise on trust.',
                     ],
                 ],
                 'narrative_title' => 'The small print: a free app has to charge somebody',
                 'narrative' => [
                     'Fintonic being free is not a trick. It is a business model decision, and it is stated on its own site. It reads your profile, matches it against the offers of more than forty lenders, and gets paid by the lender when the loan or the policy goes through. It costs you nothing. For the app, your spending history is the raw material it uses to work out which product fits you.',
                     'That changes what the app is optimising for. One that lives off intermediation has a reason to know how much debt you could take on; one that lives off a subscription only has a reason to keep you using it next month. Whoever pays sets the priority.',
-                    'Whisper Money charges a subscription and has a free plan with no advertising. There is no loan comparison engine, no insurance, no interest-bearing accounts, no commission from anyone for what you see. If it stops being useful, you cancel, and that is the whole of our incentive.',
+                    'Finanzas Personales charges a subscription and has a free plan with no advertising. There is no loan comparison engine, no insurance, no interest-bearing accounts, no commission from anyone for what you see. If it stops being useful, you cancel, and that is the whole of our incentive.',
                 ],
                 'bullets' => [
                     'Bank connections over PSD2 with Spanish and European banks, the same standard Fintonic uses.',
@@ -384,37 +384,37 @@ final class MarketingContent
             'es' => [
                 'slug' => 'alternativa-a-fintonic',
                 'rival' => 'Fintonic',
-                'title' => 'Alternativa a Fintonic (2026) | Whisper Money',
-                'description' => 'Fintonic es gratis porque gana dinero intermediando préstamos y seguros. Whisper Money se paga con una suscripción, agrega tus bancos por PSD2 y suma inversiones y cripto. Comparativa y guía de migración.',
+                'title' => 'Alternativa a Fintonic (2026) | Finanzas Personales',
+                'description' => 'Fintonic es gratis porque gana dinero intermediando préstamos y seguros. Finanzas Personales se paga con una suscripción, agrega tus bancos por PSD2 y suma inversiones y cripto. Comparativa y guía de migración.',
                 'heading' => 'Alternativa a Fintonic',
                 'intro' => 'Fintonic fue la app que acostumbró a España a mirar sus cuentas desde el móvil. Es gratuita, está inscrita en el registro del Banco de España y agrega bancos por PSD2. Lo que conviene mirar antes de quedarse es de dónde sale su dinero: su propia web explica que intermedia préstamos con más de cuarenta entidades, y también seguros y cuentas remuneradas.',
                 'rows' => [
                     [
                         'dimension' => 'Precio y modelo de negocio',
                         'rival' => 'Gratis. Los ingresos vienen de intermediar préstamos, seguros y cuentas remuneradas: «intermediamos por ti con más de 40 entidades», dice su web (consultado el 18 de agosto de 2026).',
-                        'whisper' => 'Plan gratuito y plan de pago por suscripción. No intermediamos ningún producto financiero, así que nadie nos paga por lo que aparece en tu pantalla.',
+                        'finanzas' => 'Plan gratuito y plan de pago por suscripción. No intermediamos ningún producto financiero, así que nadie nos paga por lo que aparece en tu pantalla.',
                     ],
                     [
                         'dimension' => 'Qué hay dentro de la app',
                         'rival' => 'Además del análisis de gastos, ofertas de préstamos, seguros y cuentas remuneradas.',
-                        'whisper' => 'Solo tus cuentas y tus números. Ninguna oferta de terceros.',
+                        'finanzas' => 'Solo tus cuentas y tus números. Ninguna oferta de terceros.',
                     ],
                     [
                         'dimension' => 'Qué puedes agregar',
                         'rival' => 'Cuentas y tarjetas de bancos españoles.',
-                        'whisper' => 'Bancos por PSD2, más brokers (Indexa Capital, Interactive Brokers), cripto (Binance, Bitpanda, Kraken, Coinbase) y Wise, todo dentro del mismo patrimonio neto.',
+                        'finanzas' => 'Bancos por PSD2, más brokers (Indexa Capital, Interactive Brokers), cripto (Binance, Bitpanda, Kraken, Coinbase) y Wise, todo dentro del mismo patrimonio neto.',
                     ],
                     [
                         'dimension' => 'Qué puedes comprobar',
                         'rival' => 'Código cerrado: su política de privacidad es lo que hay.',
-                        'whisper' => 'El código es público en GitHub, así que puedes leer qué hace la aplicación con tus datos en lugar de creerte una promesa.',
+                        'finanzas' => 'El código es público en GitHub, así que puedes leer qué hace la aplicación con tus datos en lugar de creerte una promesa.',
                     ],
                 ],
                 'narrative_title' => 'La letra pequeña: una app gratis tiene que cobrar a alguien',
                 'narrative' => [
                     'Que Fintonic sea gratis no es un truco, es una decisión de modelo de negocio, y está declarada en su propia web. Analiza tu perfil, lo compara con la oferta de más de cuarenta entidades y cobra a la entidad cuando el préstamo o el seguro sale adelante. Para ti no tiene coste. Para la app, tu historial de gastos es la materia prima con la que decide qué producto te encaja.',
                     'Eso cambia lo que la aplicación optimiza. Una app que vive de la intermediación tiene un motivo para conocer tu capacidad de endeudamiento; una que vive de una suscripción solo tiene un motivo para que sigas usándola el mes que viene. Quien paga marca la prioridad.',
-                    'Whisper Money cobra una suscripción y tiene un plan gratuito sin publicidad. No hay comparador de préstamos, ni seguros, ni cuentas remuneradas, ni comisiones de nadie por lo que ves. Si algún día deja de resultarte útil, lo cancelas, y ese es todo el incentivo que tenemos.',
+                    'Finanzas Personales cobra una suscripción y tiene un plan gratuito sin publicidad. No hay comparador de préstamos, ni seguros, ni cuentas remuneradas, ni comisiones de nadie por lo que ves. Si algún día deja de resultarte útil, lo cancelas, y ese es todo el incentivo que tenemos.',
                 ],
                 'bullets' => [
                     'Conexión bancaria por PSD2 con bancos españoles y europeos, el mismo estándar que usa Fintonic.',
@@ -427,7 +427,7 @@ final class MarketingContent
                     'Importación de extractos en CSV, XLS y XLSX con mapeo de columnas, para las cuentas que no conectan.',
                     'Aplicación web instalable en el móvil, en español, inglés o francés, con el código público y sin compartir tus datos con terceros.',
                 ],
-                'migration_intro' => 'Fintonic muestra los movimientos que le entrega tu banco, así que el origen fiable de tu histórico es el banco, no la app. El importador de Whisper Money está pensado justo para eso: coges el fichero del banco y él se encarga de entender las columnas.',
+                'migration_intro' => 'Fintonic muestra los movimientos que le entrega tu banco, así que el origen fiable de tu histórico es el banco, no la app. El importador de Finanzas Personales está pensado justo para eso: coges el fichero del banco y él se encarga de entender las columnas.',
                 'migration_steps' => [
                     [
                         'title' => 'Crea la cuenta y conecta tus bancos',
@@ -482,37 +482,37 @@ final class MarketingContent
             'en' => [
                 'slug' => 'ynab-alternative',
                 'rival' => 'YNAB',
-                'title' => 'YNAB Alternative (2026) | Whisper Money',
-                'description' => 'YNAB costs $14.99/month or $109/year billed in dollars, with direct import limited to selected banks. Whisper Money bills in euros, connects banks over PSD2 and imports files. Comparison and migration guide.',
+                'title' => 'YNAB Alternative (2026) | Finanzas Personales',
+                'description' => 'YNAB costs $14.99/month or $109/year billed in dollars, with direct import limited to selected banks. Finanzas Personales bills in euros, connects banks over PSD2 and imports files. Comparison and migration guide.',
                 'heading' => 'YNAB alternative',
                 'intro' => 'YNAB (You Need A Budget) is probably the budgeting method with the most devoted following in the world, and deservedly so: assigning every euro to a category before you spend it works. The problem in Europe is not the method, it is the logistics. The price is in dollars and automatic import only covers some European banks.',
                 'rows' => [
                     [
                         'dimension' => 'Price',
                         'rival' => '$14.99/month or $109/year. Its pricing page warns that the rate is "priced in US dollars" and publishes no euro price (checked 6 October 2026).',
-                        'whisper' => 'A free plan and a paid plan billed in euros, with the rate published on the pricing page.',
+                        'finanzas' => 'A free plan and a paid plan billed in euros, with the rate published on the pricing page.',
                     ],
                     [
                         'dimension' => 'Language',
                         'rival' => 'App, marketing site and help centre in English only.',
-                        'whisper' => 'Interface in English, Spanish and French.',
+                        'finanzas' => 'Interface in English, Spanish and French.',
                     ],
                     [
                         'dimension' => 'Bank connection',
                         'rival' => '"Direct import currently supports select US, Canadian, UK, and EU Banks." For everything else, file-based import.',
-                        'whisper' => 'PSD2 connections with Spanish and European banks, plus file import when a bank does not connect.',
+                        'finanzas' => 'PSD2 connections with Spanish and European banks, plus file import when a bank does not connect.',
                     ],
                     [
                         'dimension' => 'Budgeting method',
                         'rival' => 'Envelopes: the whole available balance gets assigned before you spend it.',
-                        'whisper' => 'Category budgets — weekly, biweekly, monthly or yearly — with optional rollover. You can budget only what you care about.',
+                        'finanzas' => 'Category budgets — weekly, biweekly, monthly or yearly — with optional rollover. You can budget only what you care about.',
                     ],
                 ],
                 'narrative_title' => 'The catch: the method travels, the typing does not have to',
                 'narrative' => [
                     "YNAB's subscription is $109 a year billed in dollars, so what you actually pay depends on the day's exchange rate and on what your bank charges for a foreign currency transaction. That is the visible part.",
                     'The less visible part is the daily work. Its own page says it: direct import covers "select US, Canadian, UK, and EU Banks". If your bank is not in that group, the routine becomes downloading the statement and uploading it by hand every week, so the tool you bought to save time charges you twice — in dollars and in Sundays.',
-                    'The good news is that what you learned in YNAB does not disappear when you switch apps. Setting category limits, reviewing the month and deciding before you spend are habits, not features of one particular product. Whisper Money holds them up with category budgets and rollover, billed in euros, with the bank syncing itself.',
+                    'The good news is that what you learned in YNAB does not disappear when you switch apps. Setting category limits, reviewing the month and deciding before you spend are habits, not features of one particular product. Finanzas Personales holds them up with category budgets and rollover, billed in euros, with the bank syncing itself.',
                 ],
                 'bullets' => [
                     'PSD2 connections with Spanish and European banks, with no file to upload every week.',
@@ -555,37 +555,37 @@ final class MarketingContent
             'es' => [
                 'slug' => 'alternativa-a-ynab-en-espanol',
                 'rival' => 'YNAB',
-                'title' => 'Alternativa a YNAB en español (2026) | Whisper Money',
-                'description' => 'YNAB cuesta 14,99 $/mes o 109 $/año y factura en dólares, con importación directa limitada a algunos bancos. Whisper Money está en español, conecta bancos por PSD2 e importa ficheros. Comparativa y guía de migración.',
+                'title' => 'Alternativa a YNAB en español (2026) | Finanzas Personales',
+                'description' => 'YNAB cuesta 14,99 $/mes o 109 $/año y factura en dólares, con importación directa limitada a algunos bancos. Finanzas Personales está en español, conecta bancos por PSD2 e importa ficheros. Comparativa y guía de migración.',
                 'heading' => 'Alternativa a YNAB en español',
                 'intro' => 'YNAB (You Need A Budget) es probablemente el método de presupuesto con más devotos del mundo, y con razón: asignar cada euro a una categoría antes de gastarlo funciona. El problema en España no es el método, es la logística. El precio está en dólares, la aplicación y su documentación están en inglés y la importación automática solo cubre parte de los bancos europeos.',
                 'rows' => [
                     [
                         'dimension' => 'Precio',
                         'rival' => '14,99 $/mes o 109 $/año. Su página de precios avisa de que la tarifa está «priced in US dollars» y no publica precio en euros (consultado el 6 de octubre de 2026).',
-                        'whisper' => 'Plan gratuito y plan de pago facturado en euros, con la tarifa publicada en la página de precios.',
+                        'finanzas' => 'Plan gratuito y plan de pago facturado en euros, con la tarifa publicada en la página de precios.',
                     ],
                     [
                         'dimension' => 'Idioma',
                         'rival' => 'Aplicación, web comercial y centro de ayuda en inglés.',
-                        'whisper' => 'Interfaz en español, inglés y francés.',
+                        'finanzas' => 'Interfaz en español, inglés y francés.',
                     ],
                     [
                         'dimension' => 'Conexión bancaria',
                         'rival' => '«Direct import currently supports select US, Canadian, UK, and EU Banks». Para el resto, importación de fichero.',
-                        'whisper' => 'Conexión por PSD2 con bancos españoles y europeos, e importación de fichero cuando la entidad no conecta.',
+                        'finanzas' => 'Conexión por PSD2 con bancos españoles y europeos, e importación de fichero cuando la entidad no conecta.',
                     ],
                     [
                         'dimension' => 'Método de presupuesto',
                         'rival' => 'Sobres: el saldo disponible se asigna entero antes de gastar.',
-                        'whisper' => 'Presupuestos por categoría —semanales, quincenales, mensuales o anuales— con arrastre opcional del sobrante. Puedes presupuestar solo lo que te interese.',
+                        'finanzas' => 'Presupuestos por categoría —semanales, quincenales, mensuales o anuales— con arrastre opcional del sobrante. Puedes presupuestar solo lo que te interese.',
                     ],
                 ],
                 'narrative_title' => 'La trampa: el método viaja, teclear los datos no hace falta que viaje',
                 'narrative' => [
                     'La suscripción de YNAB son 109 $ al año facturados en dólares, así que lo que acabas pagando depende del cambio del día y de lo que tu banco cobre por operar en divisa. Esa es la parte visible.',
                     'La menos visible es el trabajo diario. Su propia página lo dice: la importación directa cubre «select US, Canadian, UK, and EU Banks». Si tu entidad no está en ese grupo, la rutina consiste en descargar el extracto y subirlo a mano cada semana, con lo que la herramienta que compraste para ahorrarte tiempo te lo cobra dos veces, en dólares y en domingos.',
-                    'La buena noticia es que lo que aprendiste en YNAB no se pierde al cambiar de app. Poner límites por categoría, revisar el mes y decidir antes de gastar son hábitos, no funciones de un producto concreto. Whisper Money los sostiene con presupuestos por categoría y arrastre del sobrante, en tu idioma y con el banco sincronizándose solo.',
+                    'La buena noticia es que lo que aprendiste en YNAB no se pierde al cambiar de app. Poner límites por categoría, revisar el mes y decidir antes de gastar son hábitos, no funciones de un producto concreto. Finanzas Personales los sostiene con presupuestos por categoría y arrastre del sobrante, en tu idioma y con el banco sincronizándose solo.',
                 ],
                 'bullets' => [
                     'Conexión por PSD2 con bancos españoles y europeos, sin subir un fichero cada semana.',
@@ -639,8 +639,8 @@ final class MarketingContent
                     'name' => 'Carla Álvarez',
                     'gravatar' => '9901ee5e849cf9a0caea00e897cb8123',
                     'text' => [
-                        'en' => 'I found Whisper Money and instantly knew I needed it. I was stuck doing everything in a spreadsheet — a chore I kept putting off. This makes it effortless.',
-                        'es' => 'Descubrí Whisper Money y supe al instante que lo necesitaba. Estaba haciéndolo todo en una hoja de cálculo, una tarea que acababa posponiendo siempre. Esto lo hace facilísimo.',
+                        'en' => 'I found Finanzas Personales and instantly knew I needed it. I was stuck doing everything in a spreadsheet — a chore I kept putting off. This makes it effortless.',
+                        'es' => 'Descubrí Finanzas Personales y supe al instante que lo necesitaba. Estaba haciéndolo todo en una hoja de cálculo, una tarea que acababa posponiendo siempre. Esto lo hace facilísimo.',
                     ],
                 ],
                 [
@@ -655,37 +655,37 @@ final class MarketingContent
             'en' => [
                 'slug' => 'excel-and-google-sheets-alternative',
                 'rival' => 'Excel and Google Sheets',
-                'title' => 'Excel and Google Sheets Alternative for Personal Finance (2026) | Whisper Money',
-                'description' => 'A spreadsheet is free and perfect until you stop maintaining it. Whisper Money keeps you in control of the categories and takes the data entry off your hands. Comparison and a guide to importing your sheet.',
+                'title' => 'Excel and Google Sheets Alternative for Personal Finance (2026) | Finanzas Personales',
+                'description' => 'A spreadsheet is free and perfect until you stop maintaining it. Finanzas Personales keeps you in control of the categories and takes the data entry off your hands. Comparison and a guide to importing your sheet.',
                 'heading' => 'Excel and Google Sheets alternative for your finances',
                 'intro' => 'A spreadsheet is the best personal finance tool there is, right up to the day you stop maintaining it. Google Sheets is free, Excel comes with Microsoft 365, it does exactly what you tell it, and the file is yours forever. Almost everyone who abandons one does so for the same reason, and it is not a lack of power: it is the work of entering the data.',
                 'rows' => [
                     [
                         'dimension' => 'Price',
                         'rival' => 'Google Sheets is free and Excel comes with Microsoft 365. On money alone, unbeatable.',
-                        'whisper' => 'A free plan and a paid plan. We do not win this comparison on price: we win it on the time it gives back.',
+                        'finanzas' => 'A free plan and a paid plan. We do not win this comparison on price: we win it on the time it gives back.',
                     ],
                     [
                         'dimension' => 'Where the data comes from',
                         'rival' => 'You paste it in: download the statement, fix the columns, paste underneath, repair the dates and decimals.',
-                        'whisper' => 'From the bank over PSD2, or from the same statement you were already downloading, with the columns detected and the duplicates flagged.',
+                        'finanzas' => 'From the bank over PSD2, or from the same statement you were already downloading, with the columns detected and the duplicates flagged.',
                     ],
                     [
                         'dimension' => 'Categories',
                         'rival' => 'VLOOKUP, dropdown lists and some nested IF only you understand.',
-                        'whisper' => 'Automation rules that apply to everything arriving, plus optional AI categorisation.',
+                        'finanzas' => 'Automation rules that apply to everything arriving, plus optional AI categorisation.',
                     ],
                     [
                         'dimension' => 'What happens if you skip a month',
                         'rival' => 'You come back to a file with a hole in it and a sense of unfinished homework.',
-                        'whisper' => 'Connected accounts keep syncing: when you come back, the month is already there.',
+                        'finanzas' => 'Connected accounts keep syncing: when you come back, the month is already there.',
                     ],
                 ],
                 'narrative_title' => 'The problem is not the spreadsheet, it is the upkeep',
                 'narrative' => [
                     'A well-built sheet gives you something no app does: total control of the calculation. If yours works and you keep it current, there is no reason at all to switch.',
                     'The real reason people abandon them is boring and mechanical. Every month you download each bank\'s statement, adjust the columns because every bank names them differently, repair the dates and the decimals, paste without duplicating last month, and re-label merchants you have already labelled twelve times. It is work that produces no new information. The first time you skip it, the file stops being current; the second time, it stops being any use for deciding anything.',
-                    'Whisper Money does not try to be more flexible than your sheet, because it will not be. It tries to take that upkeep away. The banks that connect come in on their own, the ones that do not come in through the same file you were already downloading, and categories apply through rules you write once. The free plan is permanent, so trying it commits you to nothing.',
+                    'Finanzas Personales does not try to be more flexible than your sheet, because it will not be. It tries to take that upkeep away. The banks that connect come in on their own, the ones that do not come in through the same file you were already downloading, and categories apply through rules you write once. The free plan is permanent, so trying it commits you to nothing.',
                 ],
                 'bullets' => [
                     'No copy and paste: the banks that connect over PSD2 come in on their own every day.',
@@ -704,7 +704,7 @@ final class MarketingContent
                 'migration_steps' => [
                     [
                         'title' => 'Create the accounts you had as tabs',
-                        'body' => 'Each tab or block in your sheet usually maps to a real account. Create them in Whisper Money, or connect the bank directly if it syncs, before importing anything. If everything lives in one tab with an account column, skip this: the full importer creates them for you.',
+                        'body' => 'Each tab or block in your sheet usually maps to a real account. Create them in Finanzas Personales, or connect the bank directly if it syncs, before importing anything. If everything lives in one tab with an account column, skip this: the full importer creates them for you.',
                     ],
                     [
                         'title' => 'Prepare the sheet without reformatting it',
@@ -728,37 +728,37 @@ final class MarketingContent
             'es' => [
                 'slug' => 'alternativa-a-excel-y-google-sheets',
                 'rival' => 'Excel y Google Sheets',
-                'title' => 'Alternativa a Excel y Google Sheets para finanzas personales (2026) | Whisper Money',
-                'description' => 'La hoja de cálculo es gratis y perfecta hasta que dejas de mantenerla. Whisper Money conserva el control de las categorías y te quita el trabajo de meter los datos. Comparativa y guía para importar tu hoja.',
+                'title' => 'Alternativa a Excel y Google Sheets para finanzas personales (2026) | Finanzas Personales',
+                'description' => 'La hoja de cálculo es gratis y perfecta hasta que dejas de mantenerla. Finanzas Personales conserva el control de las categorías y te quita el trabajo de meter los datos. Comparativa y guía para importar tu hoja.',
                 'heading' => 'Alternativa a Excel y Google Sheets para tus finanzas',
                 'intro' => 'La hoja de cálculo es la mejor herramienta de finanzas personales que existe, hasta el día en que dejas de mantenerla. Google Sheets es gratuito, Excel viene incluido con Microsoft 365, hace exactamente lo que le pidas y el fichero es tuyo para siempre. Casi todo el mundo que la abandona lo hace por el mismo motivo, y no es la potencia: es el trabajo de meter los datos.',
                 'rows' => [
                     [
                         'dimension' => 'Precio',
                         'rival' => 'Google Sheets es gratuito y Excel viene con Microsoft 365. En dinero, imbatible.',
-                        'whisper' => 'Plan gratuito y plan de pago. Esta comparación no la ganamos en precio: la ganamos en el tiempo que te devuelve.',
+                        'finanzas' => 'Plan gratuito y plan de pago. Esta comparación no la ganamos en precio: la ganamos en el tiempo que te devuelve.',
                     ],
                     [
                         'dimension' => 'De dónde salen los datos',
                         'rival' => 'Los pegas tú: descargar el extracto, ajustar columnas, pegar debajo, arreglar fechas y decimales.',
-                        'whisper' => 'Del banco por PSD2, o del mismo extracto que ya descargabas, con las columnas detectadas y los duplicados marcados.',
+                        'finanzas' => 'Del banco por PSD2, o del mismo extracto que ya descargabas, con las columnas detectadas y los duplicados marcados.',
                     ],
                     [
                         'dimension' => 'Categorías',
                         'rival' => 'BUSCARV, listas desplegables y algún SI anidado que solo entiendes tú.',
-                        'whisper' => 'Reglas de automatización que se aplican a todo lo que entra, y categorización con IA opcional.',
+                        'finanzas' => 'Reglas de automatización que se aplican a todo lo que entra, y categorización con IA opcional.',
                     ],
                     [
                         'dimension' => 'Qué pasa si lo dejas un mes',
                         'rival' => 'Vuelves a un fichero con un hueco y la sensación de deuda pendiente.',
-                        'whisper' => 'Las cuentas conectadas siguen sincronizando: cuando vuelves, el mes ya está.',
+                        'finanzas' => 'Las cuentas conectadas siguen sincronizando: cuando vuelves, el mes ya está.',
                     ],
                 ],
                 'narrative_title' => 'El problema no es la hoja de cálculo, es el mantenimiento',
                 'narrative' => [
                     'Una hoja bien montada te da algo que ninguna aplicación te da: control absoluto del cálculo. Si la tuya funciona y la mantienes al día, no hay ninguna razón para cambiar.',
                     'El motivo real por el que se abandonan es aburrido y mecánico. Cada mes hay que descargar los extractos de cada banco, ajustar las columnas porque cada entidad las nombra distinto, arreglar las fechas y los decimales, pegar sin duplicar lo del mes anterior y volver a etiquetar comercios que ya etiquetaste doce veces. Es trabajo que no produce ninguna información nueva. La primera vez que te lo saltas, el fichero deja de estar al día; la segunda, deja de servir para decidir nada.',
-                    'Whisper Money no intenta ser más flexible que tu hoja, porque no lo será: intenta quitarte ese mantenimiento. Los bancos que conectan entran solos, los que no entran por el mismo fichero que ya descargabas, y las categorías se aplican con reglas que escribes una vez. El plan gratuito es permanente, así que probarlo no te obliga a nada.',
+                    'Finanzas Personales no intenta ser más flexible que tu hoja, porque no lo será: intenta quitarte ese mantenimiento. Los bancos que conectan entran solos, los que no entran por el mismo fichero que ya descargabas, y las categorías se aplican con reglas que escribes una vez. El plan gratuito es permanente, así que probarlo no te obliga a nada.',
                 ],
                 'bullets' => [
                     'Nada de copiar y pegar: los bancos que conectan por PSD2 entran solos cada día.',
@@ -777,7 +777,7 @@ final class MarketingContent
                 'migration_steps' => [
                     [
                         'title' => 'Crea las cuentas que tenías en pestañas',
-                        'body' => 'Cada pestaña o cada bloque de tu hoja suele corresponder a una cuenta real. Créalas en Whisper Money, o conecta directamente el banco si sincroniza, antes de importar nada. Si lo tienes todo en una pestaña con una columna de cuenta, sáltate esto: el importador completo las crea por ti.',
+                        'body' => 'Cada pestaña o cada bloque de tu hoja suele corresponder a una cuenta real. Créalas en Finanzas Personales, o conecta directamente el banco si sincroniza, antes de importar nada. Si lo tienes todo en una pestaña con una columna de cuenta, sáltate esto: el importador completo las crea por ti.',
                     ],
                     [
                         'title' => 'Prepara la hoja sin reformatearla',
@@ -827,30 +827,30 @@ final class MarketingContent
             'en' => [
                 'slug' => 'bank-app-alternative',
                 'rival' => "your bank's app",
-                'title' => "An Alternative to Your Bank's App for Tracking Spending (2026) | Whisper Money",
-                'description' => "Your bank's app only sees what passes through that bank. Whisper Money brings every institution together over PSD2, plus brokers, crypto, property and loans, with categories you define. Comparison and migration guide.",
+                'title' => "An Alternative to Your Bank's App for Tracking Spending (2026) | Finanzas Personales",
+                'description' => "Your bank's app only sees what passes through that bank. Finanzas Personales brings every institution together over PSD2, plus brokers, crypto, property and loans, with categories you define. Comparison and migration guide.",
                 'heading' => "An alternative to your bank's app",
                 'intro' => "Your bank's app is free, already installed, and its spending charts have improved a great deal in recent years. For anyone with one account and no investments it is usually enough, and saying otherwise would be selling you something you do not need. The useful question is a different one: what happens when you have two banks, a neobank, a broker and some crypto.",
                 'rows' => [
                     [
                         'dimension' => 'Price',
                         'rival' => 'Free, included with your account.',
-                        'whisper' => 'A free plan and a paid plan. Paying for it only makes sense if your money sits in more than one place.',
+                        'finanzas' => 'A free plan and a paid plan. Paying for it only makes sense if your money sits in more than one place.',
                     ],
                     [
                         'dimension' => 'What it can see',
                         'rival' => 'Whatever passes through that bank. Transactions at other institutions do not exist for it.',
-                        'whisper' => 'All your banks over PSD2 on one screen, plus brokers, crypto, Wise, property and loans.',
+                        'finanzas' => 'All your banks over PSD2 on one screen, plus brokers, crypto, Wise, property and loans.',
                     ],
                     [
                         'dimension' => 'Categories',
                         'rival' => "The bank's, with the bank's logic, and no rules of your own.",
-                        'whisper' => 'Yours, with rules you write once that apply themselves to everything arriving.',
+                        'finanzas' => 'Yours, with rules you write once that apply themselves to everything arriving.',
                     ],
                     [
                         'dimension' => 'What happens if you switch banks',
                         'rival' => 'You start from scratch: the analysis ends where the commercial relationship ends.',
-                        'whisper' => 'You connect the new account or import the old one\'s statement, and the series carries on.',
+                        'finanzas' => 'You connect the new account or import the old one\'s statement, and the series carries on.',
                     ],
                 ],
                 'narrative_title' => 'The limit: your bank can only tell you its half',
@@ -899,30 +899,30 @@ final class MarketingContent
             'es' => [
                 'slug' => 'alternativa-a-la-app-de-tu-banco',
                 'rival' => 'la app de tu banco',
-                'title' => 'Alternativa a la app de tu banco para controlar tus gastos (2026) | Whisper Money',
-                'description' => 'La app de tu banco solo ve lo que pasa por ese banco. Whisper Money reúne todas tus entidades por PSD2, más brokers, cripto, inmuebles y préstamos, con categorías tuyas. Comparativa y guía de migración.',
+                'title' => 'Alternativa a la app de tu banco para controlar tus gastos (2026) | Finanzas Personales',
+                'description' => 'La app de tu banco solo ve lo que pasa por ese banco. Finanzas Personales reúne todas tus entidades por PSD2, más brokers, cripto, inmuebles y préstamos, con categorías tuyas. Comparativa y guía de migración.',
                 'heading' => 'Alternativa a la app de tu banco',
                 'intro' => 'La app de tu banco es gratis, ya la tienes instalada y sus gráficos de gasto han mejorado mucho en los últimos años. Para quien tiene una sola cuenta y ninguna inversión suele ser suficiente, y decir lo contrario sería venderte algo que no necesitas. La pregunta útil es otra: qué pasa cuando tienes dos bancos, un neobanco, un broker y algo de cripto.',
                 'rows' => [
                     [
                         'dimension' => 'Precio',
                         'rival' => 'Gratis, incluida en tu cuenta.',
-                        'whisper' => 'Plan gratuito y plan de pago. Solo tiene sentido pagarlo si tienes dinero en más de un sitio.',
+                        'finanzas' => 'Plan gratuito y plan de pago. Solo tiene sentido pagarlo si tienes dinero en más de un sitio.',
                     ],
                     [
                         'dimension' => 'Qué alcanza a ver',
                         'rival' => 'Lo que pasa por ese banco. Los movimientos de las demás entidades no existen para ella.',
-                        'whisper' => 'Todos tus bancos por PSD2 en la misma pantalla, más brokers, cripto, Wise, inmuebles y préstamos.',
+                        'finanzas' => 'Todos tus bancos por PSD2 en la misma pantalla, más brokers, cripto, Wise, inmuebles y préstamos.',
                     ],
                     [
                         'dimension' => 'Categorías',
                         'rival' => 'Las que decide el banco, con la lógica del banco y sin reglas propias.',
-                        'whisper' => 'Las tuyas, con reglas que escribes una vez y se aplican solas a lo que entra.',
+                        'finanzas' => 'Las tuyas, con reglas que escribes una vez y se aplican solas a lo que entra.',
                     ],
                     [
                         'dimension' => 'Qué pasa si cambias de banco',
                         'rival' => 'Empiezas de cero: el análisis termina donde termina la relación comercial.',
-                        'whisper' => 'Conectas la cuenta nueva o importas el extracto de la antigua, y la serie continúa.',
+                        'finanzas' => 'Conectas la cuenta nueva o importas el extracto de la antigua, y la serie continúa.',
                     ],
                 ],
                 'narrative_title' => 'El límite: tu banco solo puede contarte su mitad',
@@ -997,30 +997,30 @@ final class MarketingContent
             'en' => [
                 'slug' => 'wallet-budgetbakers-alternative',
                 'rival' => 'Wallet (BudgetBakers)',
-                'title' => 'Wallet by BudgetBakers Alternative (2026) | Whisper Money',
-                'description' => 'Wallet by BudgetBakers publishes no price and its transaction export is a premium feature. Whisper Money publishes its price, includes importing in the free plan, and adds investments and crypto.',
+                'title' => 'Wallet by BudgetBakers Alternative (2026) | Finanzas Personales',
+                'description' => 'Wallet by BudgetBakers publishes no price and its transaction export is a premium feature. Finanzas Personales publishes its price, includes importing in the free plan, and adds investments and crypto.',
                 'heading' => 'An alternative to Wallet, by BudgetBakers',
                 'intro' => 'Wallet, from the Czech company BudgetBakers, is one of the longest-running finance managers in Europe: it claims more than 14 million downloads and more than 15,000 bank connections, and it is among the highest-grossing finance apps in Spain. It is a solid product with years behind it. The differences are in the price, which it does not publish, and in what it costs to move your own data.',
                 'rows' => [
                     [
                         'dimension' => 'Price',
                         'rival' => 'Publishes no rate on its site: it mentions a free trial and premium users, with no figures (checked 6 October 2026).',
-                        'whisper' => 'Price published on the pricing page, with a free plan and a paid plan in euros.',
+                        'finanzas' => 'Price published on the pricing page, with a free plan and a paid plan in euros.',
                     ],
                     [
                         'dimension' => 'Moving your history',
                         'rival' => 'Exports to CSV and XLS from its web app by selecting transactions. Its help centre states the export is a premium feature and that it does not include budgets, goals or recurring payments.',
-                        'whisper' => 'Importing CSV, XLS and XLSX with column mapping is included in the free plan, and in your first 15 days one export with all your accounts comes in whole.',
+                        'finanzas' => 'Importing CSV, XLS and XLSX with column mapping is included in the free plan, and in your first 15 days one export with all your accounts comes in whole.',
                     ],
                     [
                         'dimension' => 'Investments and crypto',
                         'rival' => 'Focused on accounts, cards and budgeting.',
-                        'whisper' => 'Brokers and exchanges inside net worth: Indexa Capital, Interactive Brokers, Binance, Bitpanda, Kraken, Coinbase and Wise.',
+                        'finanzas' => 'Brokers and exchanges inside net worth: Indexa Capital, Interactive Brokers, Binance, Bitpanda, Kraken, Coinbase and Wise.',
                     ],
                     [
                         'dimension' => 'What you can verify',
                         'rival' => 'Closed source.',
-                        'whisper' => 'Public code on GitHub.',
+                        'finanzas' => 'Public code on GitHub.',
                     ],
                 ],
                 'narrative_title' => 'What it costs to leave',
@@ -1071,30 +1071,30 @@ final class MarketingContent
             'es' => [
                 'slug' => 'alternativa-a-wallet-budgetbakers',
                 'rival' => 'Wallet (BudgetBakers)',
-                'title' => 'Alternativa a Wallet de BudgetBakers (2026) | Whisper Money',
-                'description' => 'Wallet de BudgetBakers no publica su tarifa y su exportación de movimientos es una función premium. Whisper Money publica el precio, incluye la importación en el plan gratuito y añade inversiones y cripto.',
+                'title' => 'Alternativa a Wallet de BudgetBakers (2026) | Finanzas Personales',
+                'description' => 'Wallet de BudgetBakers no publica su tarifa y su exportación de movimientos es una función premium. Finanzas Personales publica el precio, incluye la importación en el plan gratuito y añade inversiones y cripto.',
                 'heading' => 'Alternativa a Wallet, de BudgetBakers',
                 'intro' => 'Wallet, de la checa BudgetBakers, es uno de los gestores más veteranos de Europa: declara más de 14 millones de descargas y más de 15.000 conexiones bancarias, y está entre las apps de finanzas que más facturan en España. Es un producto sólido y con años de recorrido. Las diferencias están en el precio, que no publica, y en lo que cuesta mover tus propios datos.',
                 'rows' => [
                     [
                         'dimension' => 'Precio',
                         'rival' => 'No publica tarifa en su web: habla de prueba gratuita y de usuarios premium, sin cifras (consultado el 6 de octubre de 2026).',
-                        'whisper' => 'Precio publicado en la página de precios, con plan gratuito y plan de pago en euros.',
+                        'finanzas' => 'Precio publicado en la página de precios, con plan gratuito y plan de pago en euros.',
                     ],
                     [
                         'dimension' => 'Mover tu histórico',
                         'rival' => 'Exporta a CSV y a XLS desde su web seleccionando movimientos. Su centro de ayuda indica que la exportación es una función premium y que no incluye presupuestos, objetivos ni pagos recurrentes.',
-                        'whisper' => 'La importación de CSV, XLS y XLSX con mapeo de columnas está incluida en el plan gratuito, y en tus primeros 15 días una exportación con todas tus cuentas entra entera.',
+                        'finanzas' => 'La importación de CSV, XLS y XLSX con mapeo de columnas está incluida en el plan gratuito, y en tus primeros 15 días una exportación con todas tus cuentas entra entera.',
                     ],
                     [
                         'dimension' => 'Inversiones y cripto',
                         'rival' => 'Centrada en cuentas, tarjetas y presupuesto.',
-                        'whisper' => 'Brokers y exchanges dentro del patrimonio neto: Indexa Capital, Interactive Brokers, Binance, Bitpanda, Kraken, Coinbase y Wise.',
+                        'finanzas' => 'Brokers y exchanges dentro del patrimonio neto: Indexa Capital, Interactive Brokers, Binance, Bitpanda, Kraken, Coinbase y Wise.',
                     ],
                     [
                         'dimension' => 'Qué puedes comprobar',
                         'rival' => 'Código cerrado.',
-                        'whisper' => 'Código público en GitHub.',
+                        'finanzas' => 'Código público en GitHub.',
                     ],
                 ],
                 'narrative_title' => 'Lo que cuesta salir',
@@ -1172,37 +1172,37 @@ final class MarketingContent
             'en' => [
                 'slug' => 'monefy-alternative',
                 'rival' => 'Monefy',
-                'title' => 'Monefy Alternative (2026) | Whisper Money',
-                'description' => 'Monefy is extremely fast for logging expenses, but it does not connect to banks: "no bank login required", says its site. Whisper Money keeps the manual entry and adds bank connections and statement import.',
+                'title' => 'Monefy Alternative (2026) | Finanzas Personales',
+                'description' => 'Monefy is extremely fast for logging expenses, but it does not connect to banks: "no bank login required", says its site. Finanzas Personales keeps the manual entry and adds bank connections and statement import.',
                 'heading' => 'Monefy alternative',
                 'intro' => 'Monefy is the fastest expense-logging app there is: open it, tap an icon, type the amount, done. It is among the highest-rated in Spain and its core is free, with an optional upgrade for unlimited accounts, recurring transactions and advanced filters. Its own site explains the trade-off plainly: "you can import statements manually or add expenses in seconds, no bank login required".',
                 'rows' => [
                     [
                         'dimension' => 'Price',
                         'rival' => 'Free core plus an optional paid upgrade; its site does not publish the price of that upgrade (checked 6 October 2026).',
-                        'whisper' => 'Price published, with a free plan and a paid plan in euros.',
+                        'finanzas' => 'Price published, with a free plan and a paid plan in euros.',
                     ],
                     [
                         'dimension' => 'Where the transactions come from',
                         'rival' => 'You log them. It does not connect to banks, as a product decision: "no bank login required".',
-                        'whisper' => 'The banks that connect over PSD2 come in on their own; everything else you log by hand or import.',
+                        'finanzas' => 'The banks that connect over PSD2 come in on their own; everything else you log by hand or import.',
                     ],
                     [
                         'dimension' => 'Syncing between devices',
                         'rival' => 'Through your own Google Drive or Dropbox.',
-                        'whisper' => 'The same account in the browser and on your phone, with no external storage in between.',
+                        'finanzas' => 'The same account in the browser and on your phone, with no external storage in between.',
                     ],
                     [
                         'dimension' => 'Scope',
                         'rival' => 'Expenses and income split by category.',
-                        'whisper' => 'Spending, budgets, cash flow and net worth, with brokers, crypto, property and loans.',
+                        'finanzas' => 'Spending, budgets, cash flow and net worth, with brokers, crypto, property and loans.',
                     ],
                 ],
                 'narrative_title' => 'Logging fast is free; remembering to log is not',
                 'narrative' => [
                     'Monefy\'s design is a good one, and its decision not to connect to banks is deliberate rather than a gap: it prioritises simplicity, speed and privacy, and says so on its site. For anyone living in cash, or anyone who wants to feel each expense as they record it, it works better than any aggregator.',
                     'The problem with manual logging is not the effort per entry, which is two seconds. It is coverage. Direct debits, subscriptions, the account maintenance fee and the purchase you made from your phone without thinking are precisely the expenses you do not log, and they are the ones that throw the month off. A manual history ends up being a history of what you remembered, which is not the same as what you spent.',
-                    'Whisper Money keeps the manual part — you can log cash in two taps from your phone — and adds what the bank connection brings on its own. And if you would rather not connect the bank, the importer lets you upload the statement without handing credentials to anyone.',
+                    'Finanzas Personales keeps the manual part — you can log cash in two taps from your phone — and adds what the bank connection brings on its own. And if you would rather not connect the bank, the importer lets you upload the statement without handing credentials to anyone.',
                 ],
                 'bullets' => [
                     'Direct debits, subscriptions and fees come in by themselves: they do not depend on you remembering.',
@@ -1245,37 +1245,37 @@ final class MarketingContent
             'es' => [
                 'slug' => 'alternativa-a-monefy',
                 'rival' => 'Monefy',
-                'title' => 'Alternativa a Monefy (2026) | Whisper Money',
-                'description' => 'Monefy es rapidísima para apuntar gastos, pero no conecta con bancos: «no bank login required», dice su web. Whisper Money conserva el apunte manual y añade la conexión bancaria y la importación de extractos.',
+                'title' => 'Alternativa a Monefy (2026) | Finanzas Personales',
+                'description' => 'Monefy es rapidísima para apuntar gastos, pero no conecta con bancos: «no bank login required», dice su web. Finanzas Personales conserva el apunte manual y añade la conexión bancaria y la importación de extractos.',
                 'heading' => 'Alternativa a Monefy',
                 'intro' => 'Monefy es la app de apuntar gastos más rápida que existe: abres, pulsas un icono, escribes el importe y ya está. Es de las más valoradas de España y su núcleo es gratuito, con una mejora opcional para cuentas ilimitadas, recurrentes y filtros avanzados. Su propia web explica la contrapartida sin rodeos: «you can import statements manually or add expenses in seconds, no bank login required».',
                 'rows' => [
                     [
                         'dimension' => 'Precio',
                         'rival' => 'Núcleo gratuito y mejora opcional de pago; su web no publica el precio de esa mejora (consultado el 6 de octubre de 2026).',
-                        'whisper' => 'Precio publicado, con plan gratuito y plan de pago en euros.',
+                        'finanzas' => 'Precio publicado, con plan gratuito y plan de pago en euros.',
                     ],
                     [
                         'dimension' => 'De dónde salen los movimientos',
                         'rival' => 'Los apuntas tú. No conecta con bancos, por decisión de producto: «no bank login required».',
-                        'whisper' => 'Los bancos que conectan por PSD2 entran solos; lo demás se apunta a mano o se importa.',
+                        'finanzas' => 'Los bancos que conectan por PSD2 entran solos; lo demás se apunta a mano o se importa.',
                     ],
                     [
                         'dimension' => 'Sincronización entre dispositivos',
                         'rival' => 'A través de tu propio Google Drive o Dropbox.',
-                        'whisper' => 'La misma cuenta en el navegador y en el móvil, sin depender de un almacenamiento externo.',
+                        'finanzas' => 'La misma cuenta en el navegador y en el móvil, sin depender de un almacenamiento externo.',
                     ],
                     [
                         'dimension' => 'Alcance',
                         'rival' => 'Gastos e ingresos repartidos por categoría.',
-                        'whisper' => 'Gastos, presupuestos, flujo de caja y patrimonio neto, con brokers, cripto, inmuebles y préstamos.',
+                        'finanzas' => 'Gastos, presupuestos, flujo de caja y patrimonio neto, con brokers, cripto, inmuebles y préstamos.',
                     ],
                 ],
                 'narrative_title' => 'Apuntar rápido es gratis; acordarse de apuntar, no',
                 'narrative' => [
                     'El diseño de Monefy es acertado, y su decisión de no conectar bancos es deliberada, no una carencia: prioriza simplicidad, velocidad y privacidad, y lo dice en su web. Para quien vive en efectivo, o para quien quiere sentir cada gasto en el momento de apuntarlo, funciona mejor que cualquier agregador.',
                     'El problema del registro manual no es el esfuerzo de cada apunte, que son dos segundos. Es la cobertura. Los recibos domiciliados, las suscripciones, la comisión de mantenimiento y la compra que hiciste desde el móvil sin pensar son precisamente los gastos que no apuntas, y son los que descuadran el mes. Un histórico manual acaba siendo el histórico de lo que recordaste, que no es lo mismo que el de lo que gastaste.',
-                    'Whisper Money conserva la parte manual —puedes apuntar el efectivo en dos toques desde el móvil— y añade lo que la conexión bancaria trae sola. Y si prefieres no conectar el banco, como en Monefy, el importador te deja subir el extracto sin dar credenciales a nadie.',
+                    'Finanzas Personales conserva la parte manual —puedes apuntar el efectivo en dos toques desde el móvil— y añade lo que la conexión bancaria trae sola. Y si prefieres no conectar el banco, como en Monefy, el importador te deja subir el extracto sin dar credenciales a nadie.',
                 ],
                 'bullets' => [
                     'Los recibos, las suscripciones y las comisiones entran solos: no dependen de que te acuerdes.',
@@ -1337,44 +1337,44 @@ final class MarketingContent
                     'name' => 'Miguel Ángel SB',
                     'gravatar' => 'e5da1753042eee6b08a3db0df0b5f807',
                     'text' => [
-                        'en' => 'I love the style, the intuitive interface, how easy it is to use. If it keeps growing like this, Whisper Money will be my finance app of choice. You can tell it is built with passion — and things made with passion can only end up a success.',
-                        'es' => 'Me gusta mucho el estilo, la interfaz intuitiva, la facilidad de uso. Si sigue creciendo en esta línea, Whisper Money será mi futura aplicación de finanzas. Se nota que lo hacéis con pasión, y lo que se hace con pasión solo puede acabar siendo un éxito.',
+                        'en' => 'I love the style, the intuitive interface, how easy it is to use. If it keeps growing like this, Finanzas Personales will be my finance app of choice. You can tell it is built with passion — and things made with passion can only end up a success.',
+                        'es' => 'Me gusta mucho el estilo, la interfaz intuitiva, la facilidad de uso. Si sigue creciendo en esta línea, Finanzas Personales será mi futura aplicación de finanzas. Se nota que lo hacéis con pasión, y lo que se hace con pasión solo puede acabar siendo un éxito.',
                     ],
                 ],
             ],
             'en' => [
-                'slug' => 'margen-vs-whisper-money',
+                'slug' => 'margen-vs-finanzas-personales',
                 'rival' => 'Margen',
-                'title' => 'Margen vs Whisper Money (2026) | Comparison',
-                'description' => 'Margen costs €4.99/month or €39.99/year and runs on iPhone only. Whisper Money is a web app installable on iPhone and Android, with PSD2, brokers, crypto and public code. Comparison and migration guide.',
-                'heading' => 'Margen vs Whisper Money',
+                'title' => 'Margen vs Finanzas Personales (2026) | Comparison',
+                'description' => 'Margen costs €4.99/month or €39.99/year and runs on iPhone only. Finanzas Personales is a web app installable on iPhone and Android, with PSD2, brokers, crypto and public code. Comparison and migration guide.',
+                'heading' => 'Margen vs Finanzas Personales',
                 'intro' => 'Margen launched in July 2026 with a clear, well-executed pitch: "all your money in a single number. Live." It solves the same problem we do — consolidated net worth — and connects BBVA, Santander, CaixaBank, Sabadell, ING, Trade Republic and Revolut. It is the most honest comparison we can draw, because we are nearly the same thing with two different decisions.',
                 'rows' => [
                     [
                         'dimension' => 'Price',
                         'rival' => 'A free tier at €0/month and Premium at €4.99/month or €39.99/year (getmargen.com, 18 August 2026).',
-                        'whisper' => 'A free plan and a paid plan in euros, with the rate published on the pricing page.',
+                        'finanzas' => 'A free plan and a paid plan in euros, with the rate published on the pricing page.',
                     ],
                     [
                         'dimension' => 'Where it runs',
                         'rival' => 'iPhone only: its site offers the App Store download and nothing else, with no web or Android version.',
-                        'whisper' => 'A web app in any browser, installable as an app on iPhone and on Android.',
+                        'finanzas' => 'A web app in any browser, installable as an app on iPhone and on Android.',
                     ],
                     [
                         'dimension' => 'What connects',
                         'rival' => 'BBVA, Santander, CaixaBank, Sabadell, ING, Trade Republic and Revolut, plus "AI import from any bank" on Premium.',
-                        'whisper' => 'Spanish and European banks over PSD2, plus Indexa Capital, Interactive Brokers, Wise, Binance, Bitpanda, Kraken and Coinbase.',
+                        'finanzas' => 'Spanish and European banks over PSD2, plus Indexa Capital, Interactive Brokers, Wise, Binance, Bitpanda, Kraken and Coinbase.',
                     ],
                     [
                         'dimension' => 'What you can verify',
                         'rival' => 'Closed source.',
-                        'whisper' => 'Public code on GitHub.',
+                        'finanzas' => 'Public code on GitHub.',
                     ],
                 ],
                 'narrative_title' => 'Two different bets on where finances get looked at',
                 'narrative' => [
                     'Margen bets on the phone and on the gesture of opening an app to see a number. It is well judged: net worth is a figure you consult rather than edit, and for consulting something the phone wins every time.',
-                    'We bet the other way, for a specific reason. Reviewing categories, squaring a month, setting up budgets or working through a two-hundred-line statement is large-screen, keyboard work. Whisper Money is a web app that also installs on your phone, not a mobile app with a website beside it. If your relationship with your finances is checking the total once a day, the advantage is Margen\'s; if you also want to do something with that data, it changes sides.',
+                    'We bet the other way, for a specific reason. Reviewing categories, squaring a month, setting up budgets or working through a two-hundred-line statement is large-screen, keyboard work. Finanzas Personales is a web app that also installs on your phone, not a mobile app with a website beside it. If your relationship with your finances is checking the total once a day, the advantage is Margen\'s; if you also want to do something with that data, it changes sides.',
                     'The second difference is the reach of the aggregation. Margen publishes a specific list of institutions; we connect over PSD2 against the catalogue of Spanish and European banks, and add brokers and exchanges as our own integrations. If your money is at Indexa Capital, at Interactive Brokers or on a crypto exchange, that is where the difference shows.',
                     'And the third is structural: our code is public. You can read what the app does with your data before giving it access to your accounts, which is a rather firmer basis for trust than reading a privacy policy.',
                 ],
@@ -1416,38 +1416,38 @@ final class MarketingContent
                 'closing_body' => 'If Margen convinced you of the problem and what you are missing is the large screen, the brokers or code you can read, this is the same thing solved from the other side. The free plan asks for no card.',
             ],
             'es' => [
-                'slug' => 'margen-vs-whisper-money',
+                'slug' => 'margen-vs-finanzas-personales',
                 'rival' => 'Margen',
-                'title' => 'Margen vs Whisper Money (2026) | Comparativa',
-                'description' => 'Margen cuesta 4,99 €/mes o 39,99 €/año y funciona solo en iPhone. Whisper Money es una aplicación web instalable en iPhone y Android, con PSD2, brokers, cripto y código público. Comparativa y guía de migración.',
-                'heading' => 'Margen vs Whisper Money',
+                'title' => 'Margen vs Finanzas Personales (2026) | Comparativa',
+                'description' => 'Margen cuesta 4,99 €/mes o 39,99 €/año y funciona solo en iPhone. Finanzas Personales es una aplicación web instalable en iPhone y Android, con PSD2, brokers, cripto y código público. Comparativa y guía de migración.',
+                'heading' => 'Margen vs Finanzas Personales',
                 'intro' => 'Margen salió en julio de 2026 con una propuesta clara y bien ejecutada: «Todo tu dinero en un solo número. En vivo». Resuelve el mismo problema que nosotros —el patrimonio neto consolidado— y conecta BBVA, Santander, CaixaBank, Sabadell, ING, Trade Republic y Revolut. Es la comparación más honesta que podemos hacer, porque somos casi lo mismo con dos decisiones distintas.',
                 'rows' => [
                     [
                         'dimension' => 'Precio',
                         'rival' => 'Plan gratuito de 0 €/mes y Premium a 4,99 €/mes o 39,99 €/año (getmargen.com, 18 de agosto de 2026).',
-                        'whisper' => 'Plan gratuito y plan de pago en euros, con la tarifa publicada en la página de precios.',
+                        'finanzas' => 'Plan gratuito y plan de pago en euros, con la tarifa publicada en la página de precios.',
                     ],
                     [
                         'dimension' => 'Dónde funciona',
                         'rival' => 'Solo iPhone: su web ofrece únicamente la descarga en App Store, sin versión web ni Android.',
-                        'whisper' => 'Aplicación web en cualquier navegador, instalable como app en iPhone y en Android.',
+                        'finanzas' => 'Aplicación web en cualquier navegador, instalable como app en iPhone y en Android.',
                     ],
                     [
                         'dimension' => 'Qué se conecta',
                         'rival' => 'BBVA, Santander, CaixaBank, Sabadell, ING, Trade Republic y Revolut, más «importación con IA de cualquier banco» en Premium.',
-                        'whisper' => 'Bancos españoles y europeos por PSD2, más Indexa Capital, Interactive Brokers, Wise, Binance, Bitpanda, Kraken y Coinbase.',
+                        'finanzas' => 'Bancos españoles y europeos por PSD2, más Indexa Capital, Interactive Brokers, Wise, Binance, Bitpanda, Kraken y Coinbase.',
                     ],
                     [
                         'dimension' => 'Qué puedes comprobar',
                         'rival' => 'Código cerrado.',
-                        'whisper' => 'Código público en GitHub.',
+                        'finanzas' => 'Código público en GitHub.',
                     ],
                 ],
                 'narrative_title' => 'Dos apuestas distintas sobre dónde se miran las finanzas',
                 'narrative' => [
                     'Margen apuesta por el móvil y por el gesto de abrir la app para ver un número. Está bien pensado: el patrimonio neto es un dato que se consulta, no que se edita, y para consultar algo el móvil gana siempre.',
-                    'Nosotros apostamos por lo contrario, y por un motivo concreto. Revisar categorías, cuadrar un mes, montar presupuestos o repasar un extracto de doscientas líneas es trabajo de pantalla grande y teclado. Whisper Money es una aplicación web que además se instala en el móvil, no una app móvil con una web al lado. Si tu relación con tus finanzas consiste en mirar el total una vez al día, la ventaja es de Margen; si además quieres hacer algo con esos datos, cambia de lado.',
+                    'Nosotros apostamos por lo contrario, y por un motivo concreto. Revisar categorías, cuadrar un mes, montar presupuestos o repasar un extracto de doscientas líneas es trabajo de pantalla grande y teclado. Finanzas Personales es una aplicación web que además se instala en el móvil, no una app móvil con una web al lado. Si tu relación con tus finanzas consiste en mirar el total una vez al día, la ventaja es de Margen; si además quieres hacer algo con esos datos, cambia de lado.',
                     'La segunda diferencia es el alcance de la agregación. Margen publica una lista concreta de entidades; nosotros conectamos por PSD2 contra el catálogo de bancos españoles y europeos, y añadimos brokers y exchanges como integraciones propias. Si tu dinero está en Indexa Capital, en Interactive Brokers o en un exchange de cripto, ahí es donde se nota la diferencia.',
                     'Y la tercera es de fondo: nuestro código es público. Puedes leer qué hace la aplicación con tus datos antes de darle acceso a tus cuentas, lo cual es una forma bastante más sólida de confiar que leerse una política de privacidad.',
                 ],
@@ -1515,32 +1515,32 @@ final class MarketingContent
                 ],
             ],
             'en' => [
-                'slug' => 'dinerio-vs-whisper-money',
+                'slug' => 'dinerio-vs-finanzas-personales',
                 'rival' => 'Dinerio',
-                'title' => 'Dinerio vs Whisper Money (2026) | Comparison',
-                'description' => 'Dinerio costs €3.99/month or €35.88/year and does not connect to banks by design. Whisper Money connects over PSD2 without ever asking for credentials, has a permanent free plan, and the code is public.',
-                'heading' => 'Dinerio vs Whisper Money',
+                'title' => 'Dinerio vs Finanzas Personales (2026) | Comparison',
+                'description' => 'Dinerio costs €3.99/month or €35.88/year and does not connect to banks by design. Finanzas Personales connects over PSD2 without ever asking for credentials, has a permanent free plan, and the code is public.',
+                'heading' => 'Dinerio vs Finanzas Personales',
                 'intro' => 'Dinerio is a Spanish personal finance manager that costs €3.99/month or €35.88/year, with a 14-day trial, and it has made an explicit design decision: "Dinerio does not connect to bank accounts and does not ask for credentials, so your data is yours alone". It defends privacy with the same argument we do, but arrives at it from the opposite direction.',
                 'rows' => [
                     [
                         'dimension' => 'Price',
                         'rival' => '€3.99/month or €35.88/year (equivalent to €2.99/month), with a 14-day trial (dinerioapp.es, 6 October 2026).',
-                        'whisper' => 'A permanent free plan and a paid plan in euros, with the rate published on the site.',
+                        'finanzas' => 'A permanent free plan and a paid plan in euros, with the rate published on the site.',
                     ],
                     [
                         'dimension' => 'Bank connection',
                         'rival' => 'Does not connect to banks, by design. You enter the transactions yourself.',
-                        'whisper' => 'PSD2 connection is optional. If you would rather not connect, you import the statement and work exactly as you would in Dinerio.',
+                        'finanzas' => 'PSD2 connection is optional. If you would rather not connect, you import the statement and work exactly as you would in Dinerio.',
                     ],
                     [
                         'dimension' => 'Credentials',
                         'rival' => 'Never asked for, because there is no connection.',
-                        'whisper' => "Never asked for either: the PSD2 authorisation is signed on your bank's website and all we receive is a revocable read permission.",
+                        'finanzas' => "Never asked for either: the PSD2 authorisation is signed on your bank's website and all we receive is a revocable read permission.",
                     ],
                     [
                         'dimension' => 'What you can verify',
                         'rival' => 'Closed source. States that data is encrypted on European servers (Supabase, Frankfurt).',
-                        'whisper' => 'Public code on GitHub: the privacy promise can be read, not just believed.',
+                        'finanzas' => 'Public code on GitHub: the privacy promise can be read, not just believed.',
                     ],
                 ],
                 'narrative_title' => 'Two ways of never touching your credentials',
@@ -1588,32 +1588,32 @@ final class MarketingContent
                 'closing_body' => "If Dinerio's privacy argument convinced you, here it is with two additions: code you can read, and the option of letting the transactions come in on their own whenever you feel like it. The free plan asks for no card.",
             ],
             'es' => [
-                'slug' => 'dinerio-vs-whisper-money',
+                'slug' => 'dinerio-vs-finanzas-personales',
                 'rival' => 'Dinerio',
-                'title' => 'Dinerio vs Whisper Money (2026) | Comparativa',
-                'description' => 'Dinerio cuesta 3,99 €/mes o 35,88 €/año y no conecta con bancos por diseño. Whisper Money conecta por PSD2 sin pedirte credenciales, tiene plan gratuito permanente y el código es público. Comparativa y guía de migración.',
-                'heading' => 'Dinerio vs Whisper Money',
+                'title' => 'Dinerio vs Finanzas Personales (2026) | Comparativa',
+                'description' => 'Dinerio cuesta 3,99 €/mes o 35,88 €/año y no conecta con bancos por diseño. Finanzas Personales conecta por PSD2 sin pedirte credenciales, tiene plan gratuito permanente y el código es público. Comparativa y guía de migración.',
+                'heading' => 'Dinerio vs Finanzas Personales',
                 'intro' => 'Dinerio es un gestor español de finanzas personales que cuesta 3,99 €/mes o 35,88 €/año, con 14 días de prueba, y que ha tomado una decisión de diseño explícita: «Dinerio no se conecta a cuentas bancarias ni pide credenciales, así que tus datos son solo tuyos». Defiende la privacidad con el mismo argumento que nosotros, pero llegando por el camino opuesto.',
                 'rows' => [
                     [
                         'dimension' => 'Precio',
                         'rival' => '3,99 €/mes o 35,88 €/año (equivalente a 2,99 €/mes), con 14 días de prueba (dinerioapp.es, 6 de octubre de 2026).',
-                        'whisper' => 'Plan gratuito permanente y plan de pago en euros, con la tarifa publicada en la web.',
+                        'finanzas' => 'Plan gratuito permanente y plan de pago en euros, con la tarifa publicada en la web.',
                     ],
                     [
                         'dimension' => 'Conexión bancaria',
                         'rival' => 'No conecta con bancos, por diseño. Los movimientos los introduces tú.',
-                        'whisper' => 'Conexión por PSD2 opcional. Si prefieres no conectar, importas el extracto y trabajas igual que en Dinerio.',
+                        'finanzas' => 'Conexión por PSD2 opcional. Si prefieres no conectar, importas el extracto y trabajas igual que en Dinerio.',
                     ],
                     [
                         'dimension' => 'Credenciales',
                         'rival' => 'No las pide, porque no hay conexión.',
-                        'whisper' => 'No las pedimos tampoco: la autorización PSD2 se firma en la web de tu banco y nosotros solo recibimos un permiso de lectura revocable.',
+                        'finanzas' => 'No las pedimos tampoco: la autorización PSD2 se firma en la web de tu banco y nosotros solo recibimos un permiso de lectura revocable.',
                     ],
                     [
                         'dimension' => 'Qué puedes comprobar',
                         'rival' => 'Código cerrado. Declara datos cifrados en servidores europeos (Supabase, Frankfurt).',
-                        'whisper' => 'Código público en GitHub: la promesa de privacidad se puede leer, no solo creer.',
+                        'finanzas' => 'Código público en GitHub: la promesa de privacidad se puede leer, no solo creer.',
                     ],
                 ],
                 'narrative_title' => 'Dos maneras de no tocar tus credenciales',
@@ -1685,45 +1685,45 @@ final class MarketingContent
                     'name' => 'Marcus Oliveira',
                     'gravatar' => '3c4342baddf0beb8b0bd9fe89168e282',
                     'text' => [
-                        'en' => 'Thank you for developing Whisper Money. The focus on privacy and centralizing finances is an excellent proposition.',
-                        'es' => 'Gracias por desarrollar Whisper Money. El enfoque en la privacidad y en centralizar las finanzas es una propuesta excelente.',
+                        'en' => 'Thank you for developing Finanzas Personales. The focus on privacy and centralizing finances is an excellent proposition.',
+                        'es' => 'Gracias por desarrollar Finanzas Personales. El enfoque en la privacidad y en centralizar las finanzas es una propuesta excelente.',
                     ],
                 ],
             ],
             'en' => [
-                'slug' => 'banktrack-vs-whisper-money',
+                'slug' => 'banktrack-vs-finanzas-personales',
                 'rival' => 'Banktrack',
-                'title' => 'Banktrack vs Whisper Money (2026) | Comparison',
-                'description' => 'Banktrack now sells treasury and invoicing to small businesses, from €59 a month. Whisper Money is built for your personal finances, and brings your whole Banktrack export over in one go: accounts, categories and transactions.',
-                'heading' => 'Banktrack vs Whisper Money',
+                'title' => 'Banktrack vs Finanzas Personales (2026) | Comparison',
+                'description' => 'Banktrack now sells treasury and invoicing to small businesses, from €59 a month. Finanzas Personales is built for your personal finances, and brings your whole Banktrack export over in one go: accounts, categories and transactions.',
+                'heading' => 'Banktrack vs Finanzas Personales',
                 'intro' => 'Banktrack was born in 2021 as what its own site calls "a financial push project" and grew into a complete finance suite. In May 2025 its blog was still pitching it as an alternative to Fintonic for personal finances. Today its site describes something else: "Tesorería y Facturación, diseñadas para PYMEs", treasury and invoicing for small businesses, with plans from €59 a month. If you were using it for your household money, this page covers what changes and how to bring every account, category and transaction with you without typing a thing.',
                 'rows' => [
                     [
                         'dimension' => 'Who it is for',
                         'rival' => 'Small and medium businesses: its home page reads "Tesorería y Facturación, diseñadas para PYMEs" (banktrack.com, 6 October 2026).',
-                        'whisper' => 'Your personal and household finances: accounts, budgets, cash flow and net worth.',
+                        'finanzas' => 'Your personal and household finances: accounts, budgets, cash flow and net worth.',
                     ],
                     [
                         'dimension' => 'Price',
                         'rival' => 'Starter at €59/month and Advanced at €119/month, with a 7-day trial, plus a custom plan (banktrack.com/precios, 6 October 2026).',
-                        'whisper' => 'A permanent free plan and a paid plan in euros, with the rate published on the pricing page.',
+                        'finanzas' => 'A permanent free plan and a paid plan in euros, with the rate published on the pricing page.',
                     ],
                     [
                         'dimension' => 'Moving your history',
                         'rival' => 'Its "Descargar" button, in the Transacciones module, downloads the transactions you see on screen as PDF, CSV, XLSX or JSON (docs.banktrack.com, 6 October 2026).',
-                        'whisper' => 'The full importer reads that CSV or XLSX as it comes: accounts, categories with subcategories, transactions and daily balances, in one go.',
+                        'finanzas' => 'The full importer reads that CSV or XLSX as it comes: accounts, categories with subcategories, transactions and daily balances, in one go.',
                     ],
                     [
                         'dimension' => 'What you can verify',
                         'rival' => 'Its help centre says data is kept on Amazon Web Services servers in Europe and is not sold or passed on to third parties for commercial purposes (docs.banktrack.com, 6 October 2026).',
-                        'whisper' => 'We do not sell or share your data with third parties either, and the code is public on GitHub, so the promise can be read and not just believed.',
+                        'finanzas' => 'We do not sell or share your data with third parties either, and the code is public on GitHub, so the promise can be read and not just believed.',
                     ],
                 ],
                 'narrative_title' => 'A business tool now, with your history inside it',
                 'narrative' => [
                     'Nothing here says Banktrack is a bad product. It has chosen its customer, and it is a company. Its plans are measured in connected banks, invoices per quarter and users, and they come with Verifactu-ready invoicing and, on the larger plans, treasury forecasting. That is the right shape for a small business and the wrong one for keeping track of a salary, a joint account and some savings.',
                     "If you used it for your own money, the part worth keeping is the history you built there: the accounts, the categories you refined over the years, the transfers between your own accounts that you marked so they would not count as spending. All of it fits in one file, the one Banktrack's Descargar button gives you.",
-                    'Whisper Money reads that file as it comes. It knows Banktrack\'s columns, creates one account per bank with its balances, rebuilds your categories with their subcategories, sends your own transfers and the rows you had ignored to transfer categories, and skips anything already imported. If something looks wrong afterwards, one Undo in Settings takes the whole import back out.',
+                    'Finanzas Personales reads that file as it comes. It knows Banktrack\'s columns, creates one account per bank with its balances, rebuilds your categories with their subcategories, sends your own transfers and the rows you had ignored to transfer categories, and skips anything already imported. If something looks wrong afterwards, one Undo in Settings takes the whole import back out.',
                 ],
                 'bullets' => [
                     'Your whole Banktrack export in one go: accounts, categories with subcategories, transactions with their notes, and daily balances.',
@@ -1737,14 +1737,14 @@ final class MarketingContent
                     'Category budgets, cash flow and net worth, with a permanent free plan.',
                     'Public code on GitHub, and no data shared with third parties.',
                 ],
-                'migration_intro' => 'Banktrack puts everything in one file, and that file is all you need. Whisper Money already knows its columns, so the move takes minutes rather than an afternoon of spreadsheets.',
+                'migration_intro' => 'Banktrack puts everything in one file, and that file is all you need. Finanzas Personales already knows its columns, so the move takes minutes rather than an afternoon of spreadsheets.',
                 'migration_steps' => [
                     [
                         'title' => 'Download everything from Banktrack',
                         'body' => 'In its Transacciones module, clear the bank and account filter, pick the widest period and click "Descargar", then choose CSV or XLSX. Its help centre explains that the download follows the filters you have on, which is why they need clearing first.',
                     ],
                     [
-                        'title' => 'Create your Whisper Money account',
+                        'title' => 'Create your Finanzas Personales account',
                         'body' => 'The full importer is open while you set up your account and for 15 days after. During setup it is the "Coming from another app?" option on the accounts step; afterwards it lives in Settings → Import from another app. If those 15 days are over, write to us.',
                     ],
                     [
@@ -1763,39 +1763,39 @@ final class MarketingContent
                 'closing_body' => 'Your Banktrack years do not have to stay behind in a business plan. Bring them over in one file and carry on from where you were. The free plan asks for no card.',
             ],
             'es' => [
-                'slug' => 'banktrack-vs-whisper-money',
+                'slug' => 'banktrack-vs-finanzas-personales',
                 'rival' => 'Banktrack',
-                'title' => 'Banktrack vs Whisper Money (2026) | Comparativa',
-                'description' => 'Banktrack se ha centrado en la tesorería y la facturación de pymes, con planes desde 59 € al mes. Whisper Money está pensado para tus finanzas personales y se trae toda tu exportación de Banktrack de una vez: cuentas, categorías y movimientos.',
-                'heading' => 'Banktrack vs Whisper Money',
+                'title' => 'Banktrack vs Finanzas Personales (2026) | Comparativa',
+                'description' => 'Banktrack se ha centrado en la tesorería y la facturación de pymes, con planes desde 59 € al mes. Finanzas Personales está pensado para tus finanzas personales y se trae toda tu exportación de Banktrack de una vez: cuentas, categorías y movimientos.',
+                'heading' => 'Banktrack vs Finanzas Personales',
                 'intro' => 'Banktrack nació en 2021 como lo que su propia web llama «un proyecto de push financiero» y fue creciendo hasta ser una suite financiera completa. En mayo de 2025 su blog todavía lo presentaba como alternativa a Fintonic para las finanzas personales. Hoy su web cuenta otra cosa: «Tesorería y Facturación, diseñadas para PYMEs», con planes desde 59 € al mes. Si lo usabas para el dinero de casa, aquí tienes qué cambia y cómo traerte cada cuenta, cada categoría y cada movimiento sin teclear nada.',
                 'rows' => [
                     [
                         'dimension' => 'Para quién es',
                         'rival' => 'Para empresas: su portada dice «Tesorería y Facturación, diseñadas para PYMEs» (banktrack.com, 6 de octubre de 2026).',
-                        'whisper' => 'Para tus finanzas personales y las de casa: cuentas, presupuestos, flujo de caja y patrimonio neto.',
+                        'finanzas' => 'Para tus finanzas personales y las de casa: cuentas, presupuestos, flujo de caja y patrimonio neto.',
                     ],
                     [
                         'dimension' => 'Precio',
                         'rival' => 'Starter a 59 €/mes y Advanced a 119 €/mes, con 7 días de prueba, además de un plan a medida (banktrack.com/precios, 6 de octubre de 2026).',
-                        'whisper' => 'Plan gratuito permanente y plan de pago en euros, con la tarifa publicada en la página de precios.',
+                        'finanzas' => 'Plan gratuito permanente y plan de pago en euros, con la tarifa publicada en la página de precios.',
                     ],
                     [
                         'dimension' => 'Llevarte tu histórico',
                         'rival' => 'Su botón «Descargar», en el módulo Transacciones, descarga los movimientos que ves en pantalla en PDF, CSV, XLSX o JSON (docs.banktrack.com, 6 de octubre de 2026).',
-                        'whisper' => 'El importador completo lee ese CSV o XLSX tal cual: cuentas, categorías con subcategorías, movimientos y saldos diarios, de una vez.',
+                        'finanzas' => 'El importador completo lee ese CSV o XLSX tal cual: cuentas, categorías con subcategorías, movimientos y saldos diarios, de una vez.',
                     ],
                     [
                         'dimension' => 'Qué puedes comprobar',
                         'rival' => 'Su centro de ayuda dice que guarda los datos en servidores de Amazon Web Services en Europa y que no los vende ni los cede a terceros con fines comerciales (docs.banktrack.com, 6 de octubre de 2026).',
-                        'whisper' => 'Nosotros tampoco vendemos ni compartimos tus datos con terceros, y además el código es público en GitHub: la promesa se puede leer, no solo creer.',
+                        'finanzas' => 'Nosotros tampoco vendemos ni compartimos tus datos con terceros, y además el código es público en GitHub: la promesa se puede leer, no solo creer.',
                     ],
                 ],
                 'narrative_title' => 'Ahora es una herramienta de empresa, con tu histórico dentro',
                 'narrative' => [
                     'Aquí nadie dice que Banktrack sea un mal producto. Ha elegido a su cliente, y ese cliente es una empresa. Sus planes se miden en bancos conectados, facturas por trimestre y usuarios, e incluyen facturación compatible con Verifactu y, en los planes grandes, previsión de tesorería. Es la forma adecuada para una pyme y la equivocada para llevar una nómina, una cuenta conjunta y algo de ahorro.',
                     'Si lo usabas para tu propio dinero, lo que merece la pena conservar es el histórico que construiste allí: las cuentas, las categorías que fuiste afinando con los años, los traspasos entre tus cuentas que marcaste para que no contaran como gasto. Todo eso cabe en un archivo, el que te da el botón «Descargar» de Banktrack.',
-                    'Whisper Money lee ese archivo tal y como sale. Conoce las columnas de Banktrack, crea una cuenta por banco con sus saldos, reconstruye tus categorías con sus subcategorías, manda tus traspasos propios y las filas que habías ignorado a categorías de transferencia, y se salta lo que ya estuviera importado. Si después algo no te cuadra, un solo «Deshacer» en Configuración quita la importación entera.',
+                    'Finanzas Personales lee ese archivo tal y como sale. Conoce las columnas de Banktrack, crea una cuenta por banco con sus saldos, reconstruye tus categorías con sus subcategorías, manda tus traspasos propios y las filas que habías ignorado a categorías de transferencia, y se salta lo que ya estuviera importado. Si después algo no te cuadra, un solo «Deshacer» en Configuración quita la importación entera.',
                 ],
                 'bullets' => [
                     'Toda tu exportación de Banktrack de una vez: cuentas, categorías con subcategorías, movimientos con sus notas y saldos diarios.',
@@ -1809,14 +1809,14 @@ final class MarketingContent
                     'Presupuestos por categoría, flujo de caja y patrimonio neto, con plan gratuito permanente.',
                     'Código público en GitHub y ningún dato compartido con terceros.',
                 ],
-                'migration_intro' => 'Banktrack lo mete todo en un archivo, y ese archivo es todo lo que necesitas. Whisper Money ya conoce sus columnas, así que la mudanza son minutos y no una tarde peleándote con hojas de cálculo.',
+                'migration_intro' => 'Banktrack lo mete todo en un archivo, y ese archivo es todo lo que necesitas. Finanzas Personales ya conoce sus columnas, así que la mudanza son minutos y no una tarde peleándote con hojas de cálculo.',
                 'migration_steps' => [
                     [
                         'title' => 'Descárgalo todo de Banktrack',
                         'body' => 'En su módulo Transacciones, quita el filtro de banco y cuenta, elige el periodo más amplio y pulsa «Descargar»; después elige CSV o XLSX. Su centro de ayuda explica que la descarga respeta los filtros activos, por eso hay que quitarlos antes.',
                     ],
                     [
-                        'title' => 'Crea tu cuenta en Whisper Money',
+                        'title' => 'Crea tu cuenta en Finanzas Personales',
                         'body' => 'El importador completo está abierto mientras configuras tu cuenta y durante los 15 días siguientes. Durante el alta es la opción «¿Vienes de otra app?» del paso de cuentas; después lo tienes en Configuración → Importar desde otra app. Si ya han pasado esos 15 días, escríbenos.',
                     ],
                     [

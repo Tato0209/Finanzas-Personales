@@ -227,7 +227,7 @@ export function StepCategories({
             )}
 
             {matched.length > 0 && (
-                <SectionCard label={__('Already in Whisper Money')}>
+                <SectionCard label={__('Already in Finanzas Personales')}>
                     {matched.map((node) => (
                         <SectionRow
                             key={node.id}

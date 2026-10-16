@@ -42,7 +42,7 @@
 {{ __('And if something made you cancel, reply to this email and tell me. If I can fix it, I would much rather do that than lose you.') }}
 
 Víctor Falcón Ruíz<br>
-{{ __('Co-founder and solo developer, Whisper Money') }}
+{{ __('Co-founder and solo developer, Finanzas Personales') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

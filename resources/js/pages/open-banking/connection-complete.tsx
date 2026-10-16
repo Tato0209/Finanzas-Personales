@@ -53,7 +53,7 @@ export default function ConnectionComplete({
                 }
                 footer={
                     <>
-                        <StepButton text={__('Open Whisper')} href="/" />
+                        <StepButton text={__('Open Finanzas Personales')} href="/" />
                         <StepNote>
                             {isSuccess
                                 ? __('Same account, same progress.')
@@ -94,7 +94,7 @@ export default function ConnectionComplete({
 
                         <p className="rounded-lg bg-muted px-4.5 py-4 text-sm leading-normal text-pretty text-muted-foreground">
                             {__(
-                                'Go back to the Whisper tab or app you started in — everything is there, already moving. This tab can be closed.',
+                                'Go back to the Finanzas Personales tab or app you started in — everything is there, already moving. This tab can be closed.',
                             )}
                         </p>
                     </>
@@ -106,7 +106,7 @@ export default function ConnectionComplete({
                             icon={RotateCcw}
                             title={__('You can try again')}
                             description={__(
-                                'Open Whisper in the tab or app you started in and connect your bank from there.',
+                                'Open Finanzas Personales in the tab or app you started in and connect your bank from there.',
                             )}
                         />
                     </StepList>

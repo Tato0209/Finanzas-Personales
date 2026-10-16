@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(function (): void {
     $this->mock(CardRenderer::class, function ($mock): void {
-        $mock->shouldReceive('url')->andReturn('https://whisper.money/storage/card.png');
+        $mock->shouldReceive('url')->andReturn('https://finanzaspersonales.local/storage/card.png');
         $mock->shouldReceive('path')->andReturn('monthly-summaries/x/card.png');
         $mock->shouldReceive('forget')->andReturnNull();
     });
@@ -47,8 +47,8 @@ it('serves the card and a way back, and asks not to be indexed', function (): vo
         ->assertOk()
         ->assertHeader('X-Robots-Tag', 'noindex, nofollow')
         ->assertSee('og:image', false)
-        ->assertSee('https://whisper.money/storage/card.png', false)
-        ->assertSee('whisper.money', false);
+        ->assertSee('https://finanzaspersonales.local/storage/card.png', false)
+        ->assertSee('finanzaspersonales.local', false);
 });
 
 it('shows no amount, no name and no breakdown', function (): void {
@@ -119,7 +119,7 @@ it('paints the card inside the screen and saves it on download', function (): vo
     $this->actingAs($user)
         ->get("/summaries/{$summary->id}/card/savings_rate/feed/light")
         ->assertOk()
-        ->assertDownload("whisper-money-{$summary->period}-savings_rate-feed-light.png");
+        ->assertDownload("finanzas-personales-{$summary->period}-savings_rate-feed-light.png");
 });
 
 it('offers both themes of the same card, each under its own name', function (): void {
@@ -133,7 +133,7 @@ it('offers both themes of the same card, each under its own name', function (): 
         $this->actingAs($user)
             ->get("/summaries/{$summary->id}/card/savings_rate/story/{$theme->value}")
             ->assertOk()
-            ->assertDownload("whisper-money-{$summary->period}-savings_rate-story-{$theme->value}.png");
+            ->assertDownload("finanzas-personales-{$summary->period}-savings_rate-story-{$theme->value}.png");
     }
 });
 
@@ -171,7 +171,7 @@ it('draws the card in the owner\'s language, whatever the visitor reads in', fun
         $mock->shouldReceive('url')->andReturnUsing(function () use (&$drawnIn): string {
             $drawnIn = app()->getLocale();
 
-            return 'https://whisper.money/storage/card.png';
+            return 'https://finanzaspersonales.local/storage/card.png';
         });
     });
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'whisper-money-v1';
+const CACHE_NAME = 'finanzas-personales-v1';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();

@@ -145,7 +145,7 @@ export default function DocumentationShow({
                                 aria-hidden="true"
                             />
                             <span className="text-sm font-medium whitespace-nowrap">
-                                Whisper Money
+                                Finanzas Personales
                             </span>
                             <span
                                 className={cn(
@@ -163,7 +163,7 @@ export default function DocumentationShow({
 
                         <div className="hidden shrink-0 items-center gap-3 md:flex">
                             <a
-                                href="https://github.com/whisper-money/whisper-money"
+                                href="https://github.com/finanzas-personales/finanzas-personales"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 aria-label={__('Github')}

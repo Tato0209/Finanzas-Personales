@@ -55,7 +55,7 @@ function ibStatementXml(array $statements): string
     }
 
     return <<<XML
-    <FlexQueryResponse queryName="Whisper" type="AF">
+    <FlexQueryResponse queryName="FinanzasPersonales" type="AF">
     <FlexStatements count="1">{$statementsXml}</FlexStatements>
     </FlexQueryResponse>
     XML;
@@ -285,7 +285,7 @@ test('skips NAV rows that have no total', function () {
     [$user, $connection] = ibSetup();
     $account = ibAccount($user, $connection);
 
-    $statement = '<FlexQueryResponse queryName="Whisper" type="AF"><FlexStatements count="1">'
+    $statement = '<FlexQueryResponse queryName="FinanzasPersonales" type="AF"><FlexStatements count="1">'
         .'<FlexStatement accountId="U1234567"><AccountInformation accountId="U1234567" currency="USD" />'
         .'<EquitySummaryInBase>'
         .'<EquitySummaryByReportDateInBase reportDate="20250114" cash="0" />'

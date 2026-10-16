@@ -53,7 +53,7 @@ class SendUpdateEmailJob implements ShouldQueue
         public User $user,
         public string $viewName,
         public string $emailIdentifier,
-        public string $subject = 'Update from Whisper Money',
+        public string $subject = 'Update from Finanzas Personales',
         bool $marketing = true,
     ) {
         $this->marketing = $marketing;

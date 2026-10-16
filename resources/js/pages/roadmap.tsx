@@ -7,7 +7,7 @@ import { __ } from '@/utils/i18n';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ExternalLinkIcon } from 'lucide-react';
 
-const FEEDBACK_URL = 'https://whispermoney.userjot.com/';
+const FEEDBACK_URL = 'https://feedback.finanzaspersonales.local/';
 
 type RoadmapStatus = 'planned' | 'in_progress' | 'shipped';
 
@@ -55,19 +55,19 @@ export default function Roadmap({
 }) {
     const { appUrl, locale } = usePage<SharedData>().props;
     const description = __(
-        "See what's shipped, what we're building, and what's coming next in Whisper Money.",
+        "See what's shipped, what we're building, and what's coming next in Finanzas Personales.",
     );
 
     return (
         <>
-            {/* The Inertia title callback already appends " - Whisper Money". */}
+            {/* The Inertia title callback already appends " - Finanzas Personales". */}
             <Head title={__('Roadmap')}>
                 <meta name="description" content={description} />
                 <link rel="canonical" href={`${appUrl}/roadmap`} />
                 <meta name="robots" content="index, follow" />
                 <meta
                     property="og:title"
-                    content={__('Roadmap - Whisper Money')}
+                    content={__('Roadmap - Finanzas Personales')}
                 />
                 <meta property="og:description" content={description} />
                 <meta property="og:type" content="website" />

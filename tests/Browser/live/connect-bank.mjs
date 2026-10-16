@@ -7,7 +7,7 @@
 //   3. Reconnect an expired connection.
 //
 // Why this is a standalone script and not a Pest browser test: Enable Banking only
-// redirects to the fixed registered URI (https://whisper.money.local/open-banking/
+// redirects to the fixed registered URI (https://finanzaspersonales.local.local/open-banking/
 // callback). A RefreshDatabase Pest test runs an ephemeral server on a random port
 // with a transactional DB the external redirect can never reach. So we drive the
 // persistent dev server, let the bank redirect to the registered host (which is not
@@ -346,7 +346,7 @@ async function scenarioSessionLost(page, settings) {
     // flow, so hold on it long enough to be clearly visible in the recording.
     await page.getByText('sent you here').waitFor({ timeout: 15000 });
     await page
-        .getByText('Go back to the Whisper tab or app you started in')
+        .getByText('Go back to the Finanzas Personales tab or app you started in')
         .waitFor({ timeout: 5000 });
     await page.waitForTimeout(6000);
 

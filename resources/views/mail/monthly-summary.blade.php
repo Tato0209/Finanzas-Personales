@@ -47,7 +47,7 @@
         <tr><td style="padding:16px 32px;border-bottom:1px solid {{ $rule }};">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
                 <td align="left" style="font-size:13px;font-weight:600;color:{{ $ink }};letter-spacing:-0.02em;">
-                    <img src="{{ $appUrl }}/images/whisper_money_e.png" width="18" height="18" alt="" style="vertical-align:-4px;margin-right:6px;">whisper.money
+                    <img src="{{ $appUrl }}/images/finanzas_personales_e.png" width="18" height="18" alt="" style="vertical-align:-4px;margin-right:6px;">finanzaspersonales.local
                 </td>
                 <td align="right" style="font-size:10px;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:{{ $muted }};">{{ __(':month summary', ['month' => $monthName]) }}</td>
             </tr></table>
@@ -95,7 +95,7 @@
                 <a href="{{ $unsubscribeUrl }}" style="color:{{ $muted }};text-decoration:underline;">{{ __('Turn the summary off') }}</a> ·
                 <a href="{{ $historyUrl }}" style="color:{{ $muted }};text-decoration:underline;">{{ __('Open in the app') }}</a>
             </p>
-            <p style="margin:0;font-size:11px;line-height:1.6;color:{{ $muted }};">{{ __('Whisper Money · Your data never leaves your account.') }}</p>
+            <p style="margin:0;font-size:11px;line-height:1.6;color:{{ $muted }};">{{ __('Finanzas Personales · Your data never leaves your account.') }}</p>
         </td></tr>
     </table>
 

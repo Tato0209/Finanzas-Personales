@@ -29,7 +29,7 @@ Diseñada para funcionar **100% de manera local**, garantizando la privacidad de
 
 - **🔒 Privacidad y Modo Local Total:**
   - Acceso directo sin necesidad de credenciales ni inicio de sesión en entorno local.
-  - Tus datos financieros nunca salen de tu ordenador; se guardan en volúmenes Docker dedicados (`whisper-mysql` y `whisper-storage`).
+  - Tus datos financieros nunca salen de tu ordenador; se guardan en volúmenes Docker dedicados (`finanzas-mysql` y `finanzas-storage`).
   - Inicio automático garantizado tras reiniciar el sistema (`restart: unless-stopped`).
 
 ---

@@ -15,7 +15,7 @@ use RuntimeException;
  */
 class Ryuk
 {
-    public const LABEL = 'money.whisper.test-session';
+    public const LABEL = 'local.finanzas-personales.test-session';
 
     /**
      * The connection Ryuk watches.

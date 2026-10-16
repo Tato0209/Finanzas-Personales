@@ -180,10 +180,10 @@ export function StepColumns({
             description={
                 source === 'banktrack'
                     ? __(
-                          'Every piece of Whisper Money comes from a column of your file. It is already filled in for Banktrack: change only what does not fit.',
+                          'Every piece of Finanzas Personales comes from a column of your file. It is already filled in for Banktrack: change only what does not fit.',
                       )
                     : __(
-                          'Every piece of Whisper Money comes from a column of your file. Tell us which one is which; we remember it next time.',
+                          'Every piece of Finanzas Personales comes from a column of your file. Tell us which one is which; we remember it next time.',
                       )
             }
             footer={footer}

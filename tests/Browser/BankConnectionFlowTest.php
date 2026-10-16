@@ -132,7 +132,7 @@ it('shows the connected confirmation when the session is lost on return', functi
     // does not exist in. It now names the bank and carries a way back.
     $page->assertSee('Banco de Sabadell sent you here')
         ->assertSee('The connection worked')
-        ->assertSee('Open Whisper')
+        ->assertSee('Open Finanzas Personales')
         ->assertNoJavascriptErrors();
 
     // The connection is still finalized server-side (resolved from the state token).

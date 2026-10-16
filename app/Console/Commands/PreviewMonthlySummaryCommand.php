@@ -243,7 +243,7 @@ class PreviewMonthlySummaryCommand extends Command
     private function freeReader(User $source): User
     {
         return User::firstOrCreate(
-            ['email' => 'preview-free@whisper.test'],
+            ['email' => 'preview-free@finanzaspersonales.test'],
             ['name' => 'Preview (free plan)', 'password' => bcrypt(str()->random(32)), 'locale' => $source->locale],
         );
     }

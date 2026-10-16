@@ -25,7 +25,7 @@ beforeEach(function (): void {
     config()->set('inertia.ssr.enabled', false);
 
     $this->mock(CardRenderer::class, function ($mock): void {
-        $mock->shouldReceive('url')->andReturn('https://whisper.money/storage/card.png');
+        $mock->shouldReceive('url')->andReturn('https://finanzaspersonales.local/storage/card.png');
         $mock->shouldReceive('forget')->andReturnNull();
     });
 });

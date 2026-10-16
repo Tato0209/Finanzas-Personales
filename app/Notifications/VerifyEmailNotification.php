@@ -15,7 +15,7 @@ class VerifyEmailNotification extends VerifyEmail
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            ->subject(__('Verify Your Email - Whisper Money'))
+            ->subject(__('Verify Your Email - Finanzas Personales'))
             ->markdown('mail.verify-email', [
                 'userName' => $notifiable->name,
                 'verificationUrl' => $verificationUrl,

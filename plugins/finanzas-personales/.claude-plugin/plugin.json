@@ -1,0 +1,13 @@
+{
+    "name": "finanzas-personales",
+    "displayName": "Finanzas Personales",
+    "description": "Work with your own Finanzas Personales finances from Claude Code: spending, cashflow, net worth, budgets, categories, labels and automation rules, plus the product documentation.",
+    "author": {
+        "name": "Finanzas Personales",
+        "url": "https://finanzaspersonales.local"
+    },
+    "homepage": "https://finanzaspersonales.local",
+    "repository": "https://github.com/finanzas-personales/finanzas-personales",
+    "license": "CC-BY-NC-4.0",
+    "keywords": ["finance", "personal-finance", "budgeting", "mcp"]
+}

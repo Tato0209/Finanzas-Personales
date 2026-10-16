@@ -1,6 +1,6 @@
 <?php
 
-use App\Mcp\Servers\WhisperMoneyServer;
+use App\Mcp\Servers\FinanzasPersonalesServer;
 use Laravel\Mcp\Facades\Mcp;
 
 /*
@@ -36,8 +36,8 @@ use Laravel\Mcp\Facades\Mcp;
 
 Mcp::oauthRoutes();
 
-Mcp::web('/mcp', WhisperMoneyServer::class)
+Mcp::web('/mcp', FinanzasPersonalesServer::class)
     ->middleware(['auth:sanctum', 'abilities:mcp:read', 'throttle:mcp']);
 
-Mcp::web('/mcp/oauth', WhisperMoneyServer::class)
+Mcp::web('/mcp/oauth', FinanzasPersonalesServer::class)
     ->middleware(['auth:api', 'throttle:mcp']);

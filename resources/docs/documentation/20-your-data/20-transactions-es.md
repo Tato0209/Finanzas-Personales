@@ -112,7 +112,7 @@ Puedes filtrar por:
 - Cuenta
 - Etiqueta
 - Nombre del acreedor o del deudor
-- Quién asignó la categoría: tú, una regla, Whisper Money o tu banco
+- Quién asignó la categoría: tú, una regla, Finanzas Personales o tu banco
 - Texto de búsqueda
 
 Una buena búsqueda suele empezar con el nombre del comercio o una palabra de la

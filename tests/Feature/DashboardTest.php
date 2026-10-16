@@ -15,7 +15,7 @@ test('new guests are redirected to the registration page', function () {
 
 test('returning guests are redirected to the login page', function () {
     $this
-        ->withCookie('whisper_money_returning_user', '1')
+        ->withCookie('finanzas_personales_returning_user', '1')
         ->get(route('dashboard'))
         ->assertRedirect(route('login'));
 });

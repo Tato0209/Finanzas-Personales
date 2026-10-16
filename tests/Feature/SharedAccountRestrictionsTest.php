@@ -1,6 +1,6 @@
 <?php
 
-use App\Mcp\Servers\WhisperMoneyServer;
+use App\Mcp\Servers\FinanzasPersonalesServer;
 use App\Mcp\Tools\CreateLabel;
 use App\Mcp\Tools\ListSpaces;
 use App\Models\User;
@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\RateLimiter;
  */
 beforeEach(function () {
     config([
-        'app.demo.email' => 'demo@whisper.money',
-        'app.press.email' => 'prensa@whisper.money',
+        'app.demo.email' => 'demo@finanzaspersonales.local',
+        'app.press.email' => 'prensa@finanzaspersonales.local',
         'subscriptions.enabled' => true,
     ]);
 });
@@ -28,7 +28,7 @@ beforeEach(function () {
 function pressAccount(): User
 {
     $user = User::factory()->withoutTwoFactor()->create([
-        'email' => 'prensa@whisper.money',
+        'email' => 'prensa@finanzaspersonales.local',
         'password' => '123456789',
         'locale' => 'es',
         'currency_code' => 'EUR',
@@ -57,7 +57,7 @@ it('recognises the press account without inheriting the demo restrictions', func
 });
 
 it('lets the press account read through the MCP', function () {
-    WhisperMoneyServer::actingAs(pressAccount())
+    FinanzasPersonalesServer::actingAs(pressAccount())
         ->tool(ListSpaces::class)
         ->assertOk();
 });
@@ -66,7 +66,7 @@ it('lets the press account write through the MCP', function () {
     $press = pressAccount();
     $press->withAccessToken($press->createToken('mcp', ['mcp:read', 'mcp:write'])->accessToken);
 
-    WhisperMoneyServer::actingAs($press)
+    FinanzasPersonalesServer::actingAs($press)
         ->tool(CreateLabel::class, ['name' => 'Prensa', 'color' => 'blue'])
         ->assertOk();
 
@@ -74,9 +74,9 @@ it('lets the press account write through the MCP', function () {
 });
 
 it('still refuses the MCP to the demo account', function () {
-    $demo = User::factory()->create(['email' => 'demo@whisper.money']);
+    $demo = User::factory()->create(['email' => 'demo@finanzaspersonales.local']);
 
-    WhisperMoneyServer::actingAs($demo)
+    FinanzasPersonalesServer::actingAs($demo)
         ->tool(ListSpaces::class)
         ->assertHasErrors()
         ->assertSee('demo account cannot be connected');
@@ -93,7 +93,7 @@ it('lets the press account manage its own MCP tokens', function () {
 });
 
 it('keeps the demo account off the MCP token routes', function () {
-    $demo = User::factory()->create(['email' => 'demo@whisper.money']);
+    $demo = User::factory()->create(['email' => 'demo@finanzaspersonales.local']);
 
     $this->actingAs($demo);
 
@@ -125,7 +125,7 @@ it('blocks the actions that would hijack or empty the press account', function (
     $this->delete(route('profile.destroy'), ['password' => '123456789'])
         ->assertSessionHasErrors('demo');
 
-    expect($press->fresh()->email)->toBe('prensa@whisper.money');
+    expect($press->fresh()->email)->toBe('prensa@finanzaspersonales.local');
 });
 
 it('keeps a real bank off the press account', function () {

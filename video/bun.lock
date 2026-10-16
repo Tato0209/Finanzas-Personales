@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "whisper-money-video",
+      "name": "finanzas-personales-video",
       "dependencies": {
         "@remotion/cli": "4.0.535",
         "@remotion/google-fonts": "4.0.535",

@@ -55,7 +55,7 @@ describe('installFailedNavigationToast', () => {
         Object.defineProperty(window, 'location', {
             configurable: true,
             writable: true,
-            value: { href: 'https://whisper.money/onboarding' },
+            value: { href: 'https://finanzaspersonales.local/onboarding' },
         });
     });
 
@@ -70,7 +70,7 @@ describe('installFailedNavigationToast', () => {
     it('tells the user when a navigation they asked for died on the network', async () => {
         const { listeners } = await freshModules();
 
-        listeners.networkError?.(failure('https://whisper.money/budgets'));
+        listeners.networkError?.(failure('https://finanzaspersonales.local/budgets'));
 
         expect(toastError).toHaveBeenCalledOnce();
     });
@@ -78,8 +78,8 @@ describe('installFailedNavigationToast', () => {
     it('says nothing about a page we only guessed at', async () => {
         const { listeners } = await freshModules();
 
-        listeners.prefetching?.(prefetching('https://whisper.money/cashflow'));
-        listeners.networkError?.(failure('https://whisper.money/cashflow'));
+        listeners.prefetching?.(prefetching('https://finanzaspersonales.local/cashflow'));
+        listeners.networkError?.(failure('https://finanzaspersonales.local/cashflow'));
 
         expect(toastError).not.toHaveBeenCalled();
     });
@@ -87,16 +87,16 @@ describe('installFailedNavigationToast', () => {
     it('speaks up once the user commits to the page we guessed at', async () => {
         const { listeners } = await freshModules();
 
-        listeners.prefetching?.(prefetching('https://whisper.money/cashflow'));
+        listeners.prefetching?.(prefetching('https://finanzaspersonales.local/cashflow'));
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://whisper.money/cashflow'),
+                    url: new URL('https://finanzaspersonales.local/cashflow'),
                     prefetch: false,
                 },
             },
         });
-        listeners.networkError?.(failure('https://whisper.money/cashflow'));
+        listeners.networkError?.(failure('https://finanzaspersonales.local/cashflow'));
 
         expect(toastError).toHaveBeenCalledOnce();
     });
@@ -104,8 +104,8 @@ describe('installFailedNavigationToast', () => {
     it('says nothing about a poll the user never asked for', async () => {
         const { listeners } = await freshModules();
 
-        listeners.before?.(polling('https://whisper.money/onboarding'));
-        listeners.networkError?.(failure('https://whisper.money/onboarding'));
+        listeners.before?.(polling('https://finanzaspersonales.local/onboarding'));
+        listeners.networkError?.(failure('https://finanzaspersonales.local/onboarding'));
 
         expect(toastError).not.toHaveBeenCalled();
     });
@@ -116,9 +116,9 @@ describe('installFailedNavigationToast', () => {
         // A connection that is actually gone, on a page where the poll is the only
         // thing happening: nothing else would ever tell the user.
         for (let beat = 0; beat < 3; beat++) {
-            listeners.before?.(polling('https://whisper.money/onboarding'));
+            listeners.before?.(polling('https://finanzaspersonales.local/onboarding'));
             listeners.networkError?.(
-                failure('https://whisper.money/onboarding'),
+                failure('https://finanzaspersonales.local/onboarding'),
             );
         }
 
@@ -129,18 +129,18 @@ describe('installFailedNavigationToast', () => {
         const { listeners } = await freshModules();
 
         for (let beat = 0; beat < 2; beat++) {
-            listeners.before?.(polling('https://whisper.money/onboarding'));
+            listeners.before?.(polling('https://finanzaspersonales.local/onboarding'));
             listeners.networkError?.(
-                failure('https://whisper.money/onboarding'),
+                failure('https://finanzaspersonales.local/onboarding'),
             );
         }
 
         listeners.success?.({ detail: {} });
 
         for (let beat = 0; beat < 2; beat++) {
-            listeners.before?.(polling('https://whisper.money/onboarding'));
+            listeners.before?.(polling('https://finanzaspersonales.local/onboarding'));
             listeners.networkError?.(
-                failure('https://whisper.money/onboarding'),
+                failure('https://finanzaspersonales.local/onboarding'),
             );
         }
 
@@ -150,16 +150,16 @@ describe('installFailedNavigationToast', () => {
     it('speaks up once the user asks for the page a poll was refreshing', async () => {
         const { listeners } = await freshModules();
 
-        listeners.before?.(polling('https://whisper.money/onboarding'));
+        listeners.before?.(polling('https://finanzaspersonales.local/onboarding'));
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://whisper.money/onboarding'),
+                    url: new URL('https://finanzaspersonales.local/onboarding'),
                     prefetch: false,
                 },
             },
         });
-        listeners.networkError?.(failure('https://whisper.money/onboarding'));
+        listeners.networkError?.(failure('https://finanzaspersonales.local/onboarding'));
 
         expect(toastError).toHaveBeenCalledOnce();
     });
@@ -172,16 +172,16 @@ describe('installFailedNavigationToast', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://whisper.money/settings/connections'),
+                    url: new URL('https://finanzaspersonales.local/settings/connections'),
                     prefetch: false,
                 },
             },
         });
         listeners.before?.(
-            polling('https://whisper.money/settings/connections'),
+            polling('https://finanzaspersonales.local/settings/connections'),
         );
         listeners.networkError?.(
-            failure('https://whisper.money/settings/connections'),
+            failure('https://finanzaspersonales.local/settings/connections'),
         );
 
         expect(toastError).toHaveBeenCalledOnce();
@@ -195,10 +195,10 @@ describe('installFailedNavigationToast', () => {
 
             // The poll stopped - the step moved on, the page unmounted - so the
             // next failure at that url belongs to whoever asked for it next.
-            listeners.before?.(polling('https://whisper.money/onboarding'));
+            listeners.before?.(polling('https://finanzaspersonales.local/onboarding'));
             vi.setSystemTime(Date.now() + 31_000);
             listeners.networkError?.(
-                failure('https://whisper.money/onboarding'),
+                failure('https://finanzaspersonales.local/onboarding'),
             );
 
             expect(toastError).toHaveBeenCalledOnce();
@@ -222,7 +222,7 @@ describe('installFailedNavigationToast', () => {
         // that step's 4s poll is in flight.
         leavePage('https://bank.example/authorize');
         listeners.networkError?.(
-            failure('https://whisper.money/onboarding?step=create-account'),
+            failure('https://finanzaspersonales.local/onboarding?step=create-account'),
         );
 
         expect(toastError).not.toHaveBeenCalled();
@@ -235,7 +235,7 @@ describe('installFailedNavigationToast', () => {
         // An iOS PWA hands the redirect to Safari and keeps its own page alive.
         document.dispatchEvent(new Event('visibilitychange'));
         listeners.networkError?.(
-            failure('https://whisper.money/onboarding?step=create-account'),
+            failure('https://finanzaspersonales.local/onboarding?step=create-account'),
         );
 
         expect(toastError).toHaveBeenCalledOnce();

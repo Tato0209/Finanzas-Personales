@@ -28,7 +28,7 @@ class AutoLoginLocalUser
             if (! $user) {
                 $user = User::create([
                     'name' => 'Usuario Local',
-                    'email' => 'local@whisper.money',
+                    'email' => 'local@finanzaspersonales.local',
                     'password' => Hash::make('local-password'),
                     'currency_code' => 'PEN',
                     'locale' => 'es',

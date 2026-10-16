@@ -6,7 +6,7 @@ set -e
 # can append to it afterwards.
 umask 0002
 
-echo "=== Whisper Money Container Startup ==="
+echo "=== Finanzas Personales Container Startup ==="
 
 # Ensure storage directories exist (volume may be empty on first deploy)
 echo "Ensuring storage directories exist..."
@@ -51,7 +51,7 @@ wait_for_mysql() {
         \$port = getenv('DB_PORT') ?: '3306';
         \$user = getenv('DB_USERNAME') ?: 'root';
         \$pass = getenv('DB_PASSWORD') ?: '';
-        \$db = getenv('DB_DATABASE') ?: 'whisper_money';
+        \$db = getenv('DB_DATABASE') ?: 'finanzas_personales';
         try {
             new PDO(\"mysql:host=\$host;port=\$port;dbname=\$db\", \$user, \$pass, [
                 PDO::ATTR_TIMEOUT => 5,
@@ -72,7 +72,7 @@ done
 
 if [ $attempt -ge $max_attempts ]; then
     echo "ERROR: Could not connect to MySQL after $max_attempts attempts"
-    echo "DB_HOST=${DB_HOST:-mysql}, DB_PORT=${DB_PORT:-3306}, DB_DATABASE=${DB_DATABASE:-whisper_money}"
+    echo "DB_HOST=${DB_HOST:-mysql}, DB_PORT=${DB_PORT:-3306}, DB_DATABASE=${DB_DATABASE:-finanzas_personales}"
     exit 1
 fi
 

@@ -107,12 +107,12 @@ final class DocumentationIndex
     private static function labels(string $locale): array
     {
         return $locale === 'es' ? [
-            'title' => 'Documentación de Whisper Money',
+            'title' => 'Documentación de Finanzas Personales',
             'intro' => 'Todas las páginas de la documentación. Cada una está también en HTML en la misma dirección, sin el sufijo `.md`.',
             'children' => 'Páginas dentro de esta:',
             'index' => 'Índice completo de la documentación:',
         ] : [
-            'title' => 'Whisper Money documentation',
+            'title' => 'Finanzas Personales documentation',
             'intro' => 'Every page in the documentation. Each one is also served as HTML at the same address, without the `.md` suffix.',
             'children' => 'Pages inside this one:',
             'index' => 'Full documentation index:',

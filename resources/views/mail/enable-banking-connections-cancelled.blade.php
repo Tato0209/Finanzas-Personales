@@ -3,7 +3,7 @@
 
 {{ __('Hi :name,', ['name' => $userName]) }}
 
-{{ trans_choice('We disconnected your bank connection to keep your account on free access. Automatic bank sync is now paused, but all your accounts, transactions, and balances remain in Whisper Money.|We disconnected your :count bank connections to keep your account on free access. Automatic bank sync is now paused, but all your accounts, transactions, and balances remain in Whisper Money.', $removedConnectionsCount, ['count' => $removedConnectionsCount]) }}
+{{ trans_choice('We disconnected your bank connection to keep your account on free access. Automatic bank sync is now paused, but all your accounts, transactions, and balances remain in Finanzas Personales.|We disconnected your :count bank connections to keep your account on free access. Automatic bank sync is now paused, but all your accounts, transactions, and balances remain in Finanzas Personales.', $removedConnectionsCount, ['count' => $removedConnectionsCount]) }}
 
 {{ __('You can continue using the app on the free plan, and you can reconnect your bank later if you upgrade again.') }}
 
@@ -13,5 +13,5 @@
 
 {{ __('Best,') }}<br>
 {{ __('Álvaro & Víctor') }}<br>
-{{ __('Founders of Whisper Money') }}
+{{ __('Founders of Finanzas Personales') }}
 </x-mail::message>

@@ -32,12 +32,12 @@ final class AgentMarkdown
             '',
             '## '.$labels['head_to_head'],
             '',
-            '| '.$labels['dimension'].' | '.$rival.' | Whisper Money |',
+            '| '.$labels['dimension'].' | '.$rival.' | Finanzas Personales |',
             '| --- | --- | --- |',
         ];
 
         foreach ($page['rows'] as $row) {
-            $lines[] = '| '.self::cell($row['dimension']).' | '.self::cell($row['rival']).' | '.self::cell($row['whisper']).' |';
+            $lines[] = '| '.self::cell($row['dimension']).' | '.self::cell($row['rival']).' | '.self::cell($row['finanzas']).' |';
         }
 
         $lines = [...$lines, '', '## '.$page['narrative_title'], ''];
@@ -216,14 +216,14 @@ final class AgentMarkdown
         $baseUrl = rtrim((string) config('app.url'), '/');
 
         $lines = [
-            '# Whisper Money',
+            '# Finanzas Personales',
             '',
             '> '.MarketingContent::landing('en')['summary'],
             '',
             '## Product',
             '',
-            '- [Product summary]('.$baseUrl.'/index.md): what Whisper Money does, what it does not do, pricing and platforms.',
-            '- [Whisper Money]('.$baseUrl.'/): the landing page.',
+            '- [Product summary]('.$baseUrl.'/index.md): what Finanzas Personales does, what it does not do, pricing and platforms.',
+            '- [Finanzas Personales]('.$baseUrl.'/): the landing page.',
             '- [Roadmap]('.$baseUrl.'/roadmap): what is planned, in progress and shipped.',
             '- [Privacy policy]('.$baseUrl.'/privacy)',
             '- [Terms of service]('.$baseUrl.'/terms)',
@@ -258,7 +258,7 @@ final class AgentMarkdown
             '',
             '- Every page is available as Markdown by appending `.md` to its URL.',
             '- Claims about competitors are quoted from those competitors\' own public pages, with the date they were checked stated in the page.',
-            '- Data is stored unencrypted at rest in our own database; the code is public at https://github.com/whisper-money/whisper-money.',
+            '- Data is stored unencrypted at rest in our own database; the code is public at https://github.com/finanzas-personales/finanzas-personales.',
             '',
         ]);
     }

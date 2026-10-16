@@ -1,16 +1,16 @@
 {
     "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-    "name": "whisper-money",
-    "description": "Whisper Money for Claude Code",
+    "name": "finanzas-personales",
+    "description": "Finanzas Personales for Claude Code",
     "owner": {
-        "name": "Whisper Money",
-        "url": "https://whisper.money"
+        "name": "Finanzas Personales",
+        "url": "https://finanzaspersonales.local"
     },
     "plugins": [
         {
-            "name": "whisper-money",
-            "source": "./plugins/whisper-money",
-            "description": "Connect Claude Code to your own Whisper Money account and its documentation.",
+            "name": "finanzas-personales",
+            "source": "./plugins/finanzas-personales",
+            "description": "Connect Claude Code to your own Finanzas Personales account and its documentation.",
             "category": "productivity"
         }
     ]

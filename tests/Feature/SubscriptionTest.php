@@ -327,7 +327,7 @@ test('pricing config includes all plan details', function () {
                 ->has('name')
                 ->where('price', 8.99)
                 ->where('original_price', null)
-                ->where('stripe_lookup_key', 'whisper_pro_monthly_high')
+                ->where('stripe_lookup_key', 'finanzas_pro_monthly_high')
                 ->where('billing_period', 'month')
                 // What ships: `SUBSCRIPTION_PAY_NOW` is off by default, so the
                 // plans carry their trial and the checkout takes nothing today.
@@ -338,7 +338,7 @@ test('pricing config includes all plan details', function () {
                 ->has('name')
                 ->where('price', 53.94)
                 ->where('original_price', 107.88)
-                ->where('stripe_lookup_key', 'whisper_pro_yearly_high')
+                ->where('stripe_lookup_key', 'finanzas_pro_yearly_high')
                 ->where('billing_period', 'year')
                 ->where('trial_days', 14)
                 ->has('features')
@@ -552,7 +552,7 @@ test('checkout charges the price behind the plan config lookup key', function ()
     // The price experiment used to pick this key from the user's stored arm. With
     // one canonical price it comes straight from config, so no cookie, query
     // string or other client-supplied value can steer what Stripe charges.
-    Cache::put('stripe_price_id:whisper_pro_yearly_high', 'price_yearly_high', now()->addHour());
+    Cache::put('stripe_price_id:finanzas_pro_yearly_high', 'price_yearly_high', now()->addHour());
 
     $checkout = Mockery::mock(Checkout::class);
     $checkout->shouldReceive('toResponse')->andReturn(new RedirectResponse('https://stripe.test/session'));

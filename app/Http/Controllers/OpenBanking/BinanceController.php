@@ -30,7 +30,7 @@ class BinanceController extends CryptoPortfolioConnectController
 
     protected function bankLogo(): ?string
     {
-        return 'https://whisper.money/storage/banks/logos/t1h5rqi19dJTPl6ZadziPjNwm0lrcdTFBRzB3iCy.png';
+        return 'https://finanzaspersonales.local/storage/banks/logos/t1h5rqi19dJTPl6ZadziPjNwm0lrcdTFBRzB3iCy.png';
     }
 
     protected function fetchProviderData(array $validated): mixed

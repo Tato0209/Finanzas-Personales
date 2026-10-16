@@ -10,7 +10,7 @@ class WelcomeEmail extends DripMail
 
     protected function dripSubject(): string
     {
-        return __('Welcome to Whisper Money - Your Privacy-First Finance App');
+        return __('Welcome to Finanzas Personales - Your Privacy-First Finance App');
     }
 
     protected function template(): string

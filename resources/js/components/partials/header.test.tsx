@@ -52,7 +52,7 @@ describe('Header', () => {
         render(<Header />);
 
         const logoLinks = screen.getAllByRole('link', {
-            name: 'Whisper Money',
+            name: 'Finanzas Personales',
         });
 
         expect(logoLinks).toHaveLength(2);
@@ -64,9 +64,9 @@ describe('Header', () => {
 
         render(<Header />);
 
-        expect(screen.getAllByText('Whisper Money')).toHaveLength(2);
+        expect(screen.getAllByText('Finanzas Personales')).toHaveLength(2);
         expect(
-            screen.queryByRole('link', { name: 'Whisper Money' }),
+            screen.queryByRole('link', { name: 'Finanzas Personales' }),
         ).toBeNull();
     });
 });

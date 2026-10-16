@@ -2,7 +2,7 @@ import { reloadPage } from './leave-page';
 import { getStorage } from './safe-storage';
 
 const CHUNK_LOAD_RELOAD_STORAGE_KEY =
-    'whisper-money:chunk-load-reload-asset-signature';
+    'finanzas-personales:chunk-load-reload-asset-signature';
 
 const CHUNK_LOAD_ERROR_PATTERNS = [
     /Failed to fetch dynamically imported module/i,

@@ -93,7 +93,7 @@ apart.
 ### As a picture
 
 Every report can draw a few cards: a streak, a savings rate, a savings goal, a
-net worth change, or where the money went. Whisper Money picks the one with most
+net worth change, or where the money went. Finanzas Personales picks the one with most
 to say and marks it, and the others stay available beside it.
 
 **Share** on a card opens the same dialog a [medal](/documentation/achievements)
@@ -106,7 +106,7 @@ publishes nothing; you get a file, and where it goes is up to you.
 **Create a public link** mints an address anybody can open. Until you press it,
 no such address exists.
 
-The page behind it carries the card and a link to Whisper Money, and nothing
+The page behind it carries the card and a link to Finanzas Personales, and nothing
 else: no name, no amounts, no breakdown, no way through to your account. It asks
 search engines to leave it alone. It exists for one reason — pasting a link into
 WhatsApp or X unfurls the picture, so you do not have to download the image and
@@ -154,7 +154,7 @@ report, by drawing a card, or by saving a picture.
 
 ### Does the public page show my name or my balances?
 
-No. It shows the one card you shared and a link to Whisper Money. There is no
+No. It shows the one card you shared and a link to Finanzas Personales. There is no
 name on it, no breakdown, and no way from it into your account.
 
 ### Can I un-share something?

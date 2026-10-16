@@ -139,10 +139,10 @@ describe('UserMenuContent', () => {
             screen
                 .getByRole('link', { name: /feedback/i })
                 .getAttribute('href'),
-        ).toBe('https://whispermoney.userjot.com/');
+        ).toBe('https://feedback.finanzaspersonales.local/');
         expect(
             screen.getByRole('link', { name: /roadmap/i }).getAttribute('href'),
-        ).toBe('https://whispermoney.userjot.com/roadmap');
+        ).toBe('https://feedback.finanzaspersonales.local/roadmap');
     });
 
     it('triggers the support callback when the support item is clicked', () => {

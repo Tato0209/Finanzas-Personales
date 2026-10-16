@@ -12,11 +12,11 @@ services:
       - VITE_APP_NAME=Finanzas Personales
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_DATABASE=whisper_money
-      - DB_USERNAME=whisper
+      - DB_DATABASE=finanzas_personales
+      - DB_USERNAME=finanzas
       - DB_PASSWORD=secret
     volumes:
-      - whisper-storage:/app/storage
+      - finanzas-storage:/app/storage
     depends_on:
       mysql:
         condition: service_healthy
@@ -26,11 +26,11 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: whisper_money
-      MYSQL_USER: whisper
+      MYSQL_DATABASE: finanzas_personales
+      MYSQL_USER: finanzas
       MYSQL_PASSWORD: secret
     volumes:
-      - whisper-mysql:/var/lib/mysql
+      - finanzas-mysql:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-psecret"]
       interval: 5s
@@ -39,5 +39,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  whisper-storage:
-  whisper-mysql:
+  finanzas-storage:
+  finanzas-mysql:

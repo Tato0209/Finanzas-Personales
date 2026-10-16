@@ -3,11 +3,11 @@
 use App\Models\User;
 
 test('demo account has restricted actions', function () {
-    config(['app.demo.email' => 'demo@whisper.money']);
+    config(['app.demo.email' => 'demo@finanzaspersonales.local']);
     config(['subscriptions.enabled' => true]);
 
     $demoUser = User::factory()->create([
-        'email' => 'demo@whisper.money',
+        'email' => 'demo@finanzaspersonales.local',
         'password' => 'demo',
     ]);
 
@@ -38,16 +38,16 @@ test('demo account has restricted actions', function () {
 });
 
 test('demo account cannot log in when demo is disabled', function () {
-    config(['app.demo.email' => 'demo@whisper.money']);
+    config(['app.demo.email' => 'demo@finanzaspersonales.local']);
     config(['app.demo.enabled' => false]);
 
     User::factory()->withoutTwoFactor()->create([
-        'email' => 'demo@whisper.money',
+        'email' => 'demo@finanzaspersonales.local',
         'password' => 'demo',
     ]);
 
     $this->post(route('login.store'), [
-        'email' => 'demo@whisper.money',
+        'email' => 'demo@finanzaspersonales.local',
         'password' => 'demo',
     ])->assertSessionHasErrors('email');
 
@@ -55,16 +55,16 @@ test('demo account cannot log in when demo is disabled', function () {
 });
 
 test('demo account can log in when demo is enabled', function () {
-    config(['app.demo.email' => 'demo@whisper.money']);
+    config(['app.demo.email' => 'demo@finanzaspersonales.local']);
     config(['app.demo.enabled' => true]);
 
     User::factory()->withoutTwoFactor()->create([
-        'email' => 'demo@whisper.money',
+        'email' => 'demo@finanzaspersonales.local',
         'password' => 'demo',
     ]);
 
     $this->post(route('login.store'), [
-        'email' => 'demo@whisper.money',
+        'email' => 'demo@finanzaspersonales.local',
         'password' => 'demo',
     ]);
 
@@ -72,16 +72,16 @@ test('demo account can log in when demo is enabled', function () {
 });
 
 test('regular user can log in when demo is disabled', function () {
-    config(['app.demo.email' => 'demo@whisper.money']);
+    config(['app.demo.email' => 'demo@finanzaspersonales.local']);
     config(['app.demo.enabled' => false]);
 
     User::factory()->withoutTwoFactor()->create([
-        'email' => 'real@whisper.money',
+        'email' => 'real@finanzaspersonales.local',
         'password' => 'password123',
     ]);
 
     $this->post(route('login.store'), [
-        'email' => 'real@whisper.money',
+        'email' => 'real@finanzaspersonales.local',
         'password' => 'password123',
     ]);
 
@@ -89,10 +89,10 @@ test('regular user can log in when demo is disabled', function () {
 });
 
 test('a seeded reviewer account cannot reach the billing portal', function () {
-    config(['app.demo.email' => 'demo@whisper.money']);
+    config(['app.demo.email' => 'demo@finanzaspersonales.local']);
     config(['subscriptions.enabled' => true]);
 
-    $reviewer = User::factory()->create(['email' => 'openai-review@whisper.money']);
+    $reviewer = User::factory()->create(['email' => 'openai-review@finanzaspersonales.local']);
     $reviewer->subscriptions()->create([
         'type' => 'default',
         'stripe_id' => "sub_demo_{$reviewer->id}",

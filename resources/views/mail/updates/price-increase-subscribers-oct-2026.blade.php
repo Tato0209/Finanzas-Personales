@@ -10,7 +10,7 @@
 
 {{ __('Hi :name,', ['name' => $user->name]) }}
 
-{{ __('On 1 October the price of Whisper Money goes up, for new subscriptions.') }}
+{{ __('On 1 October the price of Finanzas Personales goes up, for new subscriptions.') }}
 
 <x-mail::table>
 | {{ __('Plan') }}        | {{ __('Today') }}  | {{ __('From 1 October') }} |
@@ -32,7 +32,7 @@
 {{ __('Thank you for paying for this. That, and the people on the free plan, is what keeps it going.') }}
 
 Víctor Falcón Ruíz<br>
-{{ __('Co-founder and solo developer, Whisper Money') }}
+{{ __('Co-founder and solo developer, Finanzas Personales') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

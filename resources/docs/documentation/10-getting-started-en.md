@@ -1,6 +1,6 @@
 # Getting started
 
-Whisper Money helps you understand where your money is, where it went, and what changed over time.
+Finanzas Personales helps you understand where your money is, where it went, and what changed over time.
 
 {{TOC}}
 
@@ -114,7 +114,7 @@ Start with the basics.
 
 ## FAQ
 
-### Do I need budgets to use Whisper Money?
+### Do I need budgets to use Finanzas Personales?
 
 No. You can start with accounts, transactions, and categories. Add budgets later if you want limits.
 

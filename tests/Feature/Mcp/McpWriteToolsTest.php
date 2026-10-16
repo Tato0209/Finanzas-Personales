@@ -8,7 +8,7 @@ use App\Enums\StatementFrequency;
 use App\Jobs\ApplySingleAutomationRuleJob;
 use App\Jobs\GenerateHistoricalLoanBalancesJob;
 use App\Jobs\GenerateHistoricalRealEstateBalancesJob;
-use App\Mcp\Servers\WhisperMoneyServer;
+use App\Mcp\Servers\FinanzasPersonalesServer;
 use App\Mcp\Tools\ApplyAutomationRule;
 use App\Mcp\Tools\CategorizeTransaction;
 use App\Mcp\Tools\CreateAccount;
@@ -60,7 +60,7 @@ function callWriteTool(User $user, string $tool, array $arguments = [], array $a
 {
     $user->withAccessToken($user->createToken('mcp', $abilities)->accessToken);
 
-    return WhisperMoneyServer::actingAs($user)->tool($tool, $arguments);
+    return FinanzasPersonalesServer::actingAs($user)->tool($tool, $arguments);
 }
 
 it('creates a manual transaction and defaults the currency to the account', function () {
@@ -1167,7 +1167,7 @@ it('lets a read-only token list automation rules but never apply one', function 
     ], ['mcp:read'])->assertHasErrors(['read-only']);
 
     // The same read-only token still reaches the listing tool.
-    WhisperMoneyServer::actingAs($user)
+    FinanzasPersonalesServer::actingAs($user)
         ->tool(ListAutomationRules::class)
         ->assertOk()
         ->assertSee($rule->title);
@@ -1390,7 +1390,7 @@ it('never creates a bank-connected account, pointing at the app instead', functi
         'type' => 'checking',
         'currency_code' => 'EUR',
         'banking_connection_id' => 'whatever-the-agent-made-up',
-    ])->assertHasErrors(['Whisper Money app']);
+    ])->assertHasErrors(['Finanzas Personales app']);
 
     expect($user->accounts()->count())->toBe(0);
 });

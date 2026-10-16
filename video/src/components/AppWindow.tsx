@@ -13,7 +13,7 @@ const NAV_ICONS = {
 
 export type NavItem = keyof typeof NAV_ICONS;
 
-/** A simplified Whisper Money app shell: icon sidebar, top bar and page. */
+/** A simplified Finanzas Personales app shell: icon sidebar, top bar and page. */
 export function AppWindow({
     active,
     title,

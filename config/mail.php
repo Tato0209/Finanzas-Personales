@@ -147,12 +147,12 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'no-reply@whisper.money'),
-        'name' => env('MAIL_FROM_NAME', 'Whisper Money'),
+        'address' => env('MAIL_FROM_ADDRESS', 'no-reply@finanzaspersonales.local'),
+        'name' => env('MAIL_FROM_NAME', 'Finanzas Personales'),
     ],
 
     'drip_from' => [
-        'address' => env('MAIL_DRIP_FROM_ADDRESS', 'hi@whisper.money'),
+        'address' => env('MAIL_DRIP_FROM_ADDRESS', 'hi@finanzaspersonales.local'),
         'name' => env('MAIL_DRIP_FROM_NAME', 'Álvaro and Víctor'),
     ],
 

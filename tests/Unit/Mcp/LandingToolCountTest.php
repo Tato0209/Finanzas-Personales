@@ -1,6 +1,6 @@
 <?php
 
-use App\Mcp\Servers\WhisperMoneyServer;
+use App\Mcp\Servers\FinanzasPersonalesServer;
 use App\Mcp\Tools\WriteTool;
 use Laravel\Mcp\Server\Tool;
 
@@ -12,7 +12,7 @@ use Laravel\Mcp\Server\Tool;
  */
 it('claims on the landing page the number of tools the server exposes', function () {
     /** @var array<int, class-string<Tool>> $tools */
-    $tools = (new ReflectionClass(WhisperMoneyServer::class))->getDefaultProperties()['tools'];
+    $tools = (new ReflectionClass(FinanzasPersonalesServer::class))->getDefaultProperties()['tools'];
 
     $writes = array_filter($tools, fn (string $tool): bool => is_subclass_of($tool, WriteTool::class));
 

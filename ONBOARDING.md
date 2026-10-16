@@ -1,4 +1,4 @@
-# Welcome to Whisper Money
+# Welcome to Finanzas Personales
 
 ## How We Use Claude
 
@@ -16,7 +16,7 @@ Top MCP Servers:
 ## Your Setup Checklist
 
 ### Codebases
-- [ ] whisper-money — https://github.com/whisper-money/whisper-money
+- [ ] finanzas-personales — https://github.com/finanzas-personales/finanzas-personales
 
 ### MCP Servers to Activate
 - [ ] _None required yet_ — the team hasn't leaned on MCP servers in this window. Sentry access is via the `/sentry-cli` skill (see below).

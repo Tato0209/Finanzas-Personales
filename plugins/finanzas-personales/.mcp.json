@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "finanzas-personales": {
+            "type": "http",
+            "url": "https://finanzaspersonales.local/mcp/oauth"
+        }
+    }
+}

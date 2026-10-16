@@ -1,0 +1,111 @@
+---
+name: finanzas-personales
+description: Work with the user's finances through the Finanzas Personales connector — spending, cashflow, net worth, budgets, categories, labels, automation rules and transaction splits. Use whenever the user asks about their money, their accounts, their budgets or their transactions, or asks to categorize, label, split, record or clean up transactions.
+---
+
+# Finanzas Personales
+
+The connector's own instructions cover the rules (minor units, spaces, what a
+budget or a split is). This skill covers how to get real work done with it.
+
+## Before calling anything
+
+- Ids are opaque. Get them from `list_accounts`, `list_categories`,
+  `list_labels`, `list_budgets`, `list_automation_rules` — never guess one, and
+  reuse them for the rest of the conversation instead of listing again.
+- `search_transactions` has no paging: it returns at most 200 rows. Narrow with
+  `from`/`to` and loop over periods rather than asking for "everything".
+- Only mention spaces if the user does. Everything defaults to the personal
+  space; call `list_spaces` when they say "shared", "household", "our".
+- Nothing here moves money. Asked to transfer, pay or send money, say so
+  plainly instead of asking where to send it, and in the same reply offer to
+  log the transfer as a manual transaction once the user has made it through
+  their bank.
+
+## Recipes
+
+**"How did I do this month?"** — `get_cashflow` for the month gives income,
+expense, savings and the comparison with the previous period. Add
+`spending_by_category` for the same range to say *where* it went, then drill
+into the biggest root with `parent_category_id`.
+
+**"What am I paying every month?"** — `search_transactions` over the last 3-6
+months, then group by creditor and spacing yourself: same merchant, similar
+amount, roughly 28-31 days apart. There is no subscriptions tool.
+
+**"Categorize what's pending"** — search a date range, keep the rows whose
+`category` is null, and set them with `categorize_transaction` (works on bank
+transactions too). When the same merchant shows up repeatedly, stop doing it by
+hand: `create_automation_rule` for future ones, then `apply_automation_rule`
+for the history — it previews by default, so show the user the match count and
+the sample before calling it again with `dry_run: false`.
+
+**"Always file X under Y"** — build the rule instead of categorizing by hand.
+Get the category and label ids from `list_categories` / `list_labels` first,
+then write the condition in plain language ("description mentions amazon, but
+not amazon prime") and only then map it to JsonLogic:
+
+- contains → `{"in":["amazon",{"var":"description"}]}`, and does not contain →
+  the same wrapped in a negation, `{"!":{"in":["amazon prime",{"var":"description"}]}}`.
+- equals / is not → `{"==":[{"var":"creditor_name"},"netflix"]}` and
+  `{"!=":[...]}`; empty / not empty are the same two against `null`.
+- Join them with `{"and":[...]}` or `{"or":[...]}`, which nest: "any of these
+  merchants, but not that one" is one `and` holding an `or` and a `!`.
+- Values are compared lowercased, and amounts inside `rules_json` are in major
+  units. "Does not contain" is also true when the field is empty.
+
+Then `create_automation_rule`, and `apply_automation_rule` with `dry_run: true`
+before anything else — the match list is the only way to find out the rule says
+what you meant. A rule that is merely wrong (bad nesting, a variable that does
+not exist, a token that never appears) saves happily and matches nothing, so a
+dry run returning 0 matches is a bug in the rule, not an empty history. Fix it
+with `update_automation_rule`, dry-run again, then commit with `dry_run: false`.
+
+**"This charge was for two things"** — `split_transaction` with parts that add
+up to the original and share its sign. The parts replace it everywhere; to undo
+it, `merge_transaction_splits` with any part.
+
+**"Add my savings account / my mortgage / my flat"** — `create_account` with
+the type, a currency and, if the user knows it, today's `balance`. A `loan` or a
+`real_estate` account is worth doing properly in one call: pass
+`annual_interest_rate`, `loan_term_months` and `original_amount` (or
+`purchase_price` and `purchase_date`), and with a balance the monthly history in
+between is generated for the chart. Link a mortgage to the property it pays for
+with `linked_real_estate_account_id`. Renaming, retyping or reweighing an
+account later is `update_account`, which touches only the fields you pass.
+
+**"Am I overspending?"** — `list_budgets` already reports allocated, spent and
+remaining for the period in progress. Say `current_period: null` means no
+period covers today, and treat `spent_amount` as provisional while
+`processing_historical` is true.
+
+**"Track my X spending"** — `create_budget` over the categories that matter.
+Period length, start day, rollover and tracked categories are frozen after
+creation, so get them right the first time: confirm them with the user before
+creating, because changing them later means deleting and recreating the budget.
+
+## What bites
+
+- Bank transactions cannot be edited or deleted — only categorized, labelled or
+  split. Reach for `categorize_transaction` / `label_transaction`, not
+  `update_transaction`.
+- `create_transaction` never dedups. Only add what the bank will not sync, or
+  the user ends up with the charge twice.
+- Balances (`create_balance`) work on manual accounts only; a connected
+  account's balances come from the bank.
+- Bank-connected accounts cannot be created: only the user can, in the app,
+  through the bank's consent flow. Offer that instead of building a manual
+  lookalike, which would never sync. On one that already exists,
+  `update_account` takes the name and the ownership fields and refuses the
+  currency, the bank and any type without a transaction ledger.
+- Neither account tool archives, hides or deletes. Archiving in particular also
+  revokes the bank connection, so it stays in the app where the user can see
+  what they are agreeing to.
+- `list_accounts` shows every account in a shared space, but only the owner can
+  edit one — `update_account` refuses a housemate's account.
+- Ask first before anything that destroys data: `delete_budget` (takes the
+  spending history with it), `merge_transaction_splits` (loses the categories,
+  labels and notes on every part), `delete_category` with
+  `strategy: "cascade"`, and any bulk `dry_run: false` run.
+- Amounts inside an automation rule's `rules_json` are in major units. Every
+  other amount in the connector is in cents.

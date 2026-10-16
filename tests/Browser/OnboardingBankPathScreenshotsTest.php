@@ -254,7 +254,7 @@ it('captures the return that landed in another browser', function () {
         ->waitForText('BBVA sent you here', 5)
         ->assertSee('The connection worked')
         ->assertSee('This tab can be closed.')
-        ->assertSee('Open Whisper')
+        ->assertSee('Open Finanzas Personales')
         ->assertScript(ANIMATIONS_SETTLED)
         ->screenshot(filename: 'bank-other-device')
         ->assertNoJavascriptErrors();

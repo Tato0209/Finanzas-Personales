@@ -30,7 +30,7 @@ class CoinbaseController extends CryptoPortfolioConnectController
 
     protected function bankLogo(): ?string
     {
-        return 'https://whisper.money/storage/banks/logos/coinbase.png';
+        return 'https://finanzaspersonales.local/storage/banks/logos/coinbase.png';
     }
 
     protected function fetchProviderData(array $validated): mixed

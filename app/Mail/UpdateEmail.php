@@ -42,7 +42,7 @@ class UpdateEmail extends Mailable implements ShouldQueue
     public function __construct(
         public User $user,
         public string $viewName,
-        public string $emailSubject = 'Update from Whisper Money',
+        public string $emailSubject = 'Update from Finanzas Personales',
         public bool $marketing = true,
     ) {
         $this->onQueue('emails');
@@ -67,8 +67,8 @@ class UpdateEmail extends Mailable implements ShouldQueue
         return new Envelope(
             subject: __($this->emailSubject),
             replyTo: [new Address(
-                config('mail.drip_from.address', 'hi@whisper.money'),
-                config('mail.drip_from.name', 'Whisper Money'),
+                config('mail.drip_from.address', 'hi@finanzaspersonales.local'),
+                config('mail.drip_from.name', 'Finanzas Personales'),
             )],
         );
     }

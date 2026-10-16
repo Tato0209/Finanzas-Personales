@@ -1,0 +1,37 @@
+import { AppContent } from '@/components/app-content';
+import { AppShell } from '@/components/app-shell';
+import { AppSidebar } from '@/components/app-sidebar';
+import { AppSidebarHeader } from '@/components/app-sidebar-header';
+import { SubscriptionPaymentIssueBanner } from '@/components/subscription/payment-issue-banner';
+import { type BreadcrumbItem } from '@/types';
+import { type PropsWithChildren, type ReactNode } from 'react';
+
+export default function AppSidebarLayout({
+    children,
+    breadcrumbs = [],
+    mobileLeading,
+}: PropsWithChildren<{
+    breadcrumbs?: BreadcrumbItem[];
+    mobileLeading?: ReactNode;
+}>) {
+    return (
+        <AppShell variant="sidebar">
+            <AppSidebar />
+            <AppContent
+                variant="sidebar"
+                className="pt-safe overflow-x-hidden pb-[90px] md:pb-0"
+            >
+                <AppSidebarHeader
+                    breadcrumbs={breadcrumbs}
+                    mobileLeading={mobileLeading}
+                />
+                <div
+                    className="mx-auto flex w-full max-w-page flex-1 flex-col"
+                    data-testid="page-content"
+                >
+                    {children}
+                </div>
+            </AppContent>
+        </AppShell>
+    );
+}

@@ -1,0 +1,3755 @@
+import { BankLogo } from '@/components/bank-logo';
+import { HeroVideo } from '@/components/landing/hero-video';
+import InstallAppButton from '@/components/landing/install-app-button';
+import Header from '@/components/partials/header';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { tailwindColorClasses } from '@/components/user-info';
+import { usePwaInstall } from '@/hooks/use-pwa-install';
+import {
+    useScrollProgress,
+    useScrollTranslate,
+} from '@/hooks/use-scroll-progress';
+import { leavePage } from '@/lib/leave-page';
+import { readStoredValue, writeStoredValue } from '@/lib/safe-storage';
+import { cn } from '@/lib/utils';
+import { dashboard, roadmap } from '@/routes';
+import documentation from '@/routes/documentation';
+import { type SharedData } from '@/types';
+import { type CategoryColor, getCategoryColorClasses } from '@/types/category';
+import { LANGUAGE_OPTIONS } from '@/types/language';
+import { Plan } from '@/types/pricing';
+import {
+    getSavingsGoalStatusColor,
+    getSavingsGoalStatusLabel,
+    type SavingsGoalStatus,
+} from '@/types/savings-goal';
+import { formatCurrency } from '@/utils/currency';
+import { __ } from '@/utils/i18n';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Facehash } from 'facehash';
+import {
+    ArrowDownLeftIcon,
+    ArrowLeftRightIcon,
+    ArrowRightIcon,
+    ArrowUpRightIcon,
+    BoltIcon,
+    BriefcaseIcon,
+    BusIcon,
+    CarIcon,
+    CheckIcon,
+    ChevronDownIcon,
+    ClapperboardIcon,
+    CoinsIcon,
+    FileSpreadsheetIcon,
+    GiftIcon,
+    HeartPulseIcon,
+    HomeIcon,
+    LaptopIcon,
+    LockIcon,
+    type LucideIcon,
+    PencilIcon,
+    SearchIcon,
+    ShirtIcon,
+    ShoppingBasketIcon,
+    SparklesIcon,
+    SplitIcon,
+    WineIcon,
+    WrenchIcon,
+    XIcon,
+} from 'lucide-react';
+import {
+    type CSSProperties,
+    type ReactNode,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+type PopularBank = {
+    name: string;
+    logo: string | null;
+};
+
+/**
+ * A comparison landing, in whichever language it is published in for this
+ * visitor. The server picks the language, since each one is its own URL.
+ */
+type ComparisonLink = {
+    slug: string;
+    heading: string;
+    path: string;
+};
+
+type TransactionPreviewRow = {
+    id: string;
+    date: string;
+    description: string;
+    category: {
+        name: string;
+        color: CategoryColor;
+        icon: LucideIcon;
+    };
+    amountInCents: number;
+};
+
+type AccountPreviewRow = {
+    id: string;
+    institution: string;
+    name: string;
+    type: string;
+    color: CategoryColor;
+    balanceInCents: number;
+};
+
+const TRANSACTION_PREVIEW_ROWS: ReadonlyArray<TransactionPreviewRow> = [
+    {
+        id: 'txn-1',
+        date: 'Mar 5',
+        description: 'Payroll Deposit',
+        category: {
+            name: 'Salary',
+            color: 'green',
+            icon: CoinsIcon,
+        },
+        amountInCents: 248500,
+    },
+    {
+        id: 'txn-2',
+        date: 'Mar 4',
+        description: 'Whole Foods Market',
+        category: {
+            name: 'Groceries',
+            color: 'red',
+            icon: ShoppingBasketIcon,
+        },
+        amountInCents: -8742,
+    },
+    {
+        id: 'txn-3',
+        date: 'Mar 4',
+        description: 'City Electric Co.',
+        category: {
+            name: 'Electricity',
+            color: 'orange',
+            icon: BoltIcon,
+        },
+        amountInCents: -12840,
+    },
+    {
+        id: 'txn-4',
+        date: 'Mar 3',
+        description: 'Coffee Lab',
+        category: {
+            name: 'Cafes, restaurants, bars',
+            color: 'red',
+            icon: WineIcon,
+        },
+        amountInCents: -1295,
+    },
+    {
+        id: 'txn-5',
+        date: 'Mar 3',
+        description: 'Rent Payment',
+        category: {
+            name: 'Rent and maintanence',
+            color: 'orange',
+            icon: WrenchIcon,
+        },
+        amountInCents: -145000,
+    },
+    {
+        id: 'txn-6',
+        date: 'Mar 2',
+        description: 'Metro Transit',
+        category: {
+            name: 'Transportation',
+            color: 'amber',
+            icon: BusIcon,
+        },
+        amountInCents: -520,
+    },
+    {
+        id: 'txn-7',
+        date: 'Mar 1',
+        description: 'Freelance Invoice',
+        category: {
+            name: 'Self-Employment Income',
+            color: 'green',
+            icon: BriefcaseIcon,
+        },
+        amountInCents: 62000,
+    },
+    {
+        id: 'txn-8',
+        date: 'Feb 28',
+        description: 'Movie Night',
+        category: {
+            name: 'Theatre, music, cinema',
+            color: 'violet',
+            icon: ClapperboardIcon,
+        },
+        amountInCents: -2499,
+    },
+    {
+        id: 'txn-9',
+        date: 'Feb 28',
+        description: 'Healthy Pharmacy',
+        category: {
+            name: 'Health and pharmaceuticals',
+            color: 'rose',
+            icon: HeartPulseIcon,
+        },
+        amountInCents: -3599,
+    },
+    {
+        id: 'txn-10',
+        date: 'Feb 27',
+        description: 'Savings Transfer',
+        category: {
+            name: 'Personal transfers',
+            color: 'cyan',
+            icon: ArrowLeftRightIcon,
+        },
+        amountInCents: -50000,
+    },
+] as const;
+
+const ACCOUNT_PREVIEW_ROWS: ReadonlyArray<AccountPreviewRow> = [
+    {
+        id: 'acc-1',
+        institution: 'Chase',
+        name: 'Main Checking',
+        type: 'Checking',
+        color: 'blue',
+        balanceInCents: 324580,
+    },
+    {
+        id: 'acc-2',
+        institution: 'Marcus',
+        name: 'High-Yield Savings',
+        type: 'Savings',
+        color: 'green',
+        balanceInCents: 1245000,
+    },
+    {
+        id: 'acc-3',
+        institution: 'American Express',
+        name: 'Gold Card',
+        type: 'Credit',
+        color: 'red',
+        balanceInCents: -189240,
+    },
+    {
+        id: 'acc-4',
+        institution: 'Vanguard',
+        name: 'Investment Portfolio',
+        type: 'Investment',
+        color: 'violet',
+        balanceInCents: 2875000,
+    },
+    {
+        id: 'acc-5',
+        institution: 'Ally',
+        name: 'Emergency Fund',
+        type: 'Savings',
+        color: 'cyan',
+        balanceInCents: 850000,
+    },
+] as const;
+
+function getBillingLabel(billingPeriod: string | null): string {
+    if (!billingPeriod) {
+        return 'one-time';
+    }
+    return '/month';
+}
+
+function FeatureCard({
+    children,
+    className,
+}: {
+    children: ReactNode;
+    className?: string;
+}) {
+    return (
+        <div
+            className={cn(
+                'overflow-hidden rounded-2xl border border-[#e3e3e0] bg-[#FDFDFC] dark:border-[#3E3E3A] dark:bg-[#161615]',
+                className,
+            )}
+        >
+            {children}
+        </div>
+    );
+}
+
+function BankConnectionsPreview({
+    banks,
+    prependFromBottomCount = 15,
+    className,
+}: {
+    banks: ReadonlyArray<PopularBank>;
+    prependFromBottomCount?: number;
+    className?: string;
+}) {
+    const { containerRef, listRef, translateY } = useScrollTranslate<
+        HTMLDivElement,
+        HTMLUListElement
+    >({ speed: 0.15, padding: 24 });
+    const prependedBanksCount = Math.min(prependFromBottomCount, banks.length);
+    const previewBanks = useMemo(
+        () => [...banks.slice(-prependedBanksCount), ...banks],
+        [banks, prependedBanksCount],
+    );
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('Popular banks available to connect')}
+            className={cn(
+                'relative min-h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950',
+                className,
+            )}
+        >
+            <ul
+                ref={listRef}
+                className="space-y-2 p-3 transition-transform duration-75 will-change-transform sm:p-4"
+                style={{ transform: `translate3d(0, -${translateY}px, 0)` }}
+            >
+                {previewBanks.map((bank, index) => {
+                    const originalIndex =
+                        (index - prependedBanksCount + banks.length) %
+                        banks.length;
+
+                    return (
+                        <li
+                            key={`${bank.name}-${index}`}
+                            className="flex items-center gap-3 rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2.5 dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                        >
+                            <span className="w-6 text-xs font-medium text-[#706f6c] dark:text-[#A1A09A]">
+                                {(originalIndex + 1)
+                                    .toString()
+                                    .padStart(2, '0')}
+                            </span>
+                            <BankLogo
+                                src={bank.logo}
+                                name={bank.name}
+                                fallback="letter"
+                                className="size-7 border border-[#e3e3e0] bg-white p-0.5 dark:border-[#3E3E3A] dark:bg-[#141413]"
+                            />
+                            <span className="text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                {bank.name}
+                            </span>
+                        </li>
+                    );
+                })}
+            </ul>
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-zinc-100 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+function TransactionRowsPreview({
+    currency,
+    locale,
+}: {
+    currency: string;
+    locale: string;
+}) {
+    const {
+        containerRef,
+        listRef,
+        translateY,
+        progress: scrollProgress,
+    } = useScrollTranslate<HTMLDivElement, HTMLUListElement>({
+        speed: 0.28,
+        padding: 56,
+    });
+    const prependedRowsCount = Math.min(10, TRANSACTION_PREVIEW_ROWS.length);
+    const previewRows = useMemo(
+        () => [
+            ...TRANSACTION_PREVIEW_ROWS.slice(-prependedRowsCount),
+            ...TRANSACTION_PREVIEW_ROWS,
+        ],
+        [prependedRowsCount],
+    );
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__(
+                'Sample transactions with a curved scrolling effect',
+            )}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            <div className="absolute inset-x-0 top-0 z-10 grid grid-cols-[60px_minmax(0,1fr)_auto] items-center rounded-t-xl border-b border-[#e3e3e0]/80 bg-[#FDFDFC]/85 px-3 py-2 text-[11px] font-semibold tracking-[0.08em] text-[#706f6c] uppercase backdrop-blur sm:px-4 dark:border-[#3E3E3A]/80 dark:bg-[#161615]/85 dark:text-[#A1A09A]">
+                <span>{__('Date')}</span>
+                <span>{__('Description')}</span>
+                <span className="text-right">{__('Amount')}</span>
+            </div>
+
+            <ul
+                ref={listRef}
+                className="flex flex-col gap-2 p-3 pt-12 transition-transform duration-75 will-change-transform sm:p-4 sm:pt-12"
+                style={{ transform: `translate3d(0, -${translateY}px, 0)` }}
+            >
+                {previewRows.map((transaction, index) => {
+                    const originalIndex =
+                        (index -
+                            prependedRowsCount +
+                            TRANSACTION_PREVIEW_ROWS.length) %
+                        TRANSACTION_PREVIEW_ROWS.length;
+                    const CategoryIcon = transaction.category.icon;
+                    const categoryColorClasses = getCategoryColorClasses(
+                        transaction.category.color,
+                    );
+                    const curveSeed =
+                        originalIndex * 0.7 + scrollProgress * Math.PI * 2.9;
+                    const curveX = Math.sin(curveSeed) * 11;
+                    const curveRotate = Math.sin(curveSeed + Math.PI / 3) * 1.6;
+                    const curveScale =
+                        1 - Math.abs(Math.sin(curveSeed)) * 0.015;
+                    const isIncome = transaction.amountInCents > 0;
+                    const amountLabel = formatCurrency(
+                        Math.abs(transaction.amountInCents),
+                        currency,
+                        locale,
+                    );
+
+                    return (
+                        <li
+                            key={`${transaction.id}-${index}`}
+                            className="flex items-center gap-3 rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2.5 dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                            style={{
+                                transform: `translate3d(${curveX}px, 0, 0) rotate(${curveRotate}deg) scale(${curveScale})`,
+                            }}
+                        >
+                            <span className="w-[60px] shrink-0 text-xs font-medium text-[#706f6c] dark:text-[#A1A09A]">
+                                {transaction.date}
+                            </span>
+
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                    {__(transaction.description)}
+                                </p>
+                                <span
+                                    className={cn(
+                                        'mt-1 inline-flex max-w-full items-center gap-1 truncate rounded-full border border-black/10 px-2 py-0.5 text-[11px] font-medium dark:border-white/15',
+                                        categoryColorClasses.bg,
+                                        categoryColorClasses.text,
+                                    )}
+                                >
+                                    <CategoryIcon className="size-3 shrink-0" />
+                                    {__(transaction.category.name)}
+                                </span>
+                            </div>
+
+                            <span
+                                className={cn(
+                                    'ml-2 flex shrink-0 items-center gap-1 text-sm font-semibold tabular-nums',
+                                    isIncome
+                                        ? 'text-emerald-600 dark:text-emerald-400'
+                                        : 'text-[#1b1b18] dark:text-[#EDEDEC]',
+                                )}
+                            >
+                                {isIncome ? (
+                                    <ArrowUpRightIcon className="size-3.5" />
+                                ) : (
+                                    <ArrowDownLeftIcon className="size-3.5" />
+                                )}
+                                <span>
+                                    {isIncome ? '+' : '-'}
+                                    {amountLabel}
+                                </span>
+                            </span>
+                        </li>
+                    );
+                })}
+            </ul>
+
+            <div className="pointer-events-none absolute inset-x-0 top-8 h-10 bg-gradient-to-b from-zinc-100/95 to-transparent dark:from-zinc-900/95" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+function AccountsBalancePreview({
+    currency,
+    locale,
+}: {
+    currency: string;
+    locale: string;
+}) {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+    const cardCount = ACCOUNT_PREVIEW_ROWS.length;
+    const staggerDelay = 0.12;
+    const staggerRange = 1 - (cardCount - 1) * staggerDelay;
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('All your bank accounts at a glance')}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            {ACCOUNT_PREVIEW_ROWS.map((account, index) => {
+                const cardProgress = Math.min(
+                    1,
+                    Math.max(
+                        0,
+                        (scrollProgress - index * staggerDelay) / staggerRange,
+                    ),
+                );
+
+                // Stack: cards centered in container with small per-card offset
+                const stackY = 130 + index * 5;
+                // Spread: cards spaced evenly from top padding
+                const spreadY = 16 + index * 66;
+                const y = stackY + (spreadY - stackY) * cardProgress;
+
+                // Rotation: cards tilt in the stack, straighten as they spread
+                const stackRotate = (index - Math.floor(cardCount / 2)) * 2;
+                const rotate = stackRotate * (1 - cardProgress);
+
+                // Scale: back cards slightly smaller in stack, full size when spread
+                const stackScale = 1 - index * 0.025;
+                const scale = stackScale + (1 - stackScale) * cardProgress;
+
+                // Opacity: back cards dimmer in stack, fully opaque when spread
+                const stackOpacity = Math.max(0.45, 1 - index * 0.12);
+                const opacity =
+                    stackOpacity + (1 - stackOpacity) * cardProgress;
+
+                const zIndex = (cardCount - index) * 10;
+                const colorClasses = getCategoryColorClasses(account.color);
+                const isDebt = account.balanceInCents < 0;
+                const balanceLabel = formatCurrency(
+                    Math.abs(account.balanceInCents),
+                    currency,
+                    locale,
+                );
+
+                return (
+                    <div
+                        key={account.id}
+                        className="absolute inset-x-3 flex items-center gap-3 rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/90 px-3 py-2.5 will-change-transform sm:inset-x-4 dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/90"
+                        style={{
+                            top: 0,
+                            transform: `translateY(${y}px) rotate(${rotate}deg) scale(${scale})`,
+                            opacity,
+                            zIndex,
+                        }}
+                    >
+                        <BankLogo
+                            src={null}
+                            name={account.institution}
+                            fallback="letter"
+                            className="size-7 shrink-0 border border-[#e3e3e0] bg-white p-0.5 dark:border-[#3E3E3A] dark:bg-[#141413]"
+                        />
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                {__(account.name)}
+                            </p>
+                            <p className="truncate text-xs text-[#706f6c] dark:text-[#A1A09A]">
+                                {account.institution}
+                            </p>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                            <span
+                                className={cn(
+                                    'text-sm font-semibold tabular-nums',
+                                    isDebt
+                                        ? 'text-red-600 dark:text-red-400'
+                                        : 'text-[#1b1b18] dark:text-[#EDEDEC]',
+                                )}
+                            >
+                                {isDebt ? '-' : ''}
+                                {balanceLabel}
+                            </span>
+                            <span
+                                className={cn(
+                                    'inline-flex items-center rounded-full border border-black/10 px-2 py-0.5 text-[11px] font-medium dark:border-white/15',
+                                    colorClasses.bg,
+                                    colorClasses.text,
+                                )}
+                            >
+                                {__(account.type)}
+                            </span>
+                        </div>
+                    </div>
+                );
+            })}
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-zinc-100 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+function ImportPreview({
+    currency,
+    locale,
+}: {
+    currency: string;
+    locale: string;
+}) {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    // How many transaction rows to show below the file card
+    const previewRows = TRANSACTION_PREVIEW_ROWS.slice(0, 5);
+
+    // Scroll range for the file card drop: 0 → FILE_DROP_END
+    const FILE_DROP_END = 0.4;
+    // Each row slides in over this span of scroll progress
+    const ROW_SPAN = 0.12;
+    // Row i starts appearing at this scroll progress
+    const rowStart = (i: number) => 0.3 + i * 0.1;
+
+    // File card animation: drops from above, scales and fades in
+    const fileProgress = Math.min(1, scrollProgress / FILE_DROP_END);
+    const fileY = -80 + 92 * fileProgress;
+    const fileScale = 0.9 + 0.1 * fileProgress;
+    const fileOpacity = fileProgress;
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('Import transactions from a CSV file')}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            {/* File card — drops from above */}
+            <div
+                className="absolute inset-x-3 flex items-center gap-3 rounded-lg border border-emerald-200 bg-[#FDFDFC] px-3 py-3 will-change-transform sm:inset-x-4 dark:border-emerald-800/60 dark:bg-[#1C1C1A]"
+                style={{
+                    top: 0,
+                    transform: `translateY(${fileY}px) scale(${fileScale})`,
+                    opacity: fileOpacity,
+                }}
+            >
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/40">
+                    <FileSpreadsheetIcon className="size-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                        transactions.csv
+                    </p>
+                    <p className="text-xs text-[#706f6c] dark:text-[#A1A09A]">
+                        847 KB &middot; 1,247 rows
+                    </p>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-400">
+                    <CheckIcon className="size-3" />
+                    {__('Imported')}
+                </span>
+            </div>
+
+            {/* Transaction rows — cascade in from the right after file card lands */}
+            {previewRows.map((transaction, index) => {
+                const start = rowStart(index);
+                const rowProgress = Math.min(
+                    1,
+                    Math.max(0, (scrollProgress - start) / ROW_SPAN),
+                );
+                const rowX = 24 * (1 - rowProgress);
+                const rowOpacity = rowProgress;
+                const CategoryIcon = transaction.category.icon;
+                const categoryColorClasses = getCategoryColorClasses(
+                    transaction.category.color,
+                );
+                const isIncome = transaction.amountInCents > 0;
+                const amountLabel = formatCurrency(
+                    Math.abs(transaction.amountInCents),
+                    currency,
+                    locale,
+                );
+
+                return (
+                    <div
+                        key={transaction.id}
+                        className="absolute inset-x-3 flex items-center gap-3 rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/90 px-3 py-2.5 will-change-transform sm:inset-x-4 dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/90"
+                        style={{
+                            top: 0,
+                            transform: `translateY(${124 + index * 38}px) translateX(${rowX}px)`,
+                            opacity: rowOpacity,
+                        }}
+                    >
+                        <span className="w-[52px] shrink-0 text-xs font-medium text-[#706f6c] dark:text-[#A1A09A]">
+                            {transaction.date}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                {__(transaction.description)}
+                            </p>
+                        </div>
+                        <span
+                            className={cn(
+                                'hidden shrink-0 items-center gap-1 rounded-full border border-black/10 px-2 py-0.5 text-[11px] font-medium sm:inline-flex dark:border-white/15',
+                                categoryColorClasses.bg,
+                                categoryColorClasses.text,
+                            )}
+                        >
+                            <CategoryIcon className="size-3 shrink-0" />
+                            {__(transaction.category.name)}
+                        </span>
+                        <span
+                            className={cn(
+                                'ml-1 shrink-0 text-sm font-semibold tabular-nums',
+                                isIncome
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : 'text-[#1b1b18] dark:text-[#EDEDEC]',
+                            )}
+                        >
+                            {isIncome ? '+' : '-'}
+                            {amountLabel}
+                        </span>
+                    </div>
+                );
+            })}
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-zinc-100 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+function PrivacyRedactedPreview() {
+    const PRIVACY_ROWS = [
+        { label: 'Account Holder', value: 'Jonathan Mitchell' },
+        { label: 'Account No.', value: 'GB29 NWBK 6016 1331 9268 19' },
+        { label: 'Balance', value: '$12,450.00' },
+        { label: 'Last Login', value: __('Today') + ', 9:42 AM' },
+        { label: 'Statement', value: 'Q4 2024 · ' + __('Quartely') },
+    ] as const;
+
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    // Each bar slides in over this span of scroll progress
+    const BAR_SPAN = 0.15;
+    // Row i's bar starts sliding at this scroll progress
+    const barStart = (i: number) => 0.1 + i * 0.12;
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__(
+                'Your financial data stays private and is never shared',
+            )}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            <ul className="flex flex-col gap-2 p-3 sm:p-4">
+                {PRIVACY_ROWS.map((row, index) => {
+                    const start = barStart(index);
+                    const barProgress = Math.min(
+                        1,
+                        Math.max(0, (scrollProgress - start) / BAR_SPAN),
+                    );
+                    const barX = 100 * (1 - barProgress);
+
+                    return (
+                        <li
+                            key={row.label}
+                            className="flex items-center gap-3 rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2.5 dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                        >
+                            <span className="w-[110px] shrink-0 text-xs font-medium text-[#706f6c] dark:text-[#A1A09A]">
+                                {__(row.label)}
+                            </span>
+                            <div className="relative min-w-0 flex-1 overflow-hidden rounded">
+                                <span className="block truncate text-sm font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                    {row.value}
+                                </span>
+                                <div
+                                    className="absolute inset-0 rounded bg-zinc-900 will-change-transform dark:bg-zinc-100"
+                                    style={{
+                                        transform: `translateX(${barX}%)`,
+                                    }}
+                                />
+                            </div>
+                        </li>
+                    );
+                })}
+
+                {/* Safe row — never redacted */}
+                <li className="flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2.5 dark:border-emerald-800/50 dark:bg-emerald-950/30">
+                    <LockIcon className="mr-2 size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-xs font-medium text-[#706f6c] dark:text-[#A1A09A]">
+                        {__('Shared')}
+                    </span>
+                    <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                        {__('only with you')}
+                    </span>
+                </li>
+            </ul>
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-100 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+type SavingsGoalPreviewRow = {
+    name: string;
+    savedInCents: number;
+    targetInCents: number;
+    status: SavingsGoalStatus;
+};
+
+const SAVINGS_GOALS_PREVIEW_ROWS: ReadonlyArray<SavingsGoalPreviewRow> = [
+    {
+        name: 'Holiday in Japan',
+        savedInCents: 124000,
+        targetInCents: 200000,
+        status: 'on_track',
+    },
+    {
+        name: 'Emergency fund',
+        savedInCents: 450000,
+        targetInCents: 600000,
+        status: 'ahead',
+    },
+    {
+        name: 'New laptop',
+        savedInCents: 38000,
+        targetInCents: 150000,
+        status: 'behind',
+    },
+    {
+        name: 'Car service',
+        savedInCents: 90000,
+        targetInCents: 90000,
+        status: 'completed',
+    },
+] as const;
+
+const GOAL_RING_SIZE = 40;
+const GOAL_RING_STROKE = 5;
+const GOAL_RING_RADIUS = (GOAL_RING_SIZE - GOAL_RING_STROKE) / 2;
+const GOAL_RING_CIRCUMFERENCE = 2 * Math.PI * GOAL_RING_RADIUS;
+
+function SavingsGoalsPreview({
+    currency,
+    locale,
+}: {
+    currency: string;
+    locale: string;
+}) {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    const ROW_SLIDE_SPAN = 0.15;
+    const RING_FILL_SPAN = 0.2;
+    const rowSlideStart = (i: number) => 0.05 + i * 0.1;
+    const ringFillStart = (i: number) => rowSlideStart(i) + 0.12;
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('Savings goals filling up as you set money aside')}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            <ul className="flex flex-col gap-2 p-3 sm:p-4">
+                {SAVINGS_GOALS_PREVIEW_ROWS.map((goal, index) => {
+                    const slideProgress = Math.min(
+                        1,
+                        Math.max(
+                            0,
+                            (scrollProgress - rowSlideStart(index)) /
+                                ROW_SLIDE_SPAN,
+                        ),
+                    );
+                    const fillProgress = Math.min(
+                        1,
+                        Math.max(
+                            0,
+                            (scrollProgress - ringFillStart(index)) /
+                                RING_FILL_SPAN,
+                        ),
+                    );
+
+                    const percentage = Math.min(
+                        100,
+                        (goal.savedInCents / goal.targetInCents) * 100,
+                    );
+                    const filledPct = percentage * fillProgress;
+                    const toGoInCents = Math.max(
+                        goal.targetInCents - goal.savedInCents,
+                        0,
+                    );
+                    const statusColor = getSavingsGoalStatusColor(goal.status);
+
+                    return (
+                        <li
+                            key={goal.name}
+                            className="flex items-center gap-3 rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2.5 will-change-transform dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                            style={{
+                                transform: `translateX(${32 * (1 - slideProgress)}px)`,
+                                opacity: slideProgress,
+                            }}
+                        >
+                            {/* A goal fills up, so it reads as a ring closing
+                                rather than the draining bar the budget preview
+                                uses — the same contrast the app itself makes. */}
+                            <div className="relative size-10 shrink-0">
+                                <svg
+                                    viewBox={`0 0 ${GOAL_RING_SIZE} ${GOAL_RING_SIZE}`}
+                                    className="size-10 -rotate-90"
+                                    aria-hidden="true"
+                                >
+                                    <circle
+                                        cx={GOAL_RING_SIZE / 2}
+                                        cy={GOAL_RING_SIZE / 2}
+                                        r={GOAL_RING_RADIUS}
+                                        fill="none"
+                                        strokeWidth={GOAL_RING_STROKE}
+                                        className="stroke-[#e3e3e0] dark:stroke-[#3E3E3A]"
+                                    />
+                                    <circle
+                                        cx={GOAL_RING_SIZE / 2}
+                                        cy={GOAL_RING_SIZE / 2}
+                                        r={GOAL_RING_RADIUS}
+                                        fill="none"
+                                        strokeWidth={GOAL_RING_STROKE}
+                                        strokeLinecap="round"
+                                        className="stroke-[#1b1b18] dark:stroke-[#EDEDEC]"
+                                        strokeDasharray={`${(GOAL_RING_CIRCUMFERENCE * filledPct) / 100} ${GOAL_RING_CIRCUMFERENCE}`}
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold tabular-nums">
+                                    {Math.round(filledPct)}%
+                                </div>
+                            </div>
+
+                            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="truncate text-xs font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                        {__(goal.name)}
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            'shrink-0 rounded-full border border-[#e3e3e0]/85 px-1.5 py-px text-[9px] dark:border-[#3E3E3A]/80',
+                                            statusColor,
+                                        )}
+                                    >
+                                        {getSavingsGoalStatusLabel(goal.status)}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2 text-[10px]">
+                                    <span className="text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__('Saved')}
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            'tabular-nums',
+                                            statusColor,
+                                        )}
+                                    >
+                                        {formatCurrency(
+                                            goal.savedInCents,
+                                            currency,
+                                            locale,
+                                        )}{' '}
+                                        {__('of')}{' '}
+                                        {formatCurrency(
+                                            goal.targetInCents,
+                                            currency,
+                                            locale,
+                                        )}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2 text-[10px]">
+                                    <span className="text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__('To go')}
+                                    </span>
+                                    <span className="tabular-nums">
+                                        {formatCurrency(
+                                            toGoInCents,
+                                            currency,
+                                            locale,
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-100 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+type SplitPreviewPart = {
+    name: string;
+    color: CategoryColor;
+    icon: LucideIcon;
+    amountInCents: number;
+};
+
+type SplitPreviewRow = {
+    id: string;
+    date: string;
+    description: string;
+    color: CategoryColor;
+    icon: LucideIcon;
+    amountInCents: number;
+    parts?: ReadonlyArray<SplitPreviewPart>;
+};
+
+const SPLIT_PREVIEW_ROWS: ReadonlyArray<SplitPreviewRow> = [
+    {
+        id: 'split-1',
+        date: 'Jan 14',
+        description: 'Mercadona',
+        color: 'rose',
+        icon: ShoppingBasketIcon,
+        amountInCents: -7040,
+        parts: [
+            {
+                name: 'Groceries',
+                color: 'rose',
+                icon: ShoppingBasketIcon,
+                amountInCents: -4820,
+            },
+            {
+                name: 'Home',
+                color: 'blue',
+                icon: HomeIcon,
+                amountInCents: -2220,
+            },
+        ],
+    },
+    {
+        id: 'split-2',
+        date: 'Jan 11',
+        description: 'Amazon',
+        color: 'violet',
+        icon: LaptopIcon,
+        amountInCents: -12999,
+        parts: [
+            {
+                name: 'Electronics',
+                color: 'violet',
+                icon: LaptopIcon,
+                amountInCents: -8999,
+            },
+            {
+                name: 'Gifts',
+                color: 'pink',
+                icon: GiftIcon,
+                amountInCents: -4000,
+            },
+        ],
+    },
+    {
+        id: 'split-3',
+        date: 'Jan 9',
+        description: 'Zara',
+        color: 'amber',
+        icon: ShirtIcon,
+        amountInCents: -5990,
+    },
+    {
+        id: 'split-4',
+        date: 'Jan 7',
+        description: 'Netflix',
+        color: 'violet',
+        icon: ClapperboardIcon,
+        amountInCents: -1399,
+    },
+    {
+        id: 'split-5',
+        date: 'Jan 5',
+        description: 'Uber',
+        color: 'blue',
+        icon: CarIcon,
+        amountInCents: -1840,
+    },
+    {
+        id: 'split-6',
+        date: 'Jan 3',
+        description: 'Glovo',
+        color: 'orange',
+        icon: WineIcon,
+        amountInCents: -3860,
+        parts: [
+            {
+                name: 'Dining Out',
+                color: 'orange',
+                icon: WineIcon,
+                amountInCents: -2660,
+            },
+            {
+                name: 'Groceries',
+                color: 'rose',
+                icon: ShoppingBasketIcon,
+                amountInCents: -1200,
+            },
+        ],
+    },
+] as const;
+
+function SplitTransactionsPreview({
+    currency,
+    locale,
+    className,
+}: {
+    currency: string;
+    locale: string;
+    className?: string;
+}) {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    const ROW_REVEAL_SPAN = 0.14;
+    const PART_REVEAL_SPAN = 0.16;
+    const rowRevealStart = (i: number) => 0.04 + i * 0.09;
+    const partRevealStart = (i: number) => rowRevealStart(i) + 0.1;
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('A transaction split across two categories')}
+            className={cn(
+                'relative min-h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950',
+                className,
+            )}
+        >
+            <ul className="flex flex-col gap-2 p-3 sm:p-4">
+                {SPLIT_PREVIEW_ROWS.map((row, index) => {
+                    const revealProgress = Math.min(
+                        1,
+                        Math.max(
+                            0,
+                            (scrollProgress - rowRevealStart(index)) /
+                                ROW_REVEAL_SPAN,
+                        ),
+                    );
+                    const railProgress = Math.min(
+                        1,
+                        Math.max(
+                            0,
+                            (scrollProgress - partRevealStart(index)) /
+                                PART_REVEAL_SPAN,
+                        ),
+                    );
+
+                    const RowIcon = row.icon;
+                    const rowColorClasses = getCategoryColorClasses(row.color);
+
+                    return (
+                        <li
+                            key={row.id}
+                            className="rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2.5 will-change-transform dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                            style={{
+                                transform: `translateY(${-12 * (1 - revealProgress)}px)`,
+                                opacity: revealProgress,
+                            }}
+                        >
+                            <div className="flex items-center gap-2">
+                                <span
+                                    className={cn(
+                                        'flex size-5 shrink-0 items-center justify-center rounded-full',
+                                        rowColorClasses.bg,
+                                    )}
+                                >
+                                    <RowIcon
+                                        className={cn(
+                                            'size-2.5',
+                                            rowColorClasses.text,
+                                        )}
+                                    />
+                                </span>
+                                <span className="truncate text-xs font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                    {row.description}
+                                </span>
+                                <span className="flex-1 text-[10px] text-[#706f6c] dark:text-[#A1A09A]">
+                                    {row.date}
+                                </span>
+                                {row.parts && (
+                                    <SplitIcon
+                                        aria-hidden="true"
+                                        className="size-3 shrink-0 text-[#706f6c] dark:text-[#A1A09A]"
+                                    />
+                                )}
+                                <span className="text-[11px] font-medium tabular-nums">
+                                    -
+                                    {formatCurrency(
+                                        Math.abs(row.amountInCents),
+                                        currency,
+                                        locale,
+                                    )}
+                                </span>
+                            </div>
+
+                            {row.parts && (
+                                <div className="relative mt-2 ml-[9px] flex flex-col gap-1.5 pl-4">
+                                    {/* The rail grows out of the original row,
+                                        then each part drops off it. */}
+                                    <span
+                                        aria-hidden="true"
+                                        className="absolute top-[-4px] bottom-2.5 left-0 w-px origin-top bg-[#e3e3e0] will-change-transform dark:bg-[#3E3E3A]"
+                                        style={{
+                                            transform: `scaleY(${railProgress})`,
+                                        }}
+                                    />
+
+                                    {row.parts.map((part, partIndex) => {
+                                        const partProgress = Math.min(
+                                            1,
+                                            Math.max(
+                                                0,
+                                                (scrollProgress -
+                                                    (partRevealStart(index) +
+                                                        partIndex * 0.04)) /
+                                                    PART_REVEAL_SPAN,
+                                            ),
+                                        );
+                                        const PartIcon = part.icon;
+                                        const partColorClasses =
+                                            getCategoryColorClasses(part.color);
+
+                                        return (
+                                            <div
+                                                key={part.name}
+                                                className="relative flex items-center gap-2 will-change-transform"
+                                                style={{
+                                                    transform: `translateX(${-8 * (1 - partProgress)}px)`,
+                                                    opacity: partProgress,
+                                                }}
+                                            >
+                                                <span
+                                                    aria-hidden="true"
+                                                    className="absolute top-1/2 -left-4 h-px w-[11px] bg-[#e3e3e0] dark:bg-[#3E3E3A]"
+                                                />
+                                                <span
+                                                    className={cn(
+                                                        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                                                        partColorClasses.bg,
+                                                        partColorClasses.text,
+                                                    )}
+                                                >
+                                                    <PartIcon className="size-2.5 shrink-0 opacity-80" />
+                                                    {__(part.name)}
+                                                </span>
+                                                <span className="ml-auto text-[10px] text-[#706f6c] tabular-nums dark:text-[#A1A09A]">
+                                                    -
+                                                    {formatCurrency(
+                                                        Math.abs(
+                                                            part.amountInCents,
+                                                        ),
+                                                        currency,
+                                                        locale,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </li>
+                    );
+                })}
+            </ul>
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-100 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+const CASHFLOW_PREVIEW_DATA = [
+    { month: 'Jan', incomeInCents: 420000, expensesInCents: 310000 },
+    { month: 'Feb', incomeInCents: 385000, expensesInCents: 290000 },
+    { month: 'Mar', incomeInCents: 510000, expensesInCents: 355000 },
+    { month: 'Apr', incomeInCents: 448000, expensesInCents: 380000 },
+    { month: 'May', incomeInCents: 495000, expensesInCents: 320000 },
+    { month: 'Jun', incomeInCents: 530000, expensesInCents: 410000 },
+] as const;
+
+function CashflowChartPreview() {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    const maxValue = Math.max(
+        ...CASHFLOW_PREVIEW_DATA.map((d) =>
+            Math.max(d.incomeInCents, d.expensesInCents),
+        ),
+    );
+    const chartHeight = 200;
+    const COL_SPAN = 0.28;
+    const COL_START_STEP = 0.07;
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('Cashflow income vs expenses bar chart')}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            <div className="flex h-full flex-col px-4 pt-5 pb-6">
+                {/* Legend */}
+                <div className="mb-3 flex items-center justify-end gap-4">
+                    <div className="flex items-center gap-1.5">
+                        <span className="size-2 rounded-full bg-emerald-500" />
+                        <span className="text-[10px] font-medium text-[#706f6c] dark:text-[#A1A09A]">
+                            {__('Income')}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="size-2 rounded-full bg-rose-400" />
+                        <span className="text-[10px] font-medium text-[#706f6c] dark:text-[#A1A09A]">
+                            {__('Expenses')}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Chart area */}
+                <div
+                    className="relative flex-1"
+                    style={{ height: chartHeight }}
+                >
+                    {/* Dashed gridlines at 25 / 50 / 75 % */}
+                    {[0.25, 0.5, 0.75].map((frac) => (
+                        <div
+                            key={frac}
+                            className="absolute inset-x-0 border-t border-dashed border-[#e3e3e0]/80 dark:border-[#3E3E3A]/60"
+                            style={{ bottom: `${frac * 100}%` }}
+                        />
+                    ))}
+
+                    {/* Baseline */}
+                    <div className="absolute inset-x-0 bottom-0 border-t border-[#e3e3e0] dark:border-[#3E3E3A]" />
+
+                    {/* Columns */}
+                    <div className="absolute inset-0 flex items-end justify-around px-1">
+                        {CASHFLOW_PREVIEW_DATA.map((col, i) => {
+                            const colProgress = Math.min(
+                                1,
+                                Math.max(
+                                    0,
+                                    (scrollProgress - i * COL_START_STEP) /
+                                        COL_SPAN,
+                                ),
+                            );
+
+                            const incomeH =
+                                (col.incomeInCents / maxValue) *
+                                chartHeight *
+                                colProgress;
+                            const expenseH =
+                                (col.expensesInCents / maxValue) *
+                                chartHeight *
+                                colProgress;
+
+                            return (
+                                <div
+                                    key={col.month}
+                                    className="flex flex-col items-center gap-1"
+                                >
+                                    <div className="flex items-end gap-0.5">
+                                        {/* Income bar */}
+                                        <div
+                                            className="w-5 rounded-t-sm bg-emerald-500 will-change-transform dark:bg-emerald-400"
+                                            style={{ height: incomeH }}
+                                        />
+                                        {/* Expense bar */}
+                                        <div
+                                            className="w-5 rounded-t-sm bg-rose-400 will-change-transform dark:bg-rose-500"
+                                            style={{ height: expenseH }}
+                                        />
+                                    </div>
+                                    <span className="text-[9px] font-medium text-[#706f6c] dark:text-[#A1A09A]">
+                                        {col.month}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-50 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+/**
+ * Tools the MCP server exposes, split by what they do. A test keeps these in
+ * step with App\Mcp\Servers\WhisperMoneyServer, so the landing cannot claim a
+ * number the server stopped serving.
+ */
+const MCP_READ_TOOL_COUNT = 11;
+const MCP_WRITE_TOOL_COUNT = 23;
+
+/**
+ * The figures the assistant reports on in the preview conversation. The budgets
+ * deliberately mirror BUDGETS_PREVIEW_ROWS below, so the two previews on the
+ * page cannot disagree about the same category, and every figure the transcript
+ * derives from them is computed rather than written out.
+ */
+const AI_CONNECTOR_CONVERSATION = {
+    budgets: [
+        { name: 'Groceries', spentInCents: 23800, budgetInCents: 35000 },
+        { name: 'Entertainment', spentInCents: 7200, budgetInCents: 8000 },
+        { name: 'Dining Out', spentInCents: 11000, budgetInCents: 20000 },
+    ],
+    /** Charges the assistant offers to file, and the budget they land in. */
+    unfiled: {
+        merchant: 'Reel Cinema',
+        count: 3,
+        amountInCents: 4780,
+        budgetIndex: 1,
+    },
+} as const;
+
+/** Span of scroll progress each message fades in over. */
+const AI_CONNECTOR_MESSAGE_SPAN = 0.12;
+
+/** Scroll progress at which message `index` starts appearing. */
+function aiConnectorMessageStart(index: number): number {
+    return 0.06 + index * 0.12;
+}
+
+function AiConnectorQuestion({
+    children,
+    style,
+}: {
+    children: ReactNode;
+    style: CSSProperties;
+}) {
+    return (
+        <div className="flex justify-end will-change-transform" style={style}>
+            <p className="max-w-[85%] rounded-xl border border-[#e3e3e0] bg-[#FDFDFC] px-3.5 py-2.5 text-sm leading-relaxed font-medium dark:border-[#3E3E3A] dark:bg-[#1C1C1A]">
+                {children}
+            </p>
+        </div>
+    );
+}
+
+function AiConnectorAnswer({
+    children,
+    style,
+}: {
+    children: ReactNode;
+    style: CSSProperties;
+}) {
+    return (
+        <div className="flex gap-3 will-change-transform" style={style}>
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#e3e3e0] bg-[#FDFDFC] dark:border-[#3E3E3A] dark:bg-[#1C1C1A]">
+                <SparklesIcon className="size-3.5" />
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-3">{children}</div>
+        </div>
+    );
+}
+
+/**
+ * One MCP tool the assistant called. Tool names are identifiers on the wire,
+ * so they are never translated.
+ */
+function AiConnectorToolChip({
+    name,
+    writes = false,
+}: {
+    name: string;
+    writes?: boolean;
+}) {
+    const Icon = writes ? PencilIcon : SearchIcon;
+
+    return (
+        <span
+            className={cn(
+                'inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 font-mono text-[0.6875rem]',
+                writes
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-400'
+                    : 'border-[#e3e3e0] bg-[#FDFDFC] text-[#706f6c] dark:border-[#3E3E3A] dark:bg-[#1C1C1A] dark:text-[#A1A09A]',
+            )}
+        >
+            <Icon className="size-3 shrink-0" />
+            {name}
+        </span>
+    );
+}
+
+function AiConnectorPreview({
+    currency,
+    locale,
+}: {
+    currency: string;
+    locale: string;
+}) {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    const { budgets, unfiled } = AI_CONNECTOR_CONVERSATION;
+    const target = budgets[unfiled.budgetIndex];
+    const filedSpentInCents = target.spentInCents + unfiled.amountInCents;
+    const amount = (valueInCents: number) =>
+        formatCurrency(valueInCents, currency, locale);
+
+    const revealStyle = (index: number): CSSProperties => {
+        const revealed = Math.min(
+            1,
+            Math.max(
+                0,
+                (scrollProgress - aiConnectorMessageStart(index)) /
+                    AI_CONNECTOR_MESSAGE_SPAN,
+            ),
+        );
+
+        return {
+            opacity: revealed,
+            transform: `translateY(${(1 - revealed) * 10}px)`,
+        };
+    };
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__(
+                'A sample conversation where an assistant reports on your budgets and files uncategorised transactions',
+            )}
+            className="overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            <div className="flex flex-wrap items-center gap-2 border-b border-[#e3e3e0]/85 px-4 py-3 dark:border-[#3E3E3A]/80">
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-[#e3e3e0] bg-[#FDFDFC] px-2 py-0.5 text-[0.7rem] font-medium text-[#706f6c] dark:border-[#3E3E3A] dark:bg-[#1C1C1A] dark:text-[#A1A09A]">
+                    <SparklesIcon className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    {__('Whisper Money connected')}
+                </span>
+                <span className="text-[0.7rem] text-[#A1A09A] dark:text-[#706f6c]">
+                    {__('Sample conversation')}
+                </span>
+            </div>
+
+            <div className="flex flex-col gap-5 p-4 sm:p-5">
+                <AiConnectorQuestion style={revealStyle(0)}>
+                    {__('What am I about to go over on this month?')}
+                </AiConnectorQuestion>
+
+                <AiConnectorAnswer style={revealStyle(1)}>
+                    <div className="flex flex-wrap gap-1.5">
+                        <AiConnectorToolChip name="list_budgets" />
+                        <AiConnectorToolChip name="spending_by_category" />
+                    </div>
+
+                    <p className="text-sm leading-relaxed">
+                        {__(
+                            ':category is the one to watch: :spent of :budget, with :remaining left.',
+                            {
+                                category: __(target.name),
+                                spent: amount(target.spentInCents),
+                                budget: amount(target.budgetInCents),
+                                remaining: amount(
+                                    target.budgetInCents - target.spentInCents,
+                                ),
+                            },
+                        )}
+                    </p>
+
+                    <div className="overflow-hidden rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75">
+                        {budgets.map((budget, index) => (
+                            <div
+                                key={budget.name}
+                                className={cn(
+                                    'flex items-center justify-between gap-3 px-3 py-2',
+                                    index < budgets.length - 1 &&
+                                        'border-b border-[#e3e3e0]/70 dark:border-[#3E3E3A]/60',
+                                )}
+                            >
+                                <span className="truncate text-[0.8125rem] font-medium">
+                                    {__(budget.name)}
+                                </span>
+                                <span className="shrink-0 text-[0.8125rem] tabular-nums">
+                                    <span
+                                        className={cn(
+                                            'font-semibold',
+                                            budget === target &&
+                                                'text-rose-500 dark:text-rose-400',
+                                        )}
+                                    >
+                                        {amount(budget.spentInCents)}
+                                    </span>
+                                    <span className="text-[#706f6c] dark:text-[#A1A09A]">
+                                        {' / '}
+                                        {amount(budget.budgetInCents)}
+                                    </span>
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <p className="text-sm leading-relaxed text-[#706f6c] dark:text-[#A1A09A]">
+                        {__(
+                            'And :count charges from :merchant are uncategorised, :amount in total, so no budget counts them yet.',
+                            {
+                                count: unfiled.count,
+                                merchant: unfiled.merchant,
+                                amount: amount(unfiled.amountInCents),
+                            },
+                        )}
+                    </p>
+                </AiConnectorAnswer>
+
+                <AiConnectorQuestion style={revealStyle(2)}>
+                    {__(
+                        'Put them under :category and make a rule for the next ones.',
+                        {
+                            category: __(target.name),
+                        },
+                    )}
+                </AiConnectorQuestion>
+
+                <AiConnectorAnswer style={revealStyle(3)}>
+                    <div className="flex flex-wrap gap-1.5">
+                        <AiConnectorToolChip
+                            name="categorize_transaction"
+                            writes
+                        />
+                        <AiConnectorToolChip
+                            name="create_automation_rule"
+                            writes
+                        />
+                    </div>
+
+                    <p className="text-sm leading-relaxed">
+                        {__(
+                            'Done. :count transactions moved to :category, and a new rule: anything from :merchant goes there from now on.',
+                            {
+                                count: unfiled.count,
+                                category: __(target.name),
+                                merchant: unfiled.merchant,
+                            },
+                        )}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2.5 dark:border-emerald-800/50 dark:bg-emerald-950/30">
+                        <CheckIcon className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-[0.8125rem] text-[#706f6c] dark:text-[#A1A09A]">
+                            {__(':category is now :amount', {
+                                category: __(target.name),
+                                amount: amount(filedSpentInCents),
+                            })}
+                        </span>
+                        <span className="text-[0.8125rem] font-medium text-rose-500 tabular-nums dark:text-rose-400">
+                            {__(':amount over budget', {
+                                amount: amount(
+                                    filedSpentInCents - target.budgetInCents,
+                                ),
+                            })}
+                        </span>
+                    </div>
+                </AiConnectorAnswer>
+            </div>
+        </div>
+    );
+}
+
+const BUDGETS_PREVIEW_ROWS = [
+    {
+        name: 'Groceries',
+        color: 'red' as const,
+        icon: ShoppingBasketIcon,
+        budgetInCents: 35000,
+        spentInCents: 23800,
+    },
+    {
+        name: 'Transportation',
+        color: 'amber' as const,
+        icon: BusIcon,
+        budgetInCents: 12000,
+        spentInCents: 5400,
+    },
+    {
+        name: 'Entertainment',
+        color: 'violet' as const,
+        icon: ClapperboardIcon,
+        budgetInCents: 8000,
+        spentInCents: 7200,
+    },
+    {
+        name: 'Dining Out',
+        color: 'orange' as const,
+        icon: WineIcon,
+        budgetInCents: 20000,
+        spentInCents: 11000,
+    },
+] as const;
+
+function BudgetsListPreview({
+    currency,
+    locale,
+}: {
+    currency: string;
+    locale: string;
+}) {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    const ROW_SLIDE_SPAN = 0.15;
+    const BAR_FILL_SPAN = 0.2;
+    const rowSlideStart = (i: number) => 0.05 + i * 0.1;
+    const barFillStart = (i: number) => rowSlideStart(i) + 0.12;
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('Budget goals by category')}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            <ul className="flex flex-col gap-2 p-3 sm:p-4">
+                {BUDGETS_PREVIEW_ROWS.map((row, index) => {
+                    const slideProgress = Math.min(
+                        1,
+                        Math.max(
+                            0,
+                            (scrollProgress - rowSlideStart(index)) /
+                                ROW_SLIDE_SPAN,
+                        ),
+                    );
+                    const fillProgress = Math.min(
+                        1,
+                        Math.max(
+                            0,
+                            (scrollProgress - barFillStart(index)) /
+                                BAR_FILL_SPAN,
+                        ),
+                    );
+
+                    const spentPct = row.spentInCents / row.budgetInCents;
+                    const filledPct = spentPct * fillProgress * 100;
+                    const colorClasses = getCategoryColorClasses(row.color);
+                    const Icon = row.icon;
+
+                    return (
+                        <li
+                            key={row.name}
+                            className="rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2.5 will-change-transform dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                            style={{
+                                transform: `translateX(${32 * (1 - slideProgress)}px)`,
+                                opacity: slideProgress,
+                            }}
+                        >
+                            <div className="mb-2 flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                    <span
+                                        className={cn(
+                                            'flex size-5 shrink-0 items-center justify-center rounded-full',
+                                            colorClasses.bg,
+                                        )}
+                                    >
+                                        <Icon
+                                            className={cn(
+                                                'size-2.5',
+                                                colorClasses.text,
+                                            )}
+                                        />
+                                    </span>
+                                    <span className="text-xs font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                        {__(row.name)}
+                                    </span>
+                                </div>
+                                <span className="text-[10px] text-[#706f6c] dark:text-[#A1A09A]">
+                                    {formatCurrency(
+                                        row.spentInCents,
+                                        currency,
+                                        locale,
+                                    )}{' '}
+                                    /{' '}
+                                    {formatCurrency(
+                                        row.budgetInCents,
+                                        currency,
+                                        locale,
+                                    )}
+                                </span>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e3e3e0] dark:bg-[#3E3E3A]">
+                                <div
+                                    className={cn(
+                                        'h-full rounded-full transition-none will-change-transform',
+                                        spentPct >= 0.85
+                                            ? 'bg-rose-400 dark:bg-rose-500'
+                                            : colorClasses.bg.split(' ')[0] +
+                                                  ' ' +
+                                                  colorClasses.bg
+                                                      .split(' ')
+                                                      .slice(1)
+                                                      .join(' '),
+                                    )}
+                                    style={{ width: `${filledPct}%` }}
+                                />
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-100 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+function BudgetDetailPreview({
+    currency,
+    locale,
+}: {
+    currency: string;
+    locale: string;
+}) {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    // Grocery budget detail — 68% spent
+    const budget = BUDGETS_PREVIEW_ROWS[0];
+    const spentPct = budget.spentInCents / budget.budgetInCents; // 0.68
+    const remainingInCents = budget.budgetInCents - budget.spentInCents;
+
+    const BAR_SPAN = 0.35;
+    const STATS_START = 0.3;
+    const STATS_SPAN = 0.2;
+    const ROWS_START = 0.25;
+    const ROW_STEP = 0.1;
+    const ROW_SPAN = 0.18;
+
+    const barFill =
+        Math.min(1, Math.max(0, scrollProgress / BAR_SPAN)) * spentPct * 100;
+    const statsProgress = Math.min(
+        1,
+        Math.max(0, (scrollProgress - STATS_START) / STATS_SPAN),
+    );
+
+    // Pick the grocery/food transactions
+    const detailRows = TRANSACTION_PREVIEW_ROWS.slice(1, 4);
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('Budget progress for Groceries')}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            <div className="flex flex-col gap-3 p-4">
+                {/* Header */}
+                <div className="flex items-center gap-2">
+                    <span
+                        className={cn(
+                            'flex size-7 shrink-0 items-center justify-center rounded-full',
+                            getCategoryColorClasses(budget.color).bg,
+                        )}
+                    >
+                        <ShoppingBasketIcon
+                            className={cn(
+                                'size-3.5',
+                                getCategoryColorClasses(budget.color).text,
+                            )}
+                        />
+                    </span>
+                    <span className="text-sm font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">
+                        {__(budget.name)}
+                    </span>
+                    <span className="ml-auto text-xs text-[#706f6c] dark:text-[#A1A09A]">
+                        {Math.round(spentPct * 100)}% {__('used')}
+                    </span>
+                </div>
+
+                {/* Big progress bar */}
+                <div className="h-3 w-full overflow-hidden rounded-full bg-[#e3e3e0] dark:bg-[#3E3E3A]">
+                    <div
+                        className="h-full rounded-full bg-red-400 transition-none will-change-transform dark:bg-red-500"
+                        style={{ width: `${barFill}%` }}
+                    />
+                </div>
+
+                {/* Stat chips */}
+                <div
+                    className="grid grid-cols-2 gap-2"
+                    style={{ opacity: statsProgress }}
+                >
+                    <div className="rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2 dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75">
+                        <p className="text-[10px] text-[#706f6c] dark:text-[#A1A09A]">
+                            {__('Spent')}
+                        </p>
+                        <p className="text-sm font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">
+                            {formatCurrency(
+                                budget.spentInCents,
+                                currency,
+                                locale,
+                            )}
+                        </p>
+                    </div>
+                    <div className="rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2 dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75">
+                        <p className="text-[10px] text-[#706f6c] dark:text-[#A1A09A]">
+                            {__('Remaining')}
+                        </p>
+                        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                            {formatCurrency(remainingInCents, currency, locale)}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Recent transactions */}
+                <ul className="flex flex-col gap-1.5">
+                    {detailRows.map((row, i) => {
+                        const rowProgress = Math.min(
+                            1,
+                            Math.max(
+                                0,
+                                (scrollProgress - (ROWS_START + i * ROW_STEP)) /
+                                    ROW_SPAN,
+                            ),
+                        );
+                        const Icon = row.category.icon;
+                        return (
+                            <li
+                                key={row.id}
+                                className="flex items-center gap-2.5 rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2 will-change-transform dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                                style={{
+                                    transform: `translateY(${8 * (1 - rowProgress)}px)`,
+                                    opacity: rowProgress,
+                                }}
+                            >
+                                <span
+                                    className={cn(
+                                        'flex size-5 shrink-0 items-center justify-center rounded-full',
+                                        getCategoryColorClasses(
+                                            row.category.color,
+                                        ).bg,
+                                    )}
+                                >
+                                    <Icon
+                                        className={cn(
+                                            'size-2.5',
+                                            getCategoryColorClasses(
+                                                row.category.color,
+                                            ).text,
+                                        )}
+                                    />
+                                </span>
+                                <span className="min-w-0 flex-1 truncate text-xs text-[#1b1b18] dark:text-[#EDEDEC]">
+                                    {row.description}
+                                </span>
+                                <span className="shrink-0 text-xs font-medium text-rose-500 dark:text-rose-400">
+                                    {formatCurrency(
+                                        Math.abs(row.amountInCents),
+                                        currency,
+                                        locale,
+                                    )}
+                                </span>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-50 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+function BudgetEditPreview() {
+    const { ref: containerRef, progress: scrollProgress } =
+        useScrollProgress<HTMLDivElement>();
+
+    // "Dining Out" budget — 90% spent (high alert)
+    const budget = BUDGETS_PREVIEW_ROWS[2]; // Entertainment, 90%
+    const diningBudget = BUDGETS_PREVIEW_ROWS[3]; // Dining Out, 55% for the row display
+    const spentPct = budget.spentInCents / budget.budgetInCents;
+
+    const ROW_SPAN = 0.2;
+    const ALERT_START = 0.18;
+    const ALERT_SPAN = 0.22;
+    const ACTION_START = 0.35;
+    const ACTION_SPAN = 0.18;
+
+    const rowProgress = Math.min(1, Math.max(0, scrollProgress / ROW_SPAN));
+    const alertProgress = Math.min(
+        1,
+        Math.max(0, (scrollProgress - ALERT_START) / ALERT_SPAN),
+    );
+    const actionProgress = Math.min(
+        1,
+        Math.max(0, (scrollProgress - ACTION_START) / ACTION_SPAN),
+    );
+
+    const Icon = budget.icon;
+    const DiningIcon = diningBudget.icon;
+    const colorClasses = getCategoryColorClasses(budget.color);
+    const diningColorClasses = getCategoryColorClasses(diningBudget.color);
+    const filledWidth = spentPct * rowProgress * 100;
+
+    return (
+        <div
+            ref={containerRef}
+            role="img"
+            aria-label={__('Budget alert and limit adjustment')}
+            className="relative h-[320px] overflow-hidden rounded-xl border border-[#e3e3e0]/70 bg-gradient-to-br from-zinc-50 to-zinc-100 select-none dark:border-[#3E3E3A]/30 dark:from-zinc-900 dark:to-zinc-950"
+        >
+            <div className="flex flex-col gap-3 p-4">
+                {/* Budget row */}
+                <div
+                    className="rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2.5 will-change-transform dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                    style={{ opacity: rowProgress }}
+                >
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <span
+                                className={cn(
+                                    'flex size-5 shrink-0 items-center justify-center rounded-full',
+                                    colorClasses.bg,
+                                )}
+                            >
+                                <Icon
+                                    className={cn(
+                                        'size-2.5',
+                                        colorClasses.text,
+                                    )}
+                                />
+                            </span>
+                            <span className="text-xs font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                {__(budget.name)}
+                            </span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-rose-500 dark:text-rose-400">
+                            {Math.round(spentPct * 100)}%
+                        </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e3e3e0] dark:bg-[#3E3E3A]">
+                        <div
+                            className="h-full rounded-full bg-rose-400 transition-none will-change-transform dark:bg-rose-500"
+                            style={{ width: `${filledWidth}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* Alert card */}
+                <div
+                    className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-3 will-change-transform dark:border-amber-800/50 dark:bg-amber-950/30"
+                    style={{
+                        transform: `translateY(${-14 * (1 - alertProgress)}px)`,
+                        opacity: alertProgress,
+                    }}
+                >
+                    <div className="flex items-start gap-2.5">
+                        <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-800/50">
+                            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                                !
+                            </span>
+                        </div>
+                        <div>
+                            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                                {__("You've used 90% of your budget")}
+                            </p>
+                            <p className="mt-0.5 text-[10px] text-amber-700/80 dark:text-amber-400/80">
+                                {__(
+                                    'Entertainment · Only $8 remaining this month',
+                                )}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Dining out row (second budget, calmer) */}
+                <div
+                    className="rounded-lg border border-[#e3e3e0]/85 bg-[#FDFDFC]/75 px-3 py-2.5 will-change-transform dark:border-[#3E3E3A]/80 dark:bg-[#1C1C1A]/75"
+                    style={{
+                        opacity: actionProgress,
+                        transform: `translateY(${8 * (1 - actionProgress)}px)`,
+                    }}
+                >
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <span
+                                className={cn(
+                                    'flex size-5 shrink-0 items-center justify-center rounded-full',
+                                    diningColorClasses.bg,
+                                )}
+                            >
+                                <DiningIcon
+                                    className={cn(
+                                        'size-2.5',
+                                        diningColorClasses.text,
+                                    )}
+                                />
+                            </span>
+                            <span className="text-xs font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                {__(diningBudget.name)}
+                            </span>
+                        </div>
+                        <span className="text-[10px] text-[#706f6c] dark:text-[#A1A09A]">
+                            {Math.round(
+                                (diningBudget.spentInCents /
+                                    diningBudget.budgetInCents) *
+                                    100,
+                            )}
+                            %
+                        </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e3e3e0] dark:bg-[#3E3E3A]">
+                        <div
+                            className={cn(
+                                'h-full rounded-full transition-none',
+                                diningColorClasses.bg.split(' ')[0] +
+                                    ' ' +
+                                    diningColorClasses.bg
+                                        .split(' ')
+                                        .slice(1)
+                                        .join(' '),
+                            )}
+                            style={{
+                                width: `${(diningBudget.spentInCents / diningBudget.budgetInCents) * actionProgress * 100}%`,
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Adjust limit action */}
+                <div
+                    className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2.5 will-change-transform dark:border-emerald-800/50 dark:bg-emerald-950/30"
+                    style={{
+                        opacity: actionProgress,
+                        transform: `translateY(${10 * (1 - actionProgress)}px)`,
+                    }}
+                >
+                    <div className="flex items-center gap-2">
+                        <CheckIcon className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                            {__('Limit adjusted')}
+                        </span>
+                    </div>
+                    <span className="text-[10px] text-[#706f6c] dark:text-[#A1A09A]">
+                        {__('Entertainment → $100')}
+                    </span>
+                </div>
+            </div>
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-50 to-transparent dark:from-zinc-900" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-100 to-transparent dark:from-zinc-950" />
+        </div>
+    );
+}
+
+/**
+ * Features reserved for paid plans. On the free plan card these are shown
+ * dimmed with an X to set expectations before sign-up.
+ */
+const PRO_ONLY_FEATURES = [
+    'Connect bank accounts',
+    'AI Suggestions',
+    'Priority support',
+];
+
+/**
+ * The landing page is browsable while signed in, and every "get started" route
+ * is behind guest middleware - so for an authenticated visitor those CTAs would
+ * bounce to the dashboard with copy that does not match where they end up.
+ */
+function useLandingCta(
+    canRegister?: boolean,
+    plan?: 'free' | 'paid',
+): {
+    href: string;
+    isSignedIn: boolean;
+} {
+    const { auth } = usePage<SharedData>().props;
+
+    return {
+        href: auth.user
+            ? dashboard().url
+            : canRegister
+              ? // Only the pricing cards pass a plan: onboarding adapts to the
+                // card that was clicked, and every other CTA stays a bare
+                // /register with the untouched flow behind it.
+                `/register${plan ? `?plan=${plan}` : ''}`
+              : '/login',
+        isSignedIn: Boolean(auth.user),
+    };
+}
+
+function FreePlanCard({
+    features,
+    canRegister = false,
+}: {
+    features: string[];
+    canRegister?: boolean;
+}) {
+    const excluded = new Set(PRO_ONLY_FEATURES);
+    const cta = useLandingCta(canRegister, 'free');
+
+    return (
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-[#e3e3e0] bg-[#FDFDFC] dark:border-[#3E3E3A] dark:bg-[#161615]">
+            <div className="flex flex-1 flex-col p-6 pt-2 sm:pt-12">
+                <h3 className="text-lg font-semibold">{__('Free')}</h3>
+
+                <div className="mt-3 flex items-baseline gap-2">
+                    <span className="text-4xl font-bold tracking-tight">
+                        {__('Free')}
+                    </span>
+                    <span className="text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                        {__('forever')}
+                    </span>
+                </div>
+
+                <p className="mt-3 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                    {__(
+                        'Get started at no cost. No bank connections included.',
+                    )}
+                </p>
+
+                <div className="my-5 h-px bg-[#e3e3e0] dark:bg-[#3E3E3A]" />
+
+                <p className="mt-1 text-xs text-[#706f6c] opacity-0 dark:text-[#A1A09A]">
+                    {__('Create the account now, update at any moment')}
+                </p>
+
+                <ul className="flex-1 space-y-2.5">
+                    {features.map((feature) => {
+                        const isExcluded = excluded.has(feature);
+
+                        return (
+                            <li
+                                key={feature}
+                                className={cn(
+                                    'flex items-center gap-2.5',
+                                    isExcluded && 'opacity-40',
+                                )}
+                            >
+                                {isExcluded ? (
+                                    <XIcon className="size-4 shrink-0 text-[#706f6c] dark:text-[#A1A09A]" />
+                                ) : (
+                                    <CheckIcon className="size-4 shrink-0 text-[#1b1b18] dark:text-[#EDEDEC]" />
+                                )}
+                                <span className="text-sm">{__(feature)}</span>
+                            </li>
+                        );
+                    })}
+                </ul>
+
+                <Link href={cta.href} className="mt-8">
+                    <Button
+                        className="w-full cursor-pointer border-[#e3e3e0] bg-transparent py-5 text-base text-[#1b1b18] shadow-sm transition-all hover:bg-[#f5f5f4] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:bg-[#1f1f1e]"
+                        variant="outline"
+                    >
+                        {cta.isSignedIn
+                            ? __('Go to Dashboard')
+                            : canRegister
+                              ? __('Get Started Free')
+                              : __('Log in')}
+                    </Button>
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+function LandingPlanCard({
+    plan,
+    isDefault,
+    isBestValue,
+    currency,
+    locale,
+    canRegister = false,
+}: {
+    plan: Plan;
+    isDefault: boolean;
+    isBestValue: boolean;
+    promoEnabled: boolean;
+    promoBadge: string;
+    currency: string;
+    locale: string;
+    canRegister?: boolean;
+}) {
+    const monthlyEquivalent =
+        plan.billing_period === 'year' ? plan.price / 12 : plan.price;
+    const cta = useLandingCta(canRegister, 'paid');
+
+    return (
+        <div
+            className={cn(
+                'flex flex-col overflow-hidden rounded-2xl border border-[#e3e3e0] bg-[#FDFDFC] dark:border-[#3E3E3A] dark:bg-[#161615]',
+                isDefault && 'ring-2 ring-[#1b1b18] dark:ring-[#EDEDEC]',
+            )}
+        >
+            {(isDefault || isBestValue) && (
+                <div
+                    className={cn(
+                        'px-6 pt-6 text-xs font-semibold uppercase',
+                        isDefault && 'text-[#1b1b18]/75 dark:text-[#aaa]',
+                        isBestValue &&
+                            !isDefault &&
+                            'text-[#706f6c] dark:text-[#A1A09A]',
+                    )}
+                >
+                    {isDefault ? __('Most Popular') : __('Best Value')}
+                </div>
+            )}
+
+            <div
+                className={cn(
+                    'flex flex-1 flex-col p-6 pt-2',
+                    !isDefault && !isBestValue && 'sm:pt-12',
+                )}
+            >
+                <h3 className="text-lg font-semibold">{__(plan.name)}</h3>
+
+                <div className="mt-3 flex items-baseline gap-2">
+                    {plan.original_price && (
+                        <span className="text-lg font-medium text-[#706f6c] line-through dark:text-[#A1A09A]">
+                            {formatCurrency(
+                                (plan.billing_period === 'year'
+                                    ? plan.original_price / 12
+                                    : plan.original_price) * 100,
+                                currency,
+                                locale,
+                            )}
+                        </span>
+                    )}
+                    <span className="text-4xl font-bold tracking-tight">
+                        {formatCurrency(
+                            monthlyEquivalent * 100,
+                            currency,
+                            locale,
+                        )}
+                    </span>
+                    <span className="text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                        {getBillingLabel(plan.billing_period)}
+                    </span>
+                </div>
+
+                {plan.billing_period === 'year' && (
+                    <p className="mt-1 text-xs text-[#706f6c] dark:text-[#A1A09A]">
+                        {__('Billed annually at')}{' '}
+                        {formatCurrency(plan.price * 100, currency, locale)}
+                    </p>
+                )}
+
+                <p className="mt-3 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                    {__(
+                        'Everything you need to manage your finances securely.',
+                    )}
+                </p>
+
+                <div className="my-5 h-px bg-[#e3e3e0] dark:bg-[#3E3E3A]" />
+
+                <ul className="flex-1 space-y-2.5">
+                    {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-2.5">
+                            <CheckIcon className="size-4 shrink-0 text-[#1b1b18] dark:text-[#EDEDEC]" />
+                            <span className="text-sm">{__(feature)}</span>
+                        </li>
+                    ))}
+                </ul>
+
+                <Link href={cta.href} className="mt-8">
+                    <Button
+                        className={cn(
+                            'w-full cursor-pointer py-5 text-base shadow-sm transition-all',
+                            isDefault
+                                ? 'bg-gradient-to-t from-zinc-700 to-zinc-900 text-white hover:from-zinc-800 hover:to-black hover:shadow-md dark:from-zinc-200 dark:to-zinc-300 dark:text-[#1C1C1A] hover:dark:from-zinc-50'
+                                : 'border-[#e3e3e0] bg-transparent text-[#1b1b18] hover:bg-[#f5f5f4] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:bg-[#1f1f1e]',
+                        )}
+                        variant={isDefault ? 'default' : 'outline'}
+                    >
+                        {cta.isSignedIn
+                            ? __('Go to Dashboard')
+                            : canRegister
+                              ? __('Get Started')
+                              : __('Log in')}
+                    </Button>
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+function HeroBenefits({ className }: { className?: string }) {
+    const benefits = [
+        __('Bank sync and automatic categories'),
+        __('Budgets that warn you before you overspend'),
+        __('Never shared, never sold, open source'),
+    ];
+
+    return (
+        <ul
+            className={cn(
+                'flex flex-col gap-3 text-[15px] font-medium sm:text-base',
+                className,
+            )}
+        >
+            {benefits.map((benefit) => (
+                <li key={benefit} className="flex items-center gap-3">
+                    <span className="inline-flex size-6 flex-none items-center justify-center rounded-full bg-green-600/12 text-green-700 dark:bg-green-400/16 dark:text-green-400">
+                        <CheckIcon className="size-3.5" strokeWidth={3} />
+                    </span>
+                    {benefit}
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+function FaqItem({ question, answer }: { question: string; answer: string }) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <div className="border-b border-[#e3e3e0] dark:border-[#3E3E3A]">
+            <button
+                type="button"
+                className="flex w-full cursor-pointer items-center justify-between py-5 text-left"
+                onClick={() => setOpen(!open)}
+            >
+                <span className="text-base font-medium">{question}</span>
+                <ChevronDownIcon
+                    className={cn(
+                        'size-5 shrink-0 text-[#706f6c] transition-transform duration-200 dark:text-[#A1A09A]',
+                        open && 'rotate-180',
+                    )}
+                />
+            </button>
+            <div
+                className={cn(
+                    'grid transition-all duration-200',
+                    open ? 'grid-rows-[1fr] pb-5' : 'grid-rows-[0fr]',
+                )}
+            >
+                <div className="overflow-hidden">
+                    <p className="text-sm leading-relaxed text-[#706f6c] dark:text-[#A1A09A]">
+                        {answer}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const FOOTER_LINK_CLASSES = 'hover:text-[#1b1b18] dark:hover:text-[#EDEDEC]';
+
+function FooterColumn({
+    title,
+    children,
+    className,
+}: {
+    title: string;
+    children: ReactNode;
+    className?: string;
+}) {
+    return (
+        <div className={cn('flex flex-col gap-3', className)}>
+            <h2 className="font-semibold text-[#1b1b18] dark:text-[#EDEDEC]">
+                {title}
+            </h2>
+            <ul className="flex flex-col gap-2">{children}</ul>
+        </div>
+    );
+}
+
+export default function Welcome({
+    canRegister,
+    popularBanks,
+    comparisonLinks,
+    integrationsLink,
+    language,
+}: {
+    canRegister?: boolean;
+    popularBanks: PopularBank[];
+    comparisonLinks: ComparisonLink[];
+    integrationsLink: { heading: string; path: string };
+    /** The language the page is written in, not the format region in `locale`. */
+    language: string;
+}) {
+    const { appUrl, subscriptionsEnabled, demoEnabled, pricing, locale } =
+        usePage<SharedData>().props;
+    const cta = useLandingCta(canRegister);
+    const ctaLabel = cta.isSignedIn
+        ? __('Go to Dashboard')
+        : canRegister
+          ? __('Get Started')
+          : __('Log in');
+    const planEntries = Object.entries(pricing.plans);
+    const { isMobile } = usePwaInstall();
+
+    const testimonials: {
+        name: string;
+        text: string;
+        // ponytail: both optional — with neither, Facehash draws an avatar from the name
+        gravatar?: string;
+        avatar?: string;
+    }[] = [
+        {
+            name: 'Brian Bansuela',
+            gravatar: '9314f776a17ae977871076ac71f2ff60',
+            text: __(
+                'I just started syncing my accounts and it already feels like a great app. The interface is lovely and it looks like a really solid tool. Great work!',
+            ),
+        },
+        {
+            name: 'David Carrión',
+            gravatar: '2a0a1e872f2f883da214b65e1c2e2156',
+            text: __(
+                "I have a lot of faith in this project — it's really well built and your MVP is fantastic. Thanks for everything!",
+            ),
+        },
+        {
+            name: 'Joel Molina',
+            text: __(
+                "I really like Whisper Money and I think it's a very interesting app. I'm delighted to hear the Kuwaiti dinar is now available in production. That's great news!",
+            ),
+        },
+        {
+            name: 'Jorge Navarrete',
+            gravatar: 'd20d4e05a100d5b20b45c84f3c566a25',
+            text: __(
+                "I'm exploring the web app and the design and UX are excellent. Thanks, team!",
+            ),
+        },
+        {
+            name: 'Marcus Oliveira',
+            gravatar: '3c4342baddf0beb8b0bd9fe89168e282',
+            text: __(
+                'Thank you for developing Whisper Money. The focus on privacy and centralizing finances is an excellent proposition.',
+            ),
+        },
+        {
+            name: 'Mark',
+            text: __(
+                "I've tried a load of apps that never quite fitted. Apps also scare me a little, because years ago I spent months entering data into one that was working nicely — I was on the paid version — and six months later it disappeared and I lost all the information, and above all the time. Yours looks very good.",
+            ),
+        },
+        {
+            name: 'Carla Álvarez',
+            gravatar: '9901ee5e849cf9a0caea00e897cb8123',
+            text: __(
+                'I found Whisper Money and instantly knew I needed it. I was stuck doing everything in a spreadsheet — a chore I kept putting off. This makes it effortless.',
+            ),
+        },
+        {
+            name: 'Yaritza Rey',
+            gravatar: 'a519f143865c358b013f3f6dcdbc387a',
+            text: __(
+                'Thank you so much for creating such a clean, simple app.',
+            ),
+        },
+        {
+            name: 'Itziar Del Hierro',
+            text: __(
+                "First of all, congratulations on making the app, and on the work you've put into it.",
+            ),
+        },
+        {
+            name: 'Will Harris',
+            gravatar: 'c6fbc4911d6143fe723a42f46230275e',
+            text: __('Great project!'),
+        },
+        {
+            name: 'Fernando',
+            text: __(
+                "I found the app on my Instagram and I think it's a very good idea, and I like how it's designed. Good work on the app.",
+            ),
+        },
+        {
+            name: 'Haru',
+            gravatar: '3e52d6b2cbefb0fa2a572a588b3f7953',
+            avatar: 'https://cdn.discordapp.com/avatars/313325435687534594/4c5f74503bfc5942732c5c9d415ed255.webp?size=128',
+            text: __(
+                'I used to keep everything in a spreadsheet and it took forever — now I have my bank under control and add cash payments manually. Great work!',
+            ),
+        },
+        {
+            name: 'Tom',
+            gravatar: 'd721bb1875ac11132d4d33295867cbd9',
+            text: __(
+                "I'm genuinely happy using an open-source project with a real commitment to privacy — that's exactly what I want from a finance app.",
+            ),
+        },
+        {
+            name: 'Verónica Betancourt',
+            text: __(
+                "I love the concept of the app. It's exactly the tool I had spent a long time looking for, precisely to manage my finances in one place and have a view of everything.",
+            ),
+        },
+        {
+            name: 'Elena',
+            gravatar: '9867fc6636afc02ae519820e657e4485',
+            text: __(
+                "I can't wait to discover everything the app can do. Thank you — it must have taken a tremendous effort. Congratulations!",
+            ),
+        },
+        {
+            name: 'Albert G.',
+            gravatar: 'bb92a036f4feb9d12d0a70dd2d9a5c5f',
+            text: __(
+                'The app is intuitive, functional, and a real help for managing my finances day to day. What stands out most is how much the free version offers — it really shows your commitment to your users. I’ll keep recommending it!',
+            ),
+        },
+        {
+            name: 'Geraldine Herraz',
+            text: __(
+                'Overall I really liked the experience, and I think Whisper Money has enormous potential. Every success with Whisper Money.',
+            ),
+        },
+        {
+            name: 'Priya Nair',
+            gravatar: '299c92b453769c8805a14f3044157f22',
+            text: __(
+                'Categorizing transactions used to eat my whole Sunday. Now the AI does it and gets most of them right, and the few it misses it remembers after I fix them once. I barely touch it anymore.',
+            ),
+        },
+        {
+            name: 'Sofía Romero',
+            gravatar: '51bd48ebe85a4f936b1f2ac38ee39238',
+            text: __(
+                "My accounts sync on their own and everything lands already sorted, so checking my budget takes two minutes instead of an hour. I didn't think I'd keep up with it, but I have.",
+            ),
+        },
+        {
+            name: 'Mauricio Rojas',
+            text: __(
+                "First of all, congratulations on the app. I'm a software engineer too, and I know how complicated designing an application can be.",
+            ),
+        },
+        {
+            name: 'Daniel Okafor',
+            gravatar: '292ce946081970493a65fae7cf406427',
+            text: __(
+                "I was wary of letting any app run AI on my bank data. What changed my mind was that it only works for me and isn't fed into some model. Turns out it's accurate too.",
+            ),
+        },
+        {
+            name: 'Lena Hoffmann',
+            gravatar: '708c64d04836b9a1e25a9caddc13f97b',
+            text: __(
+                'I drop in my bank’s CSV and it works out the columns and categories on its own. The part of doing my finances I used to dread is just gone.',
+            ),
+        },
+        {
+            name: 'Marc Dubois',
+            gravatar: '226dbaa3b8d04f4641b99ab90884bb9d',
+            text: __(
+                "I had three apps and a spreadsheet before this. Getting every account in one place is the first time I've actually understood where my money goes.",
+            ),
+        },
+        {
+            name: 'Abel Morilla',
+            text: __(
+                "I appreciate your effort, your time and your dedication to getting this tool out there to make personal finance easier for people. You're doing a good job!",
+            ),
+        },
+        {
+            name: 'Kenji Saito',
+            gravatar: '13440a401468cb05cf2c123d48202c1e',
+            text: __(
+                "Fast, clean, and a dark mode that doesn't fry my eyes at night. And it isn't trying to sell my data. That's everything I wanted.",
+            ),
+        },
+        {
+            name: 'Francisco Montes',
+            gravatar: 'c81f10150ae734978a346a7d617712ad',
+            text: __(
+                "The design is simple and clean, and it's genuinely easy to use. In a few clicks I set up an account, imported my transactions, created a couple of automation rules, and tried the AI. Two days in, and it's the best I've found.",
+            ),
+        },
+        {
+            name: 'Miguel Ángel SB',
+            gravatar: 'e5da1753042eee6b08a3db0df0b5f807',
+            text: __(
+                'I love the style, the intuitive interface, how easy it is to use. If it keeps growing like this, Whisper Money will be my finance app of choice. You can tell it is built with passion — and things made with passion can only end up a success.',
+            ),
+        },
+        {
+            name: 'Marta Bordiu',
+            gravatar: '8329bd04eb4272db2e94f7c849ca7776',
+            text: __(
+                "I'd been holding back on finance apps because I worried about my data — this is the first one I trusted enough to go premium. I love that I can put everything in one place, investments included.",
+            ),
+        },
+        {
+            name: 'Ryan Haste',
+            text: __(
+                'Great job on this project, love this! Keep up the good work.',
+            ),
+        },
+        {
+            name: 'Ricardo Rovira',
+            text: __(
+                "I really like the app — it's exactly what I was looking for. It's a great project, and I think you've nailed what a personal finance app should be, at least the way I want to manage mine.",
+            ),
+        },
+        {
+            name: 'Víctor Falcón (co-owner)',
+            gravatar: '50901af884c50a8f12804b0cf3aeb98a',
+            text: __(
+                'I built the app I needed to make better decisions. Understanding how I spend and where my income comes from has brought me real financial peace of mind.',
+            ),
+        },
+    ];
+    const half = Math.ceil(testimonials.length / 2);
+    const testimonialRows = [
+        testimonials.slice(0, half),
+        testimonials.slice(half),
+    ];
+
+    const hasMonthlyAndYearly =
+        planEntries.some(([, p]) => p.billing_period === 'month') &&
+        planEntries.some(([, p]) => p.billing_period === 'year');
+
+    const [billingPeriod, setBillingPeriod] = useState<'month' | 'year'>(
+        'year',
+    );
+
+    const yearlyDiscount = useMemo(() => {
+        const monthlyPlan = planEntries.find(
+            ([, p]) => p.billing_period === 'month',
+        )?.[1];
+        const yearlyPlan = planEntries.find(
+            ([, p]) => p.billing_period === 'year',
+        )?.[1];
+
+        if (!monthlyPlan || !yearlyPlan || monthlyPlan.price === 0) {
+            return null;
+        }
+
+        const yearlyMonthlyEquivalent = yearlyPlan.price / 12;
+        const discount = Math.round(
+            (1 - yearlyMonthlyEquivalent / monthlyPlan.price) * 100,
+        );
+
+        return discount > 0 ? discount : null;
+    }, [planEntries]);
+
+    const displayedPlanEntries = hasMonthlyAndYearly
+        ? planEntries.filter(([, p]) => p.billing_period === billingPeriod)
+        : planEntries;
+
+    // Handle localStorage for language preference
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const langParam = urlParams.get('lang');
+
+        const supportedLocales: readonly string[] = LANGUAGE_OPTIONS.map(
+            (option) => option.code,
+        );
+
+        if (langParam && supportedLocales.includes(langParam)) {
+            // Store the preference in localStorage
+            writeStoredValue('whisper_landing_locale', langParam);
+        } else {
+            // No query param - check if we have a stored preference
+            const storedLocale = readStoredValue('whisper_landing_locale');
+
+            if (
+                storedLocale &&
+                storedLocale !== locale &&
+                supportedLocales.includes(storedLocale)
+            ) {
+                // Redirect to stored preference
+                leavePage(`/?lang=${storedLocale}`);
+                return;
+            } else if (!storedLocale && locale) {
+                // First visit - store the detected locale from session/header
+                writeStoredValue('whisper_landing_locale', locale);
+            }
+        }
+    }, [locale]);
+
+    const [isPwa] = useState(() => {
+        if (typeof window === 'undefined') {
+            return false;
+        }
+
+        // Standalone is the mode the manifest asks for, on Android and iOS
+        // alike; navigator.standalone covers older iOS. Fullscreen only matches
+        // the Android installs made while the manifest asked for it (September
+        // to October 2026), until Chrome updates their WebAPK. Drop it, and its
+        // PwaTest, from 2027.
+        return (
+            window.matchMedia(
+                '(display-mode: fullscreen), (display-mode: standalone)',
+            ).matches ||
+            ('standalone' in navigator &&
+                (navigator as Navigator & { standalone: boolean }).standalone)
+        );
+    });
+
+    useEffect(() => {
+        if (isPwa) {
+            router.visit('/dashboard');
+        }
+    }, [isPwa]);
+
+    if (isPwa) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Spinner className="size-8" />
+            </div>
+        );
+    }
+
+    return (
+        <>
+            <Head
+                title={__(
+                    'Whisper Money - The Most Secure Personal Finance App',
+                )}
+            >
+                <meta
+                    name="description"
+                    content={__(
+                        'The most secure privacy-first personal finance app. Track expenses, create budgets, and manage your money privately.',
+                    )}
+                />
+
+                <meta
+                    name="keywords"
+                    content={__(
+                        'finance app, budgeting, expense tracking, secure finance, personal finance, money management, privacy, privacy-first finance app',
+                    )}
+                />
+
+                <link rel="canonical" href={appUrl} />
+
+                <meta property="og:site_name" content="Whisper Money" />
+                <meta
+                    property="og:title"
+                    content={__(
+                        'Whisper Money - The Most Secure Personal Finance App',
+                    )}
+                />
+
+                <meta
+                    property="og:description"
+                    content={__(
+                        'Your financial data stays private. The most secure way to manage your personal finances.',
+                    )}
+                />
+
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={appUrl} />
+                <meta
+                    property="og:image"
+                    content={`${appUrl}/images/og_whisper_money.png`}
+                />
+
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
+                <meta
+                    property="og:image:alt"
+                    content={__('Whisper Money - Secure Personal Finance App')}
+                />
+
+                <meta property="og:locale" content={__('en_US')} />
+
+                <meta name="twitter:card" content={__('summary_large_image')} />
+                <meta
+                    name="twitter:title"
+                    content={__(
+                        'Whisper Money - The Most Secure Personal Finance App',
+                    )}
+                />
+
+                <meta
+                    name="twitter:description"
+                    content={__(
+                        'Your financial data stays private. The most secure way to manage your personal finances.',
+                    )}
+                />
+
+                <meta
+                    name="twitter:image"
+                    content={`${appUrl}/images/og_whisper_money.png`}
+                />
+
+                <meta
+                    name="twitter:image:alt"
+                    content={__('Whisper Money - Secure Personal Finance App')}
+                />
+
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'WebApplication',
+                        name: 'Whisper Money',
+                        description:
+                            'The most secure privacy-first personal finance app. Track expenses, create budgets, and manage your money privately.',
+                        url: appUrl,
+                        applicationCategory: 'FinanceApplication',
+                        featureList: [
+                            'Privacy-first design',
+                            'Smart budgeting',
+                            'Expense tracking',
+                            'Visual insights',
+                            'Zero tracking',
+                            'Open source',
+                        ],
+                    })}
+                </script>
+            </Head>
+            <div className="flex min-h-screen flex-col bg-[#FDFDFC] text-[#1b1b18] dark:bg-[#0a0a0a] dark:text-[#EDEDEC]">
+                <Header canRegister={canRegister} />
+
+                <main className="flex flex-1 flex-col">
+                    <section className="relative w-full overflow-hidden px-6 pt-28 pb-12 sm:pt-32 sm:pb-16 md:pt-40 md:pb-20 lg:pt-28">
+                        {/*
+                         * One grid for both layouts: stacked below lg, in DOM
+                         * order, and split from lg up, where the copy fills the
+                         * left column (benefits before the CTA) around the
+                         * tilted video on the right.
+                         */}
+                        <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_1.25fr] lg:grid-rows-[auto_auto_auto] lg:gap-x-16 lg:gap-y-7">
+                            <div className="flex flex-col items-start gap-6 lg:col-start-1 lg:row-start-1">
+                                <span className="inline-flex items-center gap-2 rounded-full border border-[#e3e3e0] px-2.5 py-1 text-[0.8rem] font-medium dark:border-[#3E3E3A]">
+                                    <LockIcon className="size-3.5 opacity-75" />
+                                    <span className="text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__('Private & Secure')}
+                                    </span>
+                                </span>
+                                <h1 className="font-heading max-w-[840px] bg-gradient-to-r from-[#1b1b18] to-[#1b1b18] bg-clip-text text-4xl leading-tight font-semibold text-balance text-transparent drop-shadow-2xl sm:text-5xl sm:leading-tight lg:text-[2.75rem] lg:leading-tight xl:text-[3.5rem] xl:leading-tight dark:from-[#EDEDEC] dark:to-[#A1A09A]">
+                                    {__(
+                                        'All your money in one place. No spreadsheets. Private.',
+                                    )}
+                                </h1>
+                                <p className="max-w-[840px] text-lg leading-8 font-medium text-balance text-[#706f6c] lg:text-xl lg:leading-8 dark:text-[#A1A09A]">
+                                    {__(
+                                        'Understand your finances and make better decisions without the friction. Track expenses, create budgets, and achieve your goals\u2014all in one place.',
+                                    )}
+                                </p>
+                            </div>
+
+                            <div className="lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:self-center">
+                                <HeroVideo
+                                    language={language}
+                                    cta={{ href: cta.href, label: ctaLabel }}
+                                />
+                            </div>
+
+                            <div className="flex w-full max-w-lg flex-col gap-4 lg:col-start-1 lg:row-start-3">
+                                {isMobile ? (
+                                    <InstallAppButton />
+                                ) : (
+                                    <div className="flex w-full flex-row gap-4">
+                                        <Link
+                                            href={cta.href}
+                                            className="w-full"
+                                        >
+                                            <Button className="text-shadow duration h-14 w-full cursor-pointer bg-gradient-to-t from-zinc-700 to-zinc-900 text-base text-white shadow-sm transition-all hover:from-zinc-800 hover:to-black hover:shadow-md dark:bg-[#eeeeec] dark:from-zinc-200 dark:to-zinc-300 dark:text-[#1C1C1A] dark:hover:bg-white hover:dark:from-zinc-50 dark:hover:shadow-md">
+                                                {ctaLabel}
+                                            </Button>
+                                        </Link>
+                                        {demoEnabled && !cta.isSignedIn && (
+                                            <Link href="/login?demo=1">
+                                                <Button
+                                                    variant={'secondary'}
+                                                    size={'lg'}
+                                                    className="h-14"
+                                                >
+                                                    {__('Check Demo')}
+                                                </Button>
+                                            </Link>
+                                        )}
+                                    </div>
+                                )}
+                                <p className="text-xs text-[#706f6c] dark:text-[#A1A09A]">
+                                    {__('Your data stays private. Always.')}
+                                </p>
+                            </div>
+
+                            <HeroBenefits className="lg:col-start-1 lg:row-start-2" />
+                        </div>
+                    </section>
+
+                    <section className="grid gap-6 px-4 py-12 sm:py-16 md:py-20">
+                        <div className="mx-auto grid max-w-7xl gap-3 sm:grid-cols-3">
+                            {/* Row 1: Connect Your Banks (2 cols) + Import in Seconds (1 col) */}
+                            <FeatureCard className="sm:col-span-2">
+                                <div className="grid h-full grid-rows-1 gap-0 sm:grid-cols-2">
+                                    <div className="flex flex-col justify-center p-8 sm:p-12">
+                                        <h2 className="text-3xl leading-tight font-semibold text-balance sm:text-4xl sm:leading-tight">
+                                            {__('Connect Your Banks')}
+                                        </h2>
+                                        <p className="mt-4 text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                'Link your bank accounts directly. Transactions sync automatically, giving you a real-time view of your finances.',
+                                            )}
+                                        </p>
+                                        <ul className="mt-6 space-y-3">
+                                            <li className="flex items-center gap-2.5">
+                                                <CheckIcon className="size-4 shrink-0 text-emerald-500" />
+                                                <span className="text-sm">
+                                                    {__('Connect in seconds')}
+                                                </span>
+                                            </li>
+                                            <li className="flex items-center gap-2.5">
+                                                <CheckIcon className="size-4 shrink-0 text-emerald-500" />
+                                                <span className="text-sm">
+                                                    {__('Automatic sync')}
+                                                </span>
+                                            </li>
+                                            <li className="flex items-center gap-2.5">
+                                                <CheckIcon className="size-4 shrink-0 text-emerald-500" />
+                                                <span className="text-sm">
+                                                    {__('Secure & encrypted')}
+                                                </span>
+                                            </li>
+                                        </ul>
+                                        <div className="mt-6">
+                                            <Link
+                                                href={integrationsLink.path}
+                                                className="inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4 hover:text-[#706f6c] dark:hover:text-[#A1A09A]"
+                                            >
+                                                {__('See all supported banks')}
+                                                <ArrowRightIcon className="size-4" />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                    <div className="relative min-h-[320px]">
+                                        <BankConnectionsPreview
+                                            banks={popularBanks}
+                                            className="absolute inset-2"
+                                        />
+                                    </div>
+                                </div>
+                            </FeatureCard>
+
+                            <FeatureCard>
+                                <div className="p-2">
+                                    <ImportPreview
+                                        currency={pricing.currency}
+                                        locale={locale}
+                                    />
+                                </div>
+                                <div className="p-6 pt-4">
+                                    <h3 className="text-xl font-semibold">
+                                        {__('Import in Seconds')}
+                                    </h3>
+                                    <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__(
+                                            "Export a CSV or XLS from your bank and drag it in. A year's worth of transactions imported in under 10 seconds.",
+                                        )}
+                                    </p>
+                                </div>
+                            </FeatureCard>
+
+                            {/* Row 2: All Your Accounts, Every Transaction, Your Data Your Rules */}
+                            <FeatureCard>
+                                <div className="p-2">
+                                    <AccountsBalancePreview
+                                        currency={pricing.currency}
+                                        locale={locale}
+                                    />
+                                </div>
+                                <div className="p-6 pt-4">
+                                    <h3 className="text-xl font-semibold">
+                                        {__('All Your Accounts')}
+                                    </h3>
+                                    <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__(
+                                            'See every account in one place. Track balances, monitor changes, and always know where you stand.',
+                                        )}
+                                    </p>
+                                </div>
+                            </FeatureCard>
+
+                            <FeatureCard>
+                                <div className="p-2">
+                                    <TransactionRowsPreview
+                                        currency={pricing.currency}
+                                        locale={locale}
+                                    />
+                                </div>
+                                <div className="p-6 pt-4">
+                                    <h3 className="text-xl font-semibold">
+                                        {__('Every Transaction')}
+                                    </h3>
+                                    <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__(
+                                            'Search, filter, and let AI categorize automatically. Understand exactly where your money goes.',
+                                        )}
+                                    </p>
+                                </div>
+                            </FeatureCard>
+
+                            <FeatureCard>
+                                <div className="p-2">
+                                    <PrivacyRedactedPreview />
+                                </div>
+                                <div className="p-6 pt-4">
+                                    <h3 className="text-xl font-semibold">
+                                        {__('Your Data, Your Rules')}
+                                    </h3>
+                                    <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__(
+                                            'Our own AI categorizes for you, never training on your data or sharing it with third parties. Your finances belong to you and only you.',
+                                        )}
+                                    </p>
+                                </div>
+                            </FeatureCard>
+
+                            {/* Row 3: Savings Goals + Split Transactions.
+                                Split takes two columns so the row fills out —
+                                the same 1 + 2 shape as Row 1, mirrored. */}
+                            <FeatureCard>
+                                <div className="p-2">
+                                    <SavingsGoalsPreview
+                                        currency={pricing.currency}
+                                        locale={locale}
+                                    />
+                                </div>
+                                <div className="p-6 pt-4">
+                                    <h3 className="text-xl font-semibold">
+                                        {__('Savings Goals')}
+                                    </h3>
+                                    <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__(
+                                            'Put money aside for what matters. Tag the transfers once and every goal fills itself up, so you always know how far off you are.',
+                                        )}
+                                    </p>
+                                </div>
+                            </FeatureCard>
+
+                            <FeatureCard className="sm:col-span-2">
+                                <div className="grid h-full grid-rows-1 gap-0 sm:grid-cols-2">
+                                    <div className="relative min-h-[320px]">
+                                        <SplitTransactionsPreview
+                                            currency={pricing.currency}
+                                            locale={locale}
+                                            className="absolute inset-2"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col justify-center p-8 sm:p-12">
+                                        <h2 className="text-3xl leading-tight font-semibold text-balance sm:text-4xl sm:leading-tight">
+                                            {__('Split Transactions')}
+                                        </h2>
+                                        <p className="mt-4 text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                'One receipt, several categories. Break a transaction into parts and each part counts where it belongs — merge it back whenever you want.',
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+                            </FeatureCard>
+
+                            {/* Row 4: Cashflow at a Glance (always full width) */}
+                            <FeatureCard className="sm:col-span-3">
+                                <div className="grid items-center gap-0 sm:grid-cols-2">
+                                    <div className="p-2">
+                                        <CashflowChartPreview />
+                                    </div>
+                                    <div className="p-8 sm:p-12">
+                                        <h2 className="text-3xl leading-tight font-semibold sm:text-4xl sm:leading-tight">
+                                            {__('Cashflow at a Glance')}
+                                        </h2>
+                                        <p className="mt-4 text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                'Visualize your money flow over time. See income vs. expenses and spot trends before they become problems.',
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+                            </FeatureCard>
+                        </div>
+                    </section>
+
+                    <section className="px-4 py-12 sm:py-16 md:py-20">
+                        <div className="mx-auto flex max-w-7xl flex-col gap-8 sm:gap-12">
+                            <div className="flex flex-col gap-4 sm:gap-5">
+                                <span className="inline-flex items-center gap-2 self-start rounded-full border border-[#e3e3e0] px-2.5 py-1 text-[0.8rem] font-medium dark:border-[#3E3E3A]">
+                                    <SparklesIcon className="size-3.5 opacity-75" />
+                                    <span className="text-[#706f6c] dark:text-[#A1A09A]">
+                                        {__('AI Connector')}
+                                    </span>
+                                </span>
+                                <h2 className="max-w-[760px] text-3xl leading-tight font-semibold text-balance sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight">
+                                    {__(
+                                        'Your finances, inside Claude or ChatGPT',
+                                    )}
+                                </h2>
+                                <p className="text-md max-w-[640px] font-medium text-[#706f6c] sm:text-lg dark:text-[#A1A09A]">
+                                    {__(
+                                        'Connect Whisper Money to your assistant and ask about your money in your own words. It reads your transactions to answer you and, if you ask it to, puts them in order too: recategorising, creating rules, adjusting budgets.',
+                                    )}
+                                </p>
+                                <p className="text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                    {__(
+                                        'An MCP server of our own, on the paid plan.',
+                                    )}
+                                </p>
+                            </div>
+
+                            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
+                                <AiConnectorPreview
+                                    currency={pricing.currency}
+                                    locale={locale}
+                                />
+
+                                <div className="flex flex-col gap-3">
+                                    <FeatureCard className="p-6 sm:p-8">
+                                        <h3 className="text-xl font-semibold">
+                                            {__('You connect it yourself')}
+                                        </h3>
+                                        <p className="mt-3 text-sm leading-relaxed text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                'Nothing is connected until you connect it yourself, from your settings, under AI Connector. If you never connect it, nothing changes for you.',
+                                            )}
+                                        </p>
+                                    </FeatureCard>
+
+                                    <FeatureCard className="p-6 sm:p-8">
+                                        <h3 className="text-xl font-semibold">
+                                            {__('Ask, and set things straight')}
+                                        </h3>
+                                        <p className="mt-3 text-sm leading-relaxed text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                ':total tools: :read to read your transactions, balances, budgets and net worth, and :write to change them.',
+                                                {
+                                                    total:
+                                                        MCP_READ_TOOL_COUNT +
+                                                        MCP_WRITE_TOOL_COUNT,
+                                                    read: MCP_READ_TOOL_COUNT,
+                                                    write: MCP_WRITE_TOOL_COUNT,
+                                                },
+                                            )}
+                                        </p>
+                                        <ul className="mt-4 space-y-2.5">
+                                            <li className="flex items-center gap-2.5">
+                                                <CheckIcon className="size-4 shrink-0 text-emerald-500" />
+                                                <span className="text-sm">
+                                                    {__(
+                                                        'Claude Desktop and ChatGPT',
+                                                    )}
+                                                </span>
+                                            </li>
+                                            <li className="flex items-center gap-2.5">
+                                                <CheckIcon className="size-4 shrink-0 text-emerald-500" />
+                                                <span className="text-sm">
+                                                    {__(
+                                                        'You sign in with your account, no keys to paste',
+                                                    )}
+                                                </span>
+                                            </li>
+                                            <li className="flex items-center gap-2.5">
+                                                <CheckIcon className="size-4 shrink-0 text-emerald-500" />
+                                                <span className="text-sm">
+                                                    {__(
+                                                        'Claude Code too, as a plugin',
+                                                    )}
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </FeatureCard>
+
+                                    <FeatureCard className="p-6 sm:p-8">
+                                        <h3 className="flex items-center gap-2.5 text-xl font-semibold">
+                                            <LockIcon className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                            {__('What the assistant can see')}
+                                        </h3>
+                                        <p className="mt-3 text-sm leading-relaxed text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                'While it is connected, the assistant reads your data to answer you, and those conversations live in your own account with that assistant, under their rules and not ours. Remove Whisper Money from its connected apps and it stops answering.',
+                                            )}
+                                        </p>
+                                    </FeatureCard>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="px-4 py-12 sm:py-16 md:py-20">
+                        <div className="mx-auto flex max-w-7xl flex-col gap-8 sm:gap-12">
+                            <div className="flex flex-col items-center gap-4 text-center">
+                                <h2 className="max-w-[720px] text-3xl leading-tight font-semibold sm:text-5xl sm:leading-tight">
+                                    {__('Smart Budgets')}
+                                </h2>
+                                <p className="text-md max-w-[640px] font-medium text-[#706f6c] sm:text-xl dark:text-[#A1A09A]">
+                                    {__(
+                                        'Create budgets that adapt to your spending habits and help you reach your goals.',
+                                    )}
+                                </p>
+                            </div>
+
+                            <div className="grid gap-6 sm:grid-cols-3">
+                                <FeatureCard>
+                                    <div className="p-2">
+                                        <BudgetsListPreview
+                                            currency={pricing.currency}
+                                            locale={locale}
+                                        />
+                                    </div>
+                                    <div className="p-6 pt-4">
+                                        <h3 className="text-xl font-semibold">
+                                            {__('Set Your Goals')}
+                                        </h3>
+                                        <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                'Define monthly budgets by category. Know exactly how much you can spend.',
+                                            )}
+                                        </p>
+                                    </div>
+                                </FeatureCard>
+
+                                <FeatureCard>
+                                    <div className="p-2">
+                                        <BudgetDetailPreview
+                                            currency={pricing.currency}
+                                            locale={locale}
+                                        />
+                                    </div>
+                                    <div className="p-6 pt-4">
+                                        <h3 className="text-xl font-semibold">
+                                            {__('Track Progress')}
+                                        </h3>
+                                        <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                'See where you stand in real-time. Visual progress bars show spending vs. budget.',
+                                            )}
+                                        </p>
+                                    </div>
+                                </FeatureCard>
+
+                                <FeatureCard>
+                                    <div className="p-2">
+                                        <BudgetEditPreview />
+                                    </div>
+                                    <div className="p-6 pt-4">
+                                        <h3 className="text-xl font-semibold">
+                                            {__('Stay on Track')}
+                                        </h3>
+                                        <p className="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">
+                                            {__(
+                                                "Get notified when you're close to your limit. Never overspend again.",
+                                            )}
+                                        </p>
+                                    </div>
+                                </FeatureCard>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="w-full overflow-hidden px-0 py-12 sm:py-16 md:py-20">
+                        <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 px-4 text-center sm:gap-12">
+                            <div className="flex flex-col items-center gap-4">
+                                <h2 className="max-w-[720px] text-3xl leading-tight font-semibold text-balance sm:text-4xl sm:leading-tight">
+                                    {__(
+                                        'Trusted by people who value their privacy',
+                                    )}
+                                </h2>
+                                <p className="text-md max-w-[600px] font-medium text-[#706f6c] sm:text-lg dark:text-[#A1A09A]">
+                                    {__(
+                                        'Join thousands of users who have taken control of their finances without compromising their privacy.',
+                                    )}
+                                </p>
+                            </div>
+
+                            <div className="relative flex w-full flex-col gap-4">
+                                {testimonialRows.map((row, rowIndex) => (
+                                    <div
+                                        key={rowIndex}
+                                        className={cn(
+                                            'group flex flex-row [gap:var(--gap)] overflow-hidden p-2 [--gap:1rem]',
+                                            rowIndex === 0
+                                                ? '[--duration:34s]'
+                                                : '[--duration:27s]',
+                                        )}
+                                    >
+                                        {[0, 1].map((copy) => (
+                                            <div
+                                                key={copy}
+                                                aria-hidden={copy === 1}
+                                                className={cn(
+                                                    'animate-marquee flex shrink-0 flex-row [gap:var(--gap)] group-hover:[animation-play-state:paused]',
+                                                    rowIndex === 1 &&
+                                                        '[animation-delay:-13s]',
+                                                )}
+                                            >
+                                                {row.map((testimonial) => (
+                                                    <div
+                                                        key={`${rowIndex}-${copy}-${testimonial.name}`}
+                                                        className="flex w-[300px] shrink-0 flex-col rounded-2xl border border-[#e3e3e0] bg-[#FDFDFC] p-6 text-start shadow-sm sm:w-[360px] dark:border-[#3E3E3A] dark:bg-[#161615]"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar className="size-10">
+                                                                <AvatarImage
+                                                                    src={
+                                                                        testimonial.avatar ??
+                                                                        (testimonial.gravatar
+                                                                            ? `https://www.gravatar.com/avatar/${testimonial.gravatar}?s=160&d=404`
+                                                                            : undefined)
+                                                                    }
+                                                                    alt={
+                                                                        testimonial.name
+                                                                    }
+                                                                    loading="lazy"
+                                                                    className="object-cover"
+                                                                />
+                                                                <AvatarFallback>
+                                                                    <Facehash
+                                                                        name={
+                                                                            testimonial.name
+                                                                        }
+                                                                        size={
+                                                                            40
+                                                                        }
+                                                                        colorClasses={
+                                                                            tailwindColorClasses
+                                                                        }
+                                                                        intensity3d="dramatic"
+                                                                        className="rounded-full"
+                                                                        enableBlink
+                                                                    />
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div className="flex flex-col items-start">
+                                                                <h3 className="text-sm leading-none font-semibold">
+                                                                    {
+                                                                        testimonial.name
+                                                                    }
+                                                                </h3>
+                                                            </div>
+                                                        </div>
+                                                        <p className="mt-4 text-sm leading-relaxed text-[#706f6c] dark:text-[#A1A09A]">
+                                                            {testimonial.text}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+
+                                <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/6 bg-linear-to-r from-[#FDFDFC] sm:block dark:from-[#0a0a0a]"></div>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/6 bg-linear-to-l from-[#FDFDFC] sm:block dark:from-[#0a0a0a]"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {subscriptionsEnabled && planEntries.length > 0 && (
+                        <section
+                            id="pricing"
+                            className="px-4 py-12 sm:py-16 md:py-20"
+                        >
+                            <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 sm:gap-12">
+                                <div className="flex flex-col items-center gap-4 text-center">
+                                    <h2 className="text-3xl leading-tight font-semibold sm:text-5xl sm:leading-tight">
+                                        {__('Simple, transparent pricing')}
+                                    </h2>
+                                    <p className="text-md max-w-[600px] font-medium text-[#706f6c] sm:text-lg dark:text-[#A1A09A]">
+                                        {__(
+                                            'Choose the plan that works for you. No hidden fees.',
+                                        )}
+                                    </p>
+
+                                    {hasMonthlyAndYearly && (
+                                        <div className="mt-2 flex items-center rounded-full border border-[#e3e3e0] p-1 dark:border-[#3E3E3A]">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setBillingPeriod('month')
+                                                }
+                                                className={cn(
+                                                    'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                                                    billingPeriod === 'month'
+                                                        ? 'bg-[#1b1b18] text-white dark:bg-[#EDEDEC] dark:text-[#1b1b18]'
+                                                        : 'text-[#706f6c] hover:text-[#1b1b18] dark:text-[#A1A09A] dark:hover:text-[#EDEDEC]',
+                                                )}
+                                            >
+                                                {__('Monthly')}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setBillingPeriod('year')
+                                                }
+                                                className={cn(
+                                                    'flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                                                    billingPeriod === 'year'
+                                                        ? 'bg-[#1b1b18] text-white dark:bg-[#EDEDEC] dark:text-[#1b1b18]'
+                                                        : 'text-[#706f6c] hover:text-[#1b1b18] dark:text-[#A1A09A] dark:hover:text-[#EDEDEC]',
+                                                )}
+                                            >
+                                                {__('Yearly')}
+                                                {yearlyDiscount !== null && (
+                                                    <span
+                                                        className={cn(
+                                                            'rounded-full px-2 py-0.5 text-xs font-semibold',
+                                                            billingPeriod ===
+                                                                'year'
+                                                                ? 'bg-emerald-500/20 text-emerald-200 dark:bg-emerald-900/60 dark:text-emerald-300'
+                                                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+                                                        )}
+                                                    >
+                                                        {__(
+                                                            'Save :percent%',
+                                                        ).replace(
+                                                            ':percent',
+                                                            String(
+                                                                yearlyDiscount,
+                                                            ),
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div
+                                    className={cn(
+                                        'grid w-full gap-6',
+                                        displayedPlanEntries.length + 1 === 1 &&
+                                            'mx-auto max-w-md',
+                                        displayedPlanEntries.length + 1 === 2 &&
+                                            'mx-auto max-w-3xl grid-cols-1 sm:grid-cols-2',
+                                        displayedPlanEntries.length + 1 >= 3 &&
+                                            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+                                    )}
+                                >
+                                    <FreePlanCard
+                                        features={[
+                                            ...planEntries[0][1].features,
+                                        ]}
+                                        canRegister={canRegister}
+                                    />
+                                    {displayedPlanEntries.map(([key, plan]) => (
+                                        <LandingPlanCard
+                                            key={key}
+                                            plan={plan}
+                                            isDefault={
+                                                key === pricing.defaultPlan
+                                            }
+                                            isBestValue={
+                                                key === pricing.bestValuePlan
+                                            }
+                                            promoEnabled={pricing.promo.enabled}
+                                            promoBadge={pricing.promo.badge}
+                                            currency={pricing.currency}
+                                            locale={locale}
+                                            canRegister={canRegister}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    <section className="px-4 py-12 sm:py-16 md:py-20">
+                        <div className="mx-auto max-w-3xl">
+                            <div className="mb-8 flex flex-col items-center gap-4 text-center sm:mb-12">
+                                <h2 className="text-3xl leading-tight font-semibold sm:text-5xl sm:leading-tight">
+                                    {__('Frequently Asked Questions')}
+                                </h2>
+                                <p className="text-md max-w-[600px] font-medium text-[#706f6c] sm:text-lg dark:text-[#A1A09A]">
+                                    {__(
+                                        'Everything you need to know before getting started.',
+                                    )}
+                                </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-[#e3e3e0] bg-[#FDFDFC] px-6 dark:border-[#3E3E3A] dark:bg-[#161615]">
+                                <FaqItem
+                                    question={__(
+                                        'How is my financial data kept private?',
+                                    )}
+                                    answer={__(
+                                        "Your data is stored securely and never shared with third parties. We don't use your financial data for AI training, advertising, or any purpose other than providing you the service.",
+                                    )}
+                                />
+                                <FaqItem
+                                    question={__(
+                                        'Do you use AI, and is my data safe?',
+                                    )}
+                                    answer={__(
+                                        'Yes. Whisper Money uses AI to automatically categorize transactions and suggest budgets, so you spend less time on data entry. It works only to serve you: your data is never used to train models, sold, or shared with third parties.',
+                                    )}
+                                />
+                                <FaqItem
+                                    question={__(
+                                        'Can I connect my bank accounts directly?',
+                                    )}
+                                    answer={__(
+                                        'Yes. Bank connections use secure Open Banking and never require your bank credentials, so transactions can sync automatically. This is a Pro feature; free users can import everything, but only through the CSV/Excel importer.',
+                                    )}
+                                />
+                                <FaqItem
+                                    question={__(
+                                        'Can I export or delete my data?',
+                                    )}
+                                    answer={__(
+                                        'Absolutely. You own your data. You can export all your financial data at any time, and you can permanently delete your account and all associated data whenever you want.',
+                                    )}
+                                />
+                                <FaqItem
+                                    question={__(
+                                        'What file formats are supported for import?',
+                                    )}
+                                    answer={__(
+                                        'We support CSV and XLS files. Most banks allow you to export your transaction history in one of these formats. The import process automatically maps columns and categorizes transactions.',
+                                    )}
+                                />
+                                <FaqItem
+                                    question={__(
+                                        'Is Whisper Money open source?',
+                                    )}
+                                    answer={__(
+                                        'Yes! Whisper Money is fully open source. You can review the code, suggest improvements, or even self-host it. Transparency is a core part of our privacy commitment.',
+                                    )}
+                                />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="px-4 py-12 sm:py-16 md:py-20">
+                        <div className="mx-auto max-w-7xl">
+                            <div className="flex flex-col items-center gap-6 px-6 py-12 text-center sm:px-12 sm:py-16 dark:border-[#3E3E3A] dark:bg-[#161615]">
+                                <h2 className="max-w-[600px] text-3xl leading-tight font-semibold text-balance sm:text-4xl sm:leading-tight">
+                                    {__(
+                                        'Ready to take control of your finances?',
+                                    )}
+                                </h2>
+                                <p className="max-w-[480px] text-balance text-[#706f6c] sm:text-lg dark:text-[#A1A09A]">
+                                    {__(
+                                        'Start managing your money privately. No credit card required.',
+                                    )}
+                                </p>
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    {isMobile ? (
+                                        <InstallAppButton />
+                                    ) : (
+                                        <Link href={cta.href}>
+                                            <Button className="h-12 cursor-pointer bg-gradient-to-t from-zinc-700 to-zinc-900 px-8 text-base text-white shadow-sm transition-all hover:from-zinc-800 hover:to-black hover:shadow-md dark:from-zinc-200 dark:to-zinc-300 dark:text-[#1C1C1A] hover:dark:from-zinc-50">
+                                                {cta.isSignedIn
+                                                    ? __('Go to Dashboard')
+                                                    : canRegister
+                                                      ? __(
+                                                            'Get Started for Free',
+                                                        )
+                                                      : __('Log in')}
+                                            </Button>
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+
+                <footer className="py-8 lg:mt-12 dark:border-[#3E3E3A]">
+                    <div className="mx-auto grid max-w-5xl gap-8 px-6 text-sm text-[#706f6c] sm:grid-cols-[1.5fr_1fr_1fr] lg:px-8 dark:text-[#A1A09A]">
+                        {comparisonLinks.length > 0 && (
+                            <FooterColumn title={__('Compare')}>
+                                {comparisonLinks.map((link) => (
+                                    <li key={link.slug}>
+                                        <Link
+                                            href={link.path}
+                                            className={FOOTER_LINK_CLASSES}
+                                        >
+                                            {link.heading}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </FooterColumn>
+                        )}
+
+                        <FooterColumn title={__('Resources')}>
+                            <li>
+                                <Link
+                                    href={documentation.index()}
+                                    className={FOOTER_LINK_CLASSES}
+                                >
+                                    {__('Documentation')}
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href={integrationsLink.path}
+                                    className={FOOTER_LINK_CLASSES}
+                                >
+                                    {__('Compatible banks and apps')}
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href={roadmap()}
+                                    className={FOOTER_LINK_CLASSES}
+                                >
+                                    {__('Roadmap')}
+                                </Link>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://discord.gg/m8hUhx6D9D"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={FOOTER_LINK_CLASSES}
+                                >
+                                    {__('Community')}
+                                </a>
+                            </li>
+                        </FooterColumn>
+
+                        <FooterColumn
+                            title={__('Language')}
+                            className="sm:text-right"
+                        >
+                            {LANGUAGE_OPTIONS.map((option) => (
+                                <li key={option.code}>
+                                    {option.code === locale ? (
+                                        <span className="font-medium text-[#1b1b18] dark:text-[#EDEDEC]">
+                                            {option.label}
+                                        </span>
+                                    ) : (
+                                        <a
+                                            href={`/?lang=${option.code}`}
+                                            className={cn(
+                                                'cursor-pointer',
+                                                FOOTER_LINK_CLASSES,
+                                            )}
+                                        >
+                                            {option.label}
+                                        </a>
+                                    )}
+                                </li>
+                            ))}
+                        </FooterColumn>
+                    </div>
+
+                    <div className="mx-auto mt-10 flex max-w-5xl flex-col gap-3 px-6 text-sm text-[#706f6c] sm:flex-row sm:items-center sm:justify-between lg:px-8 dark:text-[#A1A09A]">
+                        <p>
+                            © {new Date().getFullYear()}{' '}
+                            {__('Whisper Money. All rights reserved.')}
+                        </p>
+                        <div className="flex items-center gap-6">
+                            <Link
+                                href="/privacy"
+                                className={FOOTER_LINK_CLASSES}
+                            >
+                                {__('Privacy Policy')}
+                            </Link>
+                            <Link href="/terms" className={FOOTER_LINK_CLASSES}>
+                                {__('Terms of Service')}
+                            </Link>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </>
+    );
+}

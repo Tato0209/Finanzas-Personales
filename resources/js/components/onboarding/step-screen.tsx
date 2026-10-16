@@ -1,0 +1,204 @@
+import { cn } from '@/lib/utils';
+import { AlertCircle } from 'lucide-react';
+import { Fragment, type PropsWithChildren, type ReactNode } from 'react';
+
+interface StepScreenProps {
+    /** Sits above the title — the logo of the bank a screen is about. */
+    icon?: ReactNode;
+    title?: ReactNode;
+    description?: ReactNode;
+    /** Rendered in the action area: pinned to the bottom on phones, inline on desktop. */
+    footer?: ReactNode;
+    /** Vertically centre the content — for states with nothing to read but a spinner. */
+    align?: 'top' | 'center';
+    /** The categorizer needs a wider column than a form does. */
+    width?: 'md' | 'xl';
+}
+
+/**
+ * Every onboarding step is the same screen: a large left-aligned title, a
+ * supporting line, the content, and the action pinned within thumb reach.
+ */
+export function StepScreen({
+    icon,
+    title,
+    description,
+    footer,
+    align = 'top',
+    width = 'md',
+    children,
+}: PropsWithChildren<StepScreenProps>) {
+    return (
+        <main className="flex flex-1 flex-col px-5 md:items-center md:px-7">
+            <div
+                className={cn(
+                    'flex w-full flex-1 flex-col md:py-20',
+                    // Hug the content on desktop so the actions sit under it,
+                    // except when the state is meant to be centred in the page.
+                    align === 'center' ? 'md:flex-1' : 'md:flex-none',
+                    width === 'md' ? 'md:max-w-md' : 'md:max-w-xl',
+                )}
+            >
+                <div
+                    className={cn(
+                        'flex flex-1 flex-col gap-7 pt-3 md:pt-0',
+                        align === 'center' ? 'justify-center' : 'md:flex-none',
+                        // The footer below is opaque and pinned to the bottom of
+                        // the phone viewport for the whole scroll, so whatever
+                        // ends up behind it is only readable at the very end of
+                        // the scroll — on the AI gate at 390px that was the
+                        // sentence arguing for the free path, on the screen that
+                        // asks for money. This is the room to scroll it clear.
+                        footer && 'pb-8 md:pb-0',
+                    )}
+                >
+                    {(icon || title || description) && (
+                        <div className="flex flex-col gap-2.5">
+                            {icon && <div className="pb-1.5">{icon}</div>}
+                            {title && (
+                                <h1 className="text-3xl leading-[1.14] font-semibold tracking-tight text-balance md:text-[2rem]">
+                                    {title}
+                                </h1>
+                            )}
+                            {description && (
+                                <p className="text-[15px] leading-relaxed text-pretty text-muted-foreground">
+                                    {description}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {children}
+                </div>
+
+                {footer && (
+                    <div className="sticky bottom-0 z-10 -mx-5 flex flex-col gap-2.5 border-t bg-background px-5 pt-3.5 pb-[calc(1.375rem+var(--safe-area-bottom))] md:static md:mx-0 md:mt-7 md:border-0 md:px-0 md:pt-0 md:pb-0">
+                        {footer}
+                    </div>
+                )}
+            </div>
+        </main>
+    );
+}
+
+/** The one way an onboarding step reports a failure. */
+export function StepError({ children }: PropsWithChildren) {
+    return (
+        <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <AlertCircle className="size-4 shrink-0" />
+            {children}
+        </p>
+    );
+}
+
+/**
+ * A centred hint next to the primary action, e.g. a price or a time estimate.
+ * `emphasis` is for the ones that carry a commitment — those must not read as
+ * the smallest print on a screen whose main button says yes.
+ */
+export function StepNote({
+    emphasis = false,
+    children,
+}: PropsWithChildren<{ emphasis?: boolean }>) {
+    return (
+        <p
+            className={cn(
+                'text-center text-[13px] leading-normal text-pretty',
+                emphasis ? 'font-medium' : 'text-muted-foreground',
+            )}
+        >
+            {children}
+        </p>
+    );
+}
+
+/**
+ * The muted block that carries a caveat worth reading but not acting on — what
+ * a connection will not bring in, what a failure did not leave behind.
+ */
+export function StepCallout({ children }: PropsWithChildren) {
+    return (
+        <p className="rounded-lg bg-muted px-4.5 py-4 text-sm leading-normal text-pretty text-muted-foreground">
+            {children}
+        </p>
+    );
+}
+
+/**
+ * A sentence with the user's own values set into it, each carrying whatever
+ * emphasis it was handed. Written as a single translatable string with the
+ * values left as placeholders (`:gap`, `:total`) and split out after
+ * translation, so each one lands where the sentence puts it in every language
+ * rather than at a fixed position in the English.
+ */
+export function StepFilled({
+    sentence,
+    values,
+}: {
+    sentence: string;
+    values: Record<string, ReactNode>;
+}) {
+    return sentence.split(/(:\w+)/).map((part, index) => {
+        const name = part.slice(1);
+
+        return part.startsWith(':') && name in values ? (
+            <Fragment key={index}>{values[name]}</Fragment>
+        ) : (
+            part
+        );
+    });
+}
+
+/**
+ * The common case of the above: one emphasised word, one placeholder, whatever
+ * the placeholder happens to be called.
+ */
+export function StepEmphasis({
+    sentence,
+    word,
+}: {
+    sentence: string;
+    word: string;
+}) {
+    return (
+        <StepFilled
+            sentence={sentence}
+            values={{
+                [sentence.match(/:(\w+)/)?.[1] ?? '']: (
+                    <span className="font-medium text-foreground">{word}</span>
+                ),
+            }}
+        />
+    );
+}
+
+/** Onboarding controls are taller than the app's default so they stay easy to hit. */
+export const stepControlClass = 'h-13 rounded-lg text-base md:text-base';
+
+/**
+ * Applies {@link stepControlClass} to every control inside, for forms built
+ * from components shared with the rest of the app (which keep the smaller
+ * default everywhere else). `[role=combobox]` covers both the select triggers
+ * and the bank combobox's button.
+ */
+export const stepFormClass =
+    '[&_[data-slot=input]]:h-13 [&_[data-slot=input]]:rounded-lg [&_[data-slot=input]]:text-base [&_[role=combobox]]:h-13 [&_[role=combobox]]:rounded-lg [&_[role=combobox]]:text-base';
+
+/** Label + control, the form vocabulary used across the onboarding. */
+export function StepField({
+    label,
+    htmlFor,
+    children,
+}: PropsWithChildren<{ label: string; htmlFor?: string }>) {
+    return (
+        <div className="flex flex-col gap-2">
+            <label
+                htmlFor={htmlFor}
+                className="text-[13px] font-medium text-muted-foreground"
+            >
+                {label}
+            </label>
+            {children}
+        </div>
+    );
+}

@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Exceptions\Banking;
+
+use Exception;
+use Illuminate\Contracts\Debug\ShouldntReport;
+use Throwable;
+
+class TransientBankingProviderException extends Exception implements CarriesBankingOperation, ShouldntReport
+{
+    public function __construct(
+        string $message,
+        public readonly ?string $provider = null,
+        public readonly ?int $statusCode = null,
+        public readonly ?string $providerCode = null,
+        public readonly ?string $operation = null,
+        ?Throwable $previous = null,
+    ) {
+        parent::__construct($message, 0, $previous);
+    }
+}

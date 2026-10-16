@@ -1,0 +1,378 @@
+import { Head, usePage } from '@inertiajs/react';
+import {
+    Cell,
+    ColumnDef,
+    ColumnFiltersState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getSortedRowModel,
+    Row,
+    SortingState,
+    useReactTable,
+    VisibilityState,
+} from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { useMemo, useState } from 'react';
+
+import { index as automationRulesIndex } from '@/actions/App/Http/Controllers/Settings/AutomationRuleController';
+import { ApplyAutomationRuleDialog } from '@/components/automation-rules/apply-automation-rule-dialog';
+import { AutomationRuleActionBadges } from '@/components/automation-rules/automation-rule-action-badges';
+import { AutomationRuleTitle } from '@/components/automation-rules/automation-rule-title';
+import { CreateAutomationRuleDialog } from '@/components/automation-rules/create-automation-rule-dialog';
+import { DeleteAutomationRuleDialog } from '@/components/automation-rules/delete-automation-rule-dialog';
+import { EditAutomationRuleDialog } from '@/components/automation-rules/edit-automation-rule-dialog';
+import { PostSaveApplyRulePrompt } from '@/components/automation-rules/post-save-apply-rule-prompt';
+import HeadingSmall from '@/components/heading-small';
+import {
+    cellClassName,
+    SettingsTable,
+} from '@/components/shared/settings-table';
+import { Button } from '@/components/ui/button';
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuLabel,
+    ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { TableCell, TableRow } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import SettingsLayout from '@/layouts/settings/layout';
+import { cn } from '@/lib/utils';
+import { type BreadcrumbItem } from '@/types';
+import { type AutomationRule } from '@/types/automation-rule';
+import { type Category } from '@/types/category';
+import { type Label } from '@/types/label';
+import { __ } from '@/utils/i18n';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Automation rules settings',
+        href: automationRulesIndex().url,
+    },
+];
+
+function AutomationRuleActions({
+    rule,
+    categories,
+    labels,
+}: {
+    rule: AutomationRule;
+    categories: Category[];
+    labels: Label[];
+}) {
+    const [editOpen, setEditOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [applyOpen, setApplyOpen] = useState(false);
+
+    return (
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        aria-label={__('Actions')}
+                    >
+                        <span className="sr-only">{__('Open menu')}</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{__('Actions')}</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                        {__('Edit')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setApplyOpen(true)}>
+                        {__('Apply to existing transactions')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={() => setDeleteOpen(true)}
+                        variant="destructive"
+                    >
+                        {__('Delete')}
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <EditAutomationRuleDialog
+                rule={rule}
+                categories={categories}
+                labels={labels}
+                open={editOpen}
+                onOpenChange={setEditOpen}
+            />
+            <ApplyAutomationRuleDialog
+                rule={rule}
+                open={applyOpen}
+                onOpenChange={setApplyOpen}
+            />
+            <DeleteAutomationRuleDialog
+                rule={rule}
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+            />
+        </>
+    );
+}
+
+function AutomationRuleRow({
+    row,
+    categories,
+    labels,
+}: {
+    row: Row<AutomationRule>;
+    categories: Category[];
+    labels: Label[];
+}) {
+    const rule = row.original;
+    const [editOpen, setEditOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [applyOpen, setApplyOpen] = useState(false);
+    const [contextMenuOpen, setContextMenuOpen] = useState(false);
+
+    return (
+        <>
+            <ContextMenu onOpenChange={setContextMenuOpen}>
+                <ContextMenuTrigger asChild>
+                    <TableRow
+                        data-state={
+                            (row.getIsSelected() || contextMenuOpen) &&
+                            'selected'
+                        }
+                    >
+                        {row
+                            .getVisibleCells()
+                            .map((cell: Cell<AutomationRule, unknown>) => (
+                                <TableCell
+                                    key={cell.id}
+                                    className={cn(
+                                        'align-middle',
+                                        cellClassName(
+                                            cell.column.columnDef.meta,
+                                        ),
+                                    )}
+                                >
+                                    {flexRender(
+                                        cell.column.columnDef.cell,
+                                        cell.getContext(),
+                                    )}
+                                </TableCell>
+                            ))}
+                    </TableRow>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                    <ContextMenuLabel>{__('Actions')}</ContextMenuLabel>
+                    <ContextMenuItem onClick={() => setEditOpen(true)}>
+                        {__('Edit')}
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => setApplyOpen(true)}>
+                        {__('Apply to existing transactions')}
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        onClick={() => setDeleteOpen(true)}
+                        variant="destructive"
+                    >
+                        {__('Delete')}
+                    </ContextMenuItem>
+                </ContextMenuContent>
+            </ContextMenu>
+
+            <EditAutomationRuleDialog
+                rule={rule}
+                categories={categories}
+                labels={labels}
+                open={editOpen}
+                onOpenChange={setEditOpen}
+            />
+            <ApplyAutomationRuleDialog
+                rule={rule}
+                open={applyOpen}
+                onOpenChange={setApplyOpen}
+            />
+            <DeleteAutomationRuleDialog
+                rule={rule}
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+            />
+        </>
+    );
+}
+
+export default function AutomationRules() {
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: 'priority', desc: false },
+    ]);
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+        {},
+    );
+
+    const { automationRules: rawRules } = usePage<{
+        automationRules: AutomationRule[];
+    }>().props;
+
+    const categories = usePage().props.categories as Category[];
+    const labels = usePage().props.labels as Label[];
+    const rules = useMemo(
+        () =>
+            rawRules.map((rule) => ({
+                ...rule,
+                rules_json:
+                    typeof rule.rules_json === 'string'
+                        ? JSON.parse(rule.rules_json)
+                        : rule.rules_json,
+            })),
+        [rawRules],
+    );
+
+    const columns: ColumnDef<AutomationRule>[] = [
+        {
+            accessorKey: 'priority',
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === 'asc')
+                        }
+                    >
+                        {__('Priority')}
+
+                        {column.getIsSorted() === 'desc' ? (
+                            <ArrowDown className="ml-2 h-4 w-4" />
+                        ) : column.getIsSorted() === 'asc' ? (
+                            <ArrowUp className="ml-2 h-4 w-4" />
+                        ) : (
+                            <ArrowUpDown className="ml-2 h-4 w-4 opacity-40" />
+                        )}
+                    </Button>
+                );
+            },
+            // Most rules sit at the default 0, so the title keeps rows in a
+            // stable order instead of leaving them at the data's whim.
+            sortingFn: (a, b) =>
+                a.original.priority - b.original.priority ||
+                a.original.title.localeCompare(b.original.title),
+            cell: ({ row }) => (
+                <div className="pl-3 tabular-nums">
+                    {row.getValue('priority')}
+                </div>
+            ),
+            meta: { cellClassName: 'w-24' },
+        },
+        {
+            accessorKey: 'title',
+            header: __('Title'),
+            cell: ({ row }) => {
+                return <AutomationRuleTitle rule={row.original} />;
+            },
+            meta: { cellClassName: 'max-w-[220px] md:max-w-[420px]' },
+        },
+        {
+            id: 'actions_display',
+            header: __('Actions'),
+            cell: ({ row }) => {
+                return <AutomationRuleActionBadges rule={row.original} />;
+            },
+        },
+        {
+            id: 'actions',
+            enableHiding: false,
+            cell: ({ row }) => (
+                <AutomationRuleActions
+                    rule={row.original}
+                    categories={categories}
+                    labels={labels}
+                />
+            ),
+        },
+    ];
+
+    const table = useReactTable({
+        data: rules,
+        columns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getRowId: (row) => row.id,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        state: {
+            sorting,
+            columnFilters,
+            columnVisibility,
+        },
+    });
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title={__('Automation rules settings')} />
+
+            <SettingsLayout>
+                <div className="space-y-6">
+                    <HeadingSmall
+                        title={__('Automation rules settings')}
+                        description={__(
+                            'Manage rules that categorize transactions and add labels automatically',
+                        )}
+                    />
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-4">
+                            <Input
+                                placeholder={__('Filter rules...')}
+                                value={
+                                    (table
+                                        .getColumn('title')
+                                        ?.getFilterValue() as string) ?? ''
+                                }
+                                onChange={(event) =>
+                                    table
+                                        .getColumn('title')
+                                        ?.setFilterValue(event.target.value)
+                                }
+                                className="max-w-sm"
+                            />
+                            <CreateAutomationRuleDialog
+                                categories={categories}
+                                labels={labels}
+                            />
+                        </div>
+
+                        <SettingsTable
+                            table={table}
+                            emptyMessage={__('No automation rules found.')}
+                            renderRow={(row) => (
+                                <AutomationRuleRow
+                                    key={row.id}
+                                    row={row}
+                                    categories={categories}
+                                    labels={labels}
+                                />
+                            )}
+                        />
+
+                        <div className="flex items-center justify-end">
+                            <div className="text-sm text-muted-foreground">
+                                {table.getFilteredRowModel().rows.length}{' '}
+                                {__('rule(s) total.')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </SettingsLayout>
+            <PostSaveApplyRulePrompt />
+        </AppLayout>
+    );
+}

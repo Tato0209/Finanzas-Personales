@@ -1,0 +1,122 @@
+#!/bin/bash
+set -e
+
+# Boot-time artisan commands run as root; this keeps any file they create
+# (including laravel.log) group-writable so the www-data fpm/queue workers
+# can append to it afterwards.
+umask 0002
+
+echo "=== Whisper Money Container Startup ==="
+
+# Ensure storage directories exist (volume may be empty on first deploy)
+echo "Ensuring storage directories exist..."
+mkdir -p /app/storage/app/public
+mkdir -p /app/storage/framework/cache/data
+mkdir -p /app/storage/framework/sessions
+mkdir -p /app/storage/framework/views
+mkdir -p /app/storage/logs
+# Pre-create the log file group-writable so a stale root-owned file from a
+# persisted volume cannot block writes from the www-data workers.
+touch /app/storage/logs/laravel.log
+chown -R www-data:www-data /app/storage
+chmod -R 775 /app/storage
+chmod 664 /app/storage/logs/laravel.log
+
+# Auto-generate APP_KEY if not set or invalid (must start with "base64:")
+if [ -z "$APP_KEY" ] || [[ ! "$APP_KEY" =~ ^base64: ]]; then
+    if [ -n "$APP_KEY" ]; then
+        echo "APP_KEY is set but invalid (must start with 'base64:')"
+    else
+        echo "No APP_KEY found"
+    fi
+    echo "Generating new APP_KEY..."
+    APP_KEY=$(php artisan key:generate --show)
+    export APP_KEY
+    echo ""
+    echo "=================================================="
+    echo "IMPORTANT: Save this key in your environment!"
+    echo "APP_KEY=$APP_KEY"
+    echo "=================================================="
+    echo ""
+fi
+
+# Wait for MySQL to be ready using PHP PDO (more reliable than artisan commands)
+echo "Waiting for MySQL at ${DB_HOST:-mysql}:${DB_PORT:-3306}..."
+max_attempts=30
+attempt=0
+
+wait_for_mysql() {
+    php -r "
+        \$host = getenv('DB_HOST') ?: 'mysql';
+        \$port = getenv('DB_PORT') ?: '3306';
+        \$user = getenv('DB_USERNAME') ?: 'root';
+        \$pass = getenv('DB_PASSWORD') ?: '';
+        \$db = getenv('DB_DATABASE') ?: 'whisper_money';
+        try {
+            new PDO(\"mysql:host=\$host;port=\$port;dbname=\$db\", \$user, \$pass, [
+                PDO::ATTR_TIMEOUT => 5,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ]);
+            exit(0);
+        } catch (Exception \$e) {
+            exit(1);
+        }
+    " 2>/dev/null
+}
+
+until wait_for_mysql || [ $attempt -ge $max_attempts ]; do
+    attempt=$((attempt + 1))
+    echo "MySQL not ready (attempt $attempt/$max_attempts)..."
+    sleep 2
+done
+
+if [ $attempt -ge $max_attempts ]; then
+    echo "ERROR: Could not connect to MySQL after $max_attempts attempts"
+    echo "DB_HOST=${DB_HOST:-mysql}, DB_PORT=${DB_PORT:-3306}, DB_DATABASE=${DB_DATABASE:-whisper_money}"
+    exit 1
+fi
+
+echo "MySQL is ready!"
+
+# Run migrations
+echo "Running migrations..."
+php artisan migrate --force
+
+# Ensure Passport signing keys exist (OAuth for MCP connectors). Keys provided
+# via PASSPORT_PRIVATE_KEY/PASSPORT_PUBLIC_KEY env take precedence; otherwise
+# generate them into storage/ (a persisted volume) so issued tokens survive
+# restarts. NOTE: for a multi-instance deployment, provide the keys via env so
+# every instance validates tokens with the same key.
+if [ -z "$PASSPORT_PRIVATE_KEY" ] && [ ! -f /app/storage/oauth-private.key ]; then
+    echo "Generating Passport keys..."
+    php artisan passport:keys --force
+fi
+
+# Cache configuration
+echo "Caching configuration..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+# Create storage link (harmless if already exists)
+echo "Creating storage link..."
+php artisan storage:link 2>/dev/null || true
+
+# Re-apply storage ownership after artisan commands (may have created root-owned files)
+echo "Re-applying storage ownership..."
+chown -R www-data:www-data /app/storage /app/bootstrap/cache
+chmod -R 775 /app/storage /app/bootstrap/cache
+chmod 664 /app/storage/logs/laravel.log
+
+# Passport signing keys must stay private: the recursive chmod above widens them
+# to 775, but league/oauth2-server rejects any mode other than 600/660 and logs a
+# warning on every /oauth/authorize and /mcp/oauth request. Lock them back down.
+if [ -f /app/storage/oauth-private.key ]; then
+    chmod 600 /app/storage/oauth-private.key /app/storage/oauth-public.key
+fi
+
+echo "=== Startup complete, launching services ==="
+
+# Start supervisor
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

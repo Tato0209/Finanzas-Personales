@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    ports:
+      - "8080:80"
+    env_file:
+      - .env
+    environment:
+      - APP_NAME=Finanzas Personales
+      - VITE_APP_NAME=Finanzas Personales
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=whisper_money
+      - DB_USERNAME=whisper
+      - DB_PASSWORD=secret
+    volumes:
+      - whisper-storage:/app/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: whisper_money
+      MYSQL_USER: whisper
+      MYSQL_PASSWORD: secret
+    volumes:
+      - whisper-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  whisper-storage:
+  whisper-mysql:

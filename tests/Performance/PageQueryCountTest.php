@@ -1,0 +1,215 @@
+<?php
+
+use App\Enums\AccountType;
+use App\Models\Account;
+use App\Models\AccountBalance;
+use App\Models\Transaction;
+
+/*
+|--------------------------------------------------------------------------
+| Page Query Count Tests
+|--------------------------------------------------------------------------
+|
+| These tests enforce query count ceilings for all dashboard and settings
+| pages. If a page exceeds its threshold, it means new queries were added
+| (likely N+1 regressions or unnecessary eager loads).
+|
+| Each ceiling equals the number of queries that page actually runs, so any
+| query a change adds fails this suite. A ceiling only moves when someone
+| decides it should — and says below why it moved.
+|
+| Several ceilings went up by exactly one when the notification bell landed:
+| it is drawn in the app shell, so every screen pays one query for the rows
+| behind it, with the unread count riding along as a column on them. One query
+| for a control that is on every page is the cost of the feature, not a
+| regression to hunt down.
+|
+| Every ceiling here then went up by three when the Achievements flag was
+| removed and the medals became unconditional. All three are shell work that
+| used to sit behind the gate: the check for whether the sweep has ever been
+| through this reader (`TrackLastActiveAt`), and the two reads behind the header
+| challenges — the reader's medal keys and the count of transactions still
+| without a category. Same reasoning as the bell: the streak pill is drawn on
+| every screen, so this is what it costs.
+|
+| And every ceiling went up by one more when adding a transaction moved into
+| the app header: the button has to know whether the reader owns an account
+| that can hold one before it offers to open the dialog, which is one
+| `exists()` on the accounts table. It is shared as a closure, so the JSON
+| endpoints in ApiQueryCountTest pay nothing for it — only a rendered page
+| does. Reading it off the shared `accounts` list instead would cost three
+| queries rather than one, because every page that renders its own list
+| overrides that prop and the shared one is then never resolved.
+|
+| Every ceiling then came down by two when the legacy client-side encryption
+| feature was removed: the shared props no longer ask whether the reader has
+| encrypted accounts or encrypted transactions, and those were two `exists()`
+| calls on every rendered page.
+|
+| And every ceiling came down by one when the add-transaction button moved
+| back from the app header to the transactions page. That page already loads
+| the reader's accounts, so the button reads the answer off them and the
+| shared `exists()` is gone from every other screen.
+|
+| And every ceiling went up by two when the header got an add-transaction
+| button again, this time only for readers who add a meaningful share of
+| their transactions by hand. Deciding that is one aggregate over the
+| (user_id, source, created_at) index, plus an `exists()` on the accounts
+| table for the readers who pass it (the seeded user does: its transactions
+| are manual), so the button never offers a dialog with no account to file
+| into. It is an `Inertia::once` prop kept by the client for an hour, so a
+| rendered page pays for it on a full load and client-side visits skip it;
+| these tests make a fresh request each time and so always count it.
+|
+| Run this suite in isolation:
+|   php artisan test --testsuite=Performance
+|
+*/
+
+beforeEach(function () {
+    $this->user = performanceSeedUser();
+    $this->actingAs($this->user);
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// Main Sidebar Pages
+// ──────────────────────────────────────────────────────────────────────────
+
+test('dashboard page does not exceed query threshold', function () {
+    assertMaxQueries(19, function () {
+        $this->get(route('dashboard'))->assertOk();
+    }, 'Dashboard');
+});
+
+test('accounts index page does not exceed query threshold', function () {
+    assertMaxQueries(19, function () {
+        $this->get(route('accounts.list'))->assertOk();
+    }, 'Accounts Index');
+});
+
+test('account show page does not exceed query threshold', function () {
+    $account = Account::factory()->create([
+        'user_id' => $this->user->id,
+        'currency_code' => $this->user->currency_code,
+        'type' => AccountType::Checking,
+    ]);
+
+    assertMaxQueries(21, function () use ($account) {
+        $this->get(route('accounts.show', $account))->assertOk();
+    }, 'Account Show');
+});
+
+test('transactions index page does not exceed query threshold', function () {
+    assertMaxQueries(25, function () {
+        $this->get(route('transactions.index'))->assertOk();
+    }, 'Transactions Index');
+});
+
+test('budgets index page does not exceed query threshold', function () {
+    // Savings goals load unconditionally since the SavingsGoals flag was
+    // removed: the goals themselves plus their stats aggregate.
+    assertMaxQueries(26, function () {
+        $this->get(route('budgets.index'))->assertOk();
+    }, 'Budgets Index');
+});
+
+test('budget show page does not exceed query threshold', function () {
+    $budget = $this->user->budgets()->first();
+
+    assertMaxQueries(25, function () use ($budget) {
+        $this->get(route('budgets.show', $budget))->assertOk();
+    }, 'Budget Show');
+});
+
+test('cashflow page does not exceed query threshold', function () {
+    assertMaxQueries(19, function () {
+        $this->get(route('cashflow'))->assertOk();
+    }, 'Cashflow');
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// Settings Pages
+// ──────────────────────────────────────────────────────────────────────────
+
+test('settings accounts page does not exceed query threshold', function () {
+    assertMaxQueries(20, function () {
+        $this->get(route('accounts.index'))->assertOk();
+    }, 'Settings Accounts');
+});
+
+test('settings categories page does not exceed query threshold', function () {
+    assertMaxQueries(19, function () {
+        $this->get(route('categories.index'))->assertOk();
+    }, 'Settings Categories');
+});
+
+test('settings labels page does not exceed query threshold', function () {
+    assertMaxQueries(19, function () {
+        $this->get(route('labels.index'))->assertOk();
+    }, 'Settings Labels');
+});
+
+test('settings automation rules page does not exceed query threshold', function () {
+    assertMaxQueries(19, function () {
+        $this->get(route('automation-rules.index'))->assertOk();
+    }, 'Settings Automation Rules');
+});
+
+test('settings account/profile page does not exceed query threshold', function () {
+    assertMaxQueries(19, function () {
+        $this->get(route('account.edit'))->assertOk();
+    }, 'Settings Account/Profile');
+});
+
+test('settings appearance page does not exceed query threshold', function () {
+    assertMaxQueries(19, function () {
+        $this->get(route('appearance.edit'))->assertOk();
+    }, 'Settings Appearance');
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// Query count must not scale with data volume
+// ──────────────────────────────────────────────────────────────────────────
+
+test('dashboard query count does not scale with number of accounts', function () {
+    // Add 7 more accounts (10 total) with transactions and balances
+    $categories = $this->user->categories;
+
+    $extraAccounts = Account::factory(7)->create(['user_id' => $this->user->id]);
+    foreach ($extraAccounts as $index => $account) {
+        Transaction::factory(10)->create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'category_id' => $categories->random()->id,
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            AccountBalance::factory()->create([
+                'account_id' => $account->id,
+                'balance_date' => now()->subDays(($index * 5) + $i + 20)->toDateString(),
+            ]);
+        }
+    }
+
+    // Same threshold as 3 accounts — query count must not grow with data
+    assertMaxQueries(19, function () {
+        $this->get(route('dashboard'))->assertOk();
+    }, 'Dashboard with 10 accounts');
+});
+
+test('transactions page query count does not scale with number of transactions', function () {
+    $account = $this->user->accounts()->first();
+    $category = $this->user->categories()->first();
+
+    // Add 90 more transactions (120 total)
+    Transaction::factory(90)->create([
+        'user_id' => $this->user->id,
+        'account_id' => $account->id,
+        'category_id' => $category->id,
+    ]);
+
+    // Same threshold — paginated queries should not scale
+    assertMaxQueries(25, function () {
+        $this->get(route('transactions.index'))->assertOk();
+    }, 'Transactions with 120 records');
+});

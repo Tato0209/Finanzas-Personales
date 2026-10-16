@@ -1,0 +1,265 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\AccountType;
+use App\Enums\TransactionSource;
+use App\Models\Concerns\BelongsToSpace;
+use App\Services\BudgetTransactionService;
+use Carbon\Carbon;
+use Database\Factories\AccountFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+/**
+ * @property AccountType $type
+ * @property ?Carbon $archived_at
+ * @property ?Carbon $transactions_paginate_before
+ */
+class Account extends Model
+{
+    /** @use HasFactory<AccountFactory> */
+    use BelongsToSpace, HasFactory, HasUuids, SoftDeletes;
+
+    protected $fillable = [
+        'user_id',
+        'space_id',
+        'name',
+        'bank_id',
+        'currency_code',
+        'type',
+        'banking_connection_id',
+        'external_account_id',
+        'transactions_paginate_before',
+        'iban',
+        'linked_at',
+        'position',
+        'hidden_on_dashboard',
+        'archived_at',
+        'ownership_percentage',
+        'ownership_applies_to_balance',
+        'import_id',
+    ];
+
+    /** @var list<string> */
+    protected $hidden = [
+        'user_id',
+        'space_id',
+        'import_id',
+        'bank_id',
+        'transactions_paginate_before',
+        'iban',
+        'position',
+        'hidden_on_dashboard',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    /** @var list<string> */
+    protected $appends = [
+        'linked_loan_account_id',
+    ];
+
+    /**
+     * Budget amounts are snapshots taken when a transaction is assigned, so a
+     * new ownership share only reaches the budgets that already counted this
+     * account if something rewrites them. Hooked on the model rather than on
+     * the settings controller so every write path is covered.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (Account $account): void {
+            if ($account->wasChanged('ownership_percentage')) {
+                app(BudgetTransactionService::class)->reweighAccountSnapshots($account);
+            }
+        });
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'type' => AccountType::class,
+            'linked_at' => 'datetime',
+            'transactions_paginate_before' => 'date',
+            'position' => 'integer',
+            'hidden_on_dashboard' => 'boolean',
+            'archived_at' => 'datetime',
+            'ownership_percentage' => 'integer',
+            'ownership_applies_to_balance' => 'boolean',
+        ];
+    }
+
+    /**
+     * Archived accounts are left out of the accounts page and of every picker
+     * that points new data at an account. They stay in the balance history, so
+     * the queries that build it deliberately do not use this scope.
+     *
+     * @param  Builder<Account>  $query
+     * @return Builder<Account>
+     */
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    /**
+     * Whether the account was already archived on that date. An archived
+     * account contributes nothing from then on, so every figure built from a
+     * balance history has to ask this rather than read the balance straight
+     * through — the dashboard chart and the monthly summary both do, and their
+     * totals only agree because they agree on this.
+     */
+    public function isArchivedOn(Carbon $date): bool
+    {
+        return $this->archived_at !== null && $date->gte($this->archived_at);
+    }
+
+    /**
+     * The owner's share of an amount held in this account, in the same minor
+     * units. A shared account (say 50% with a partner) only contributes that
+     * slice of every transaction to the user's own figures.
+     */
+    public function shareOfAmount(int $amount): int
+    {
+        // Defaults to full ownership so a model built without the column (a
+        // partial select, a fresh factory instance) reads at face value
+        // instead of silently zeroing every amount.
+        $percentage = $this->ownership_percentage ?? 100;
+
+        if ($percentage >= 100) {
+            return $amount;
+        }
+
+        return (int) round($amount * $percentage / 100);
+    }
+
+    /**
+     * The linked loan account id, surfaced from the real estate detail. Guarded
+     * on relationLoaded so serialization never triggers a lazy load, avoiding
+     * N+1 queries when accounts are listed without the relation.
+     */
+    protected function linkedLoanAccountId(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->relationLoaded('realEstateDetail')
+            ? $this->realEstateDetail?->linked_loan_account_id
+            : null);
+    }
+
+    /**
+     * The last four of the IBAN, which is as much of it as a screen ever needs
+     * and all it may have: `iban` itself is hidden. Not appended by default —
+     * the onboarding hub asks for it explicitly, because it is the only thing
+     * telling apart seven accounts a Spanish bank returned under the holder's
+     * name.
+     */
+    protected function ibanTail(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->iban === null
+            ? null
+            : substr($this->iban, -4));
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<Bank, $this> */
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(Bank::class);
+    }
+
+    /** @return HasMany<Transaction, $this> */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /** @return HasMany<AccountBalance, $this> */
+    public function balances(): HasMany
+    {
+        return $this->hasMany(AccountBalance::class);
+    }
+
+    /** @return HasMany<InvestmentContribution, $this> */
+    public function investmentContributions(): HasMany
+    {
+        return $this->hasMany(InvestmentContribution::class)->orderBy('contribution_date', 'desc')->orderBy('created_at', 'desc');
+    }
+
+    /** @return HasMany<AccountImportConfig, $this> */
+    public function importConfigs(): HasMany
+    {
+        return $this->hasMany(AccountImportConfig::class);
+    }
+
+    /** @return BelongsTo<BankingConnection, $this> */
+    public function bankingConnection(): BelongsTo
+    {
+        return $this->belongsTo(BankingConnection::class);
+    }
+
+    /** @return HasOne<RealEstateDetail, $this> */
+    public function realEstateDetail(): HasOne
+    {
+        return $this->hasOne(RealEstateDetail::class);
+    }
+
+    /** @return HasOne<LoanDetail, $this> */
+    public function loanDetail(): HasOne
+    {
+        return $this->hasOne(LoanDetail::class);
+    }
+
+    /** @return HasOne<CreditCardDetail, $this> */
+    public function creditCardDetail(): HasOne
+    {
+        return $this->hasOne(CreditCardDetail::class);
+    }
+
+    /**
+     * Whether the bank sync already holds transactions dated before $date for
+     * this account, which is what makes a pagination resume marker there pure
+     * cost: the span behind it has been walked, and re-requesting it only feeds
+     * dedup while the window's end - and every recent transaction with it -
+     * stays in the past.
+     *
+     * Only bank-sourced rows count, the same way the sync window's watermark
+     * only counts them: a manual row or a CSV import dated years back says
+     * nothing about how far the provider has actually been paginated. Trashed
+     * rows do count, because dedup sees them too.
+     */
+    public function hasSyncedTransactionsBefore(string $date): bool
+    {
+        return $this->transactions()
+            ->withTrashed()
+            ->where('source', TransactionSource::EnableBanking)
+            ->where('transaction_date', '<', $date)
+            ->exists();
+    }
+
+    public function isConnected(): bool
+    {
+        return $this->banking_connection_id !== null;
+    }
+
+    public function isLinked(): bool
+    {
+        return $this->linked_at !== null;
+    }
+}

@@ -1,0 +1,41 @@
+import * as React from 'react';
+import * as ProgressPrimitive from '@radix-ui/react-progress';
+
+import { cn } from '@/lib/utils';
+
+interface ProgressProps
+    extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
+    indicatorClassName?: string;
+    indicatorColor?: string;
+}
+
+const Progress = React.forwardRef<
+    React.ElementRef<typeof ProgressPrimitive.Root>,
+    ProgressProps
+>(({ className, value, indicatorClassName, indicatorColor, ...props }, ref) => (
+    <ProgressPrimitive.Root
+        ref={ref}
+        className={cn(
+            'relative h-4 w-full overflow-hidden rounded-full bg-secondary group-hover:bg-muted-foreground/10 transition-colors',
+            className,
+        )}
+        {...props}
+    >
+        <ProgressPrimitive.Indicator
+            className={cn(
+                'h-full w-full flex-1 bg-primary transition-all',
+                indicatorClassName,
+            )}
+            style={{
+                // A fill is 0-100 by definition: past it the indicator slides
+                // out of the track and leaves a gap instead of reading full.
+                transform: `translateX(-${100 - Math.min(100, Math.max(0, value || 0))}%)`,
+                ...(indicatorColor && { backgroundColor: indicatorColor }),
+            }}
+        />
+    </ProgressPrimitive.Root>
+));
+Progress.displayName = ProgressPrimitive.Root.displayName;
+
+export { Progress };
+

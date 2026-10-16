@@ -1,0 +1,387 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Enums\AccountType;
+use App\Enums\BankingConnectionStatus;
+use App\Enums\BankingProvider;
+use App\Features\CalculateBalancesOnImport;
+use App\Features\FullImport;
+use App\Models\BankingConnection;
+use App\Models\User;
+use App\Services\Achievements\Catalog;
+use App\Services\Achievements\Challenges;
+use App\Services\CurrencyOptions;
+use App\Services\FormatLocaleOptions;
+use App\Services\Notifications\NotificationFeed;
+use Closure;
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Middleware;
+use Laravel\Pennant\Feature;
+
+class HandleInertiaRequests extends Middleware
+{
+    public function __construct(
+        private CurrencyOptions $currencyOptions,
+        private FormatLocaleOptions $formatLocales,
+        private NotificationFeed $notifications,
+        private Catalog $catalog,
+        private Challenges $challenges,
+    ) {}
+
+    /**
+     * The root template that's loaded on the first page visit.
+     *
+     * @see https://inertiajs.com/server-side-setup#root-template
+     *
+     * @var string
+     */
+    protected $rootView = 'app';
+
+    /**
+     * Determines the current asset version.
+     *
+     * @see https://inertiajs.com/asset-versioning
+     */
+    public function version(Request $request): ?string
+    {
+        return parent::version($request);
+    }
+
+    /**
+     * Define the props that are shared by default.
+     *
+     * @see https://inertiajs.com/shared-data
+     *
+     * @return array<string, mixed>
+     */
+    public function share(Request $request): array
+    {
+        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+
+        $user = $request->user();
+
+        return [
+            ...parent::share($request),
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'saved_automation_rule_id' => $request->session()->get('saved_automation_rule_id'),
+                'saved_automation_rule_token' => $request->session()->get('saved_automation_rule_token'),
+            ],
+            'name' => config('app.name'),
+            'appUrl' => config('app.url'),
+            'version' => json_decode(file_get_contents(base_path('package.json')))->version ?? '0.0.0',
+            'quote' => ['message' => trim($message), 'author' => trim($author)],
+            'auth' => [
+                'user' => $user,
+                'hasProPlan' => $user?->hasProPlan() ?? false,
+                'isDemoAccount' => $user?->isRestrictedDemoAccount() ?? false,
+                'isSharedAccount' => $user?->isRestrictedSharedAccount() ?? false,
+                'isAdmin' => $user?->isAdmin() ?? false,
+            ],
+            'subscriptionPaymentIssue' => $user?->hasPastDueSubscription() ? [
+                'status' => 'past_due',
+                'action_url' => route('settings.billing.portal'),
+            ] : null,
+            'demoEnabled' => (bool) config('app.demo.enabled'),
+            'openBankingEnabled' => (bool) config('services.enablebanking.enabled'),
+            'demoCredentials' => $this->demoCredentials($request, $user),
+            'subscriptionsEnabled' => config('subscriptions.enabled', false),
+            'aiCategorizationUpsellRate' => (int) config('ai_categorization.upsell_sample_rate'),
+            'pricing' => [
+                'plans' => config('subscriptions.plans', []),
+                'defaultPlan' => config('subscriptions.default_plan', 'monthly'),
+                'bestValuePlan' => config('subscriptions.best_value_plan', null),
+                'promo' => config('subscriptions.promo', []),
+                'currency' => strtoupper(config('cashier.currency', 'eur')),
+                // The way back out of an upfront charge, and so part of every
+                // screen that asks for one — the gates, the paywall and billing.
+                'refundWindowDays' => (int) config('subscriptions.refund_window_days', 3),
+            ],
+            'chartColorScheme' => $user?->setting?->chart_color_scheme->value ?? 'colorful',
+            'includeLoansInNetWorthChart' => $user?->setting->include_loans_in_net_worth_chart ?? false,
+            'includeRealEstateInNetWorthChart' => $user?->setting->include_real_estate_in_net_worth_chart ?? false,
+            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'features' => $this->resolveFeatureFlags(),
+            'notifications' => fn (): ?array => $this->notificationsFor($user),
+            'achievements' => fn (): ?array => $this->achievementsFor($request, $user),
+            'challenges' => fn (): ?array => $this->challengesFor($request, $user),
+            ...$this->userCollectionProps($user),
+            // Resolved once and kept by the client for an hour, so the aggregate
+            // runs on a full page load rather than on every visit. Keyed by the
+            // user: the client keeps once props across a login, and the guest's
+            // `false` from the login page would otherwise hide the button for
+            // the hour that follows.
+            'showHeaderAddTransaction' => Inertia::once(fn (): bool => $this->showsHeaderAddTransaction($user))
+                ->as('showHeaderAddTransaction:'.($user->id ?? 'guest'))
+                ->until(now()->addHour()),
+            'locale' => $this->formatLocaleFor($request, $user),
+            'translations' => $this->getTranslations(),
+            'currencies' => [
+                'profile' => $this->currencyOptions->primaryOptions(),
+                'accounts' => $this->currencyOptions->accountOptions(),
+                // Keyed by code rather than folded into the two lists above:
+                // a transaction can be in a currency no longer offered, and it
+                // still has to render at the right scale.
+                'decimals' => $this->currencyOptions->decimalsMap(),
+            ],
+            // Codes only: the picker writes each one's country name and its
+            // live example with `Intl`, the way `useConnectCountries()` already
+            // does, so 43 country names never need a translation entry — and
+            // the list never exists twice, once in PHP and once in TypeScript.
+            'formatLocales' => $this->formatLocales->codes(),
+        ];
+    }
+
+    /**
+     * Whether the header offers its own add-transaction button: only to the
+     * onboarded readers who add a meaningful share of their transactions by
+     * hand, and who still own an account to file one in. Everyone else reaches
+     * the dialog from the transactions list. The account check runs last, so
+     * only the readers who qualify pay for it.
+     */
+    private function showsHeaderAddTransaction(?User $user): bool
+    {
+        if ($user === null || ! $user->isOnboarded() || ! $user->addsTransactionsByHand()) {
+            return false;
+        }
+
+        return $user->accounts()
+            ->whereNull('archived_at')
+            ->whereIn('type', AccountType::withTransactionLedger())
+            ->exists();
+    }
+
+    /**
+     * How far through the medals the reader is, for the account menu.
+     *
+     * Read off the user's own row rather than counted, because this is drawn on
+     * every screen and the figure moves once a day: the nightly sweep keeps
+     * `achievements_count` in step. Null for guests.
+     *
+     * @return array{unlocked: int, total: int}|null
+     */
+    private function achievementsFor(Request $request, ?User $user): ?array
+    {
+        if ($user === null || $this->isSubscriptionFlow($request)) {
+            return null;
+        }
+
+        return [
+            'unlocked' => (int) $user->achievements_count,
+            'total' => $this->catalog->all()->count(),
+        ];
+    }
+
+    /**
+     * The two medals the chrome puts in front of the reader rather than waiting
+     * to be looked up: the visit streak in the header, and what is left to
+     * categorize this month. Null for guests and for readers still onboarding,
+     * for the same reason the bell below is: the wizard is not the app's chrome,
+     * and the toasts these feed render over whatever step the reader is on —
+     * one of them landed on top of the reveal's own button.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function challengesFor(Request $request, ?User $user): ?array
+    {
+        if ($user === null || ! $user->isOnboarded() || $this->isSubscriptionFlow($request)) {
+            return null;
+        }
+
+        return $this->challenges->for($user);
+    }
+
+    /**
+     * Whether this request is one of the subscription screens, which are no
+     * more the app's chrome than the wizard is: the paywall is a single
+     * decision on a page of its own, and a nudge to go and categorize things
+     * lands on top of it arguing for somewhere else to be.
+     */
+    private function isSubscriptionFlow(Request $request): bool
+    {
+        return $request->routeIs('subscribe', 'subscribe.*');
+    }
+
+    /**
+     * The bell's badge and its latest rows. Null for guests and for readers
+     * still onboarding, so the frontend has one thing to check before drawing
+     * it.
+     *
+     * @return array{unread: int, recent: list<array<string, mixed>>}|null
+     */
+    private function notificationsFor(?User $user): ?array
+    {
+        if ($user === null || ! $user->isOnboarded()) {
+            return null;
+        }
+
+        return $this->notifications->forBell($user);
+    }
+
+    /**
+     * The deferred props that list the user's own records. Guests get empty lists
+     * so the frontend can read them unconditionally.
+     *
+     * @return array<string, Closure>
+     */
+    private function userCollectionProps(?User $user): array
+    {
+        if ($user === null) {
+            return array_fill_keys([
+                'expiredBankingConnections',
+                'bankingConnections',
+                'accounts',
+                'categories',
+                'banks',
+                'automationRules',
+                'labels',
+            ], fn () => []);
+        }
+
+        return [
+            'expiredBankingConnections' => fn () => $user->bankingConnections()
+                ->where('provider', BankingProvider::EnableBanking)
+                ->where(function ($query) {
+                    $query->where('status', BankingConnectionStatus::Expired)
+                        ->orWhere(function ($query) {
+                            $query->whereNotNull('valid_until')
+                                ->where('valid_until', '<=', now());
+                        });
+                })
+                ->orderBy('valid_until')
+                ->limit(5)
+                ->get(['id', 'aspsp_name', 'provider', 'valid_until'])
+                ->map(fn (BankingConnection $connection): array => [
+                    'id' => $connection->id,
+                    'aspsp_name' => $connection->aspsp_name,
+                    'provider' => $connection->provider->value,
+                    'valid_until' => $connection->valid_until?->toIso8601String(),
+                    'reconnect_url' => route('open-banking.reconnect', $connection),
+                ])
+                ->all(),
+            'bankingConnections' => fn () => $user->bankingConnections()
+                ->get(['id', 'aspsp_name', 'provider', 'status'])
+                ->map(fn (BankingConnection $connection): array => [
+                    'id' => $connection->id,
+                    'aspsp_name' => $connection->aspsp_name,
+                    'provider' => $connection->provider->value,
+                    'status' => $connection->status->value,
+                ])
+                ->all(),
+            'accounts' => fn () => $user->accounts()
+                ->with(['bank', 'realEstateDetail:id,account_id,linked_loan_account_id'])
+                ->orderBy('name')
+                ->get()
+                ->makeHidden('realEstateDetail'),
+            'categories' => fn () => $user->categories()
+                ->forDisplay()
+                ->get(),
+            'banks' => fn () => $user->banks()
+                ->orderBy('name')
+                ->get(),
+            'automationRules' => fn () => $user->automationRules()
+                ->with(['category', 'labels'])
+                ->orderBy('priority')
+                ->get(),
+            'labels' => fn () => $user->labels()
+                ->orderBy('name')
+                ->get(),
+        ];
+    }
+
+    /**
+     * The demo login is prefilled for whoever asked for it (?demo=1) and for the
+     * demo account itself, so it can sign back in after logging out.
+     *
+     * @return array{email: ?string, password: ?string}|null
+     */
+    private function demoCredentials(Request $request, ?User $user): ?array
+    {
+        $wantsDemo = $request->query('demo') === '1' || ($user?->isRestrictedDemoAccount() ?? false);
+
+        if (! config('app.demo.enabled') || ! $wantsDemo) {
+            return null;
+        }
+
+        return [
+            'email' => config('app.demo.email'),
+            'password' => config('app.demo.password'),
+        ];
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    protected function resolveFeatureFlags(): array
+    {
+        $user = request()->user();
+
+        if (! $user) {
+            return [
+                'cashflow' => true,
+                'calculateBalancesOnImport' => false,
+                'fullImport' => false,
+                'fullImportSettings' => false,
+            ];
+        }
+
+        // One query for every flag, however many of them get read below.
+        Feature::for($user)->load([CalculateBalancesOnImport::class, FullImport::class]);
+
+        return [
+            'cashflow' => true,
+            'calculateBalancesOnImport' => Feature::for($user)->active(CalculateBalancesOnImport::class),
+            // Two answers, because Settings keeps the page past the window for
+            // as long as an import can still be undone, while starting one is
+            // only offered inside it. The second costs a query once the window
+            // is closed, and only the Settings menu reads it, so only Settings
+            // pages pay for it.
+            'fullImport' => $user->canUseFullImport(),
+            'fullImportSettings' => request()->is('settings', 'settings/*') && $user->canSeeFullImportSettings(),
+        ];
+    }
+
+    /**
+     * The locale the client writes amounts and dates in — a full region like
+     * `es-MX`, and deliberately NOT `app()->getLocale()`, which this prop used
+     * to carry.
+     *
+     * The two diverge on purpose and both are right. `app()->getLocale()` names
+     * the language `lang/` is translated into and has to stay two letters, or
+     * `App::setLocale('es-MX')` sends the translator after a directory that does
+     * not exist. This prop names the region, which is what decides where the
+     * decimal separator goes and how a date is ordered — and a reader is allowed
+     * to want the app in English with Mexican numbers.
+     *
+     * Nothing is lost by the swap: `i18n.ts` translates off the `translations`
+     * prop and never reads this one. See `use-locale.ts`.
+     */
+    private function formatLocaleFor(Request $request, ?User $user): string
+    {
+        // A signed-out visitor has no row to have detected anything onto, so
+        // the header is read for them on every request instead.
+        return $user?->formatLocale()
+            ?? $this->formatLocales->detectFromHeader($request->header('Accept-Language'), app()->getLocale());
+    }
+
+    /**
+     * Get all translations for the current locale as a flat key-value array.
+     *
+     * @return array<string, string>
+     */
+    protected function getTranslations(): array
+    {
+        $locale = app()->getLocale();
+        $translationFile = lang_path("{$locale}.json");
+
+        if (! file_exists($translationFile)) {
+            return [];
+        }
+
+        return json_decode(file_get_contents($translationFile), true) ?? [];
+    }
+}

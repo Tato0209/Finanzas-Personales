@@ -1,0 +1,120 @@
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AddTransactionButton } from './add-transaction-button';
+
+// Hoisted: the mock factory reads it while the module graph is still loading.
+const { refreshPageAfterWrite } = vi.hoisted(() => ({
+    refreshPageAfterWrite: vi.fn(),
+}));
+
+vi.mock('@/lib/refresh-page', () => ({ refreshPageAfterWrite }));
+
+const load = vi.fn(async () => true);
+
+vi.mock('@/hooks/use-transaction-dialog-data', () => ({
+    useTransactionDialogData: () => ({
+        data: {
+            accounts: [],
+            categories: [],
+            banks: [],
+            labels: [],
+            automationRules: [],
+        },
+        loading: false,
+        load,
+    }),
+}));
+
+vi.mock('./edit-transaction-dialog', () => ({
+    EditTransactionDialog: ({
+        open,
+        onSuccess,
+        onOpenChange,
+    }: {
+        open: boolean;
+        onSuccess: (transaction: unknown) => void;
+        onOpenChange: (open: boolean) => void;
+    }) =>
+        open ? (
+            <button
+                data-testid="create-dialog"
+                onClick={() => {
+                    // What the real dialog does on a save: report it, then
+                    // close, both in the same batch.
+                    onSuccess({ id: 'tx-1' });
+                    onOpenChange(false);
+                }}
+            />
+        ) : null,
+}));
+
+describe('AddTransactionButton', () => {
+    beforeEach(() => {
+        load.mockClear();
+        refreshPageAfterWrite.mockClear();
+    });
+
+    /**
+     * On /transactions the bar also holds Analysis and Columns, so the label
+     * only hides when its container is narrower than @xs (a 320px phone).
+     */
+    it('labels the button "Transaction", collapsing only on a narrow bar', () => {
+        render(<AddTransactionButton hasTransactionalAccounts />);
+
+        const button = screen.getByRole('button', { name: 'Add transaction' });
+
+        expect(within(button).getByText('Transaction')).toHaveClass(
+            'hidden',
+            '@xs:inline',
+        );
+    });
+
+    it('opens the create dialog once the lists are loaded', async () => {
+        render(<AddTransactionButton hasTransactionalAccounts />);
+
+        fireEvent.click(screen.getByTestId('add-transaction-button'));
+
+        expect(load).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(screen.getByTestId('create-dialog')).toBeInTheDocument();
+        });
+    });
+
+    it('refreshes the page underneath once a save has closed the dialog', async () => {
+        render(<AddTransactionButton hasTransactionalAccounts />);
+
+        fireEvent.click(screen.getByTestId('add-transaction-button'));
+        const dialog = await screen.findByTestId('create-dialog');
+
+        fireEvent.click(dialog);
+
+        expect(refreshPageAfterWrite).toHaveBeenCalled();
+    });
+
+    it('leaves the page alone when the dialog closes with nothing saved', async () => {
+        render(<AddTransactionButton hasTransactionalAccounts />);
+
+        fireEvent.click(screen.getByTestId('add-transaction-button'));
+        await screen.findByTestId('create-dialog');
+
+        expect(refreshPageAfterWrite).not.toHaveBeenCalled();
+    });
+
+    it('stays disabled while the user owns no account to file one in', () => {
+        render(<AddTransactionButton hasTransactionalAccounts={false} />);
+
+        const button = screen.getByTestId('add-transaction-button');
+        expect(button).toHaveAttribute('aria-disabled', 'true');
+
+        fireEvent.click(button);
+
+        expect(load).not.toHaveBeenCalled();
+        expect(screen.queryByTestId('create-dialog')).not.toBeInTheDocument();
+    });
+});

@@ -1,0 +1,376 @@
+<?php
+
+use App\Models\Account;
+use App\Models\Bank;
+use App\Models\Category;
+use App\Models\Label;
+use App\Models\Transaction;
+use App\Models\User;
+
+use function Pest\Laravel\actingAs;
+
+it('can view transactions page', function () {
+    $user = User::factory()->onboarded()->create();
+    Category::factory()->create(['user_id' => $user->id]);
+    Account::factory()->create(['user_id' => $user->id]);
+
+    actingAs($user);
+
+    $page = visit('/transactions');
+
+    $page->assertSee('Transactions')
+        ->assertSee('View and manage your transactions')
+        ->assertNoJavascriptErrors();
+});
+
+it('can open add transaction dialog', function () {
+    $user = User::factory()->onboarded()->create();
+    Category::factory()->create(['user_id' => $user->id]);
+    // Pinned: the factory picks a random type, and the add button is
+    // off for a user whose only account cannot hold a transaction.
+    Account::factory()->create([
+        'user_id' => $user->id,
+        'type' => 'checking',
+    ]);
+
+    actingAs($user);
+
+    $page = visit('/transactions');
+
+    $page->assertSee('Transactions')
+        ->click('[data-testid="add-transaction-button"]')
+        ->assertSee('Create Transaction')
+        ->assertNoJavascriptErrors();
+});
+
+it('offers adding a transaction above the list, not in the app header', function () {
+    $user = User::factory()->onboarded()->create();
+    Account::factory()->create([
+        'user_id' => $user->id,
+        'type' => 'checking',
+    ]);
+
+    actingAs($user);
+
+    visit('/dashboard')
+        ->assertNotPresent('[data-testid="add-transaction-button"]')
+        ->assertNoJavascriptErrors();
+
+    visit('/transactions')
+        ->assertPresent('[data-testid="add-transaction-button"]')
+        ->assertNotPresent('[data-testid="page-header"] [data-testid="add-transaction-button"]')
+        ->assertNoJavascriptErrors();
+});
+
+it('shows newly created labels in the transaction label dropdown without refreshing', function () {
+    $user = User::factory()->onboarded()->create();
+    $bank = Bank::factory()->create(['name' => 'Label Bank']);
+    Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Sports',
+    ]);
+    Account::factory()->create([
+        'user_id' => $user->id,
+        'bank_id' => $bank->id,
+        'name' => 'Label Account',
+        'currency_code' => 'USD',
+        'type' => 'checking',
+    ]);
+
+    actingAs($user);
+
+    $page = visit('/transactions');
+
+    $page->assertSee('Transactions')
+        ->click('[data-testid="add-transaction-button"]')
+        ->waitForText('Create Transaction', 5)
+        // The account, category and label fields open behind the reveal.
+        ->click('[data-testid="toggle-more-options"]')
+        ->click('[data-testid="label-combobox-trigger"]')
+        ->fill('input[placeholder="Search or create labels..."]', 'Padel')
+        ->waitForText('Create "Padel"', 5)
+        ->click('[data-testid="label-create-option"]')
+        ->waitForText('Padel', 5)
+        ->assertPresent('[data-testid="label-option"][data-label-name="Padel"]')
+        ->assertNoJavascriptErrors();
+
+    expect(Label::query()
+        ->where('user_id', $user->id)
+        ->where('name', 'Padel')
+        ->exists())->toBeTrue();
+});
+
+it('can create a transaction', function () {
+    $user = User::factory()->onboarded()->create();
+    $bank = Bank::factory()->create(['name' => 'Test Bank']);
+
+    actingAs($user);
+
+    // Create category via UI
+    $page = visit('/settings/categories');
+    createCategoryViaUI($page, 'Groceries');
+
+    // Create account via UI
+    $page = visit('/settings/accounts');
+    createAccountViaUI($page, 'My Checking', 'Test Bank');
+
+    // Verify account was created
+    $page->assertSee('My Checking');
+
+    // Visit transactions page
+    $page = visit('/transactions');
+
+    $page->assertSee('Transactions')
+        ->click('[data-testid="add-transaction-button"]')
+        ->assertSee('Create Transaction')
+        ->fill('description', 'Test Transaction')
+        // The account, category and label fields open behind the reveal.
+        ->click('[data-testid="toggle-more-options"]')
+        ->click('[data-testid="account-select"]')
+        ->waitForText('My Checking', 5)
+        ->click('[role="option"]:has-text("My Checking")')
+        ->click('[data-testid="category-select"]')
+        ->waitForText('Groceries', 5)
+        ->click('Groceries')
+        ->fill('#amount', '50.00')
+        ->click('[data-testid="submit-transaction"]')
+        ->assertDontSee('Create Transaction')
+        ->assertNoJavascriptErrors();
+
+    // The type toggle defaults to Expense, so a typed 50.00 stores negative.
+    $this->assertDatabaseHas('transactions', [
+        'user_id' => $user->id,
+        'amount' => -5000,
+    ]);
+});
+
+it('shows empty state when no transactions exist', function () {
+    $user = User::factory()->onboarded()->create();
+    Category::factory()->create(['user_id' => $user->id]);
+    Account::factory()->create(['user_id' => $user->id]);
+
+    actingAs($user);
+
+    $page = visit('/transactions');
+
+    $page->assertSee('Transactions')
+        ->waitForText('No transactions found')
+        ->assertNoJavascriptErrors();
+});
+
+it('can filter transactions by search text', function () {
+    $user = User::factory()->onboarded()->create();
+    $bank = Bank::factory()->create(['name' => 'Filter Bank']);
+    $category = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Groceries',
+    ]);
+    $account = Account::factory()->create([
+        'user_id' => $user->id,
+        'bank_id' => $bank->id,
+        'name' => 'Daily Account',
+        'currency_code' => 'USD',
+        'type' => 'checking',
+    ]);
+
+    Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => $category->id,
+        'description' => 'Weekly groceries',
+        'amount' => -4500,
+    ]);
+
+    Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => $category->id,
+        'description' => 'Electric bill',
+        'amount' => -8000,
+    ]);
+
+    actingAs($user);
+
+    $page = visit('/transactions');
+
+    $page->assertSee('Transactions')
+        ->waitForText('Weekly groceries', 10)
+        ->assertSee('Electric bill')
+        ->fill('input[placeholder="Search description or notes..."]', 'groceries')
+        ->assertSee('Weekly groceries')
+        ->assertDontSee('Electric bill')
+        ->assertNoJavascriptErrors();
+});
+
+it('can edit an existing transaction from the list', function () {
+    $user = User::factory()->onboarded()->create();
+    $bank = Bank::factory()->create(['name' => 'Edit Tx Bank']);
+    $category = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Groceries',
+    ]);
+    $replacementCategory = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Dining Out',
+    ]);
+    $account = Account::factory()->create([
+        'user_id' => $user->id,
+        'bank_id' => $bank->id,
+        'name' => 'Editing Account',
+        'currency_code' => 'USD',
+        'type' => 'checking',
+    ]);
+
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => $category->id,
+        'description' => 'Original transaction note',
+        'amount' => -3200,
+        'notes' => 'Original note',
+        'source' => 'manually_created',
+    ]);
+
+    actingAs($user);
+
+    $page = visit('/transactions');
+
+    $page->assertSee('Transactions')
+        ->waitForText('Original transaction note', 10)
+        ->click('Original transaction note')
+        ->assertSee('Edit Transaction')
+        ->fill('#description', 'Updated dinner transaction')
+        ->click('[data-testid="category-select"]')
+        ->click('Dining Out')
+        ->fill('#notes', 'Updated note for browser test')
+        ->click('[data-testid="submit-transaction"]')
+        ->assertDontSee('Edit Transaction')
+        ->waitForText('Updated dinner transaction', 10)
+        ->assertSee('Dining Out')
+        ->assertNoJavascriptErrors();
+
+    $updatedTransaction = $transaction->fresh();
+
+    expect($updatedTransaction->description)->toBe('Updated dinner transaction');
+    expect($updatedTransaction->notes)->toBe('Updated note for browser test');
+    expect($updatedTransaction->category_id)->toBe($replacementCategory->id);
+});
+
+it('opens the notes and saves an edit from the keyboard', function () {
+    $user = User::factory()->onboarded()->create();
+    $bank = Bank::factory()->create(['name' => 'Shortcut Bank']);
+    $category = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Eating Out',
+    ]);
+    $account = Account::factory()->create([
+        'user_id' => $user->id,
+        'bank_id' => $bank->id,
+        'name' => 'Shortcut Account',
+        'currency_code' => 'USD',
+        'type' => 'checking',
+    ]);
+
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => $category->id,
+        'description' => 'Keyboard lunch',
+        'amount' => -1500,
+        'notes' => null,
+        'source' => 'manually_created',
+    ]);
+
+    actingAs($user);
+
+    $page = visit('/transactions');
+
+    $page->waitForText('Keyboard lunch', 10)
+        ->click('Keyboard lunch')
+        ->assertSee('Edit Transaction')
+        // N reveals the notes and puts the cursor in them, without typing the n.
+        ->keys('[data-slot="dialog-content"]', 'n')
+        ->assertScript('document.activeElement.id', 'notes')
+        ->assertValue('#notes', '')
+        ->fill('#notes', 'Paid with the team card')
+        // ⌘⏎ on a Mac, Ctrl+Enter elsewhere: whichever the browser runs on.
+        ->keys('#notes', 'ControlOrMeta+Enter')
+        ->assertDontSee('Edit Transaction')
+        ->assertNoJavascriptErrors();
+
+    expect($transaction->fresh()->notes)->toBe('Paid with the team card');
+});
+
+it('can delete a transaction from the actions menu', function () {
+    $user = User::factory()->onboarded()->create();
+    $bank = Bank::factory()->create(['name' => 'Delete Tx Bank']);
+    $category = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Household',
+    ]);
+    $account = Account::factory()->create([
+        'user_id' => $user->id,
+        'bank_id' => $bank->id,
+        'name' => 'Delete Account',
+        'currency_code' => 'USD',
+        'type' => 'checking',
+    ]);
+
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => $category->id,
+        'description' => 'Disposable transaction',
+        'amount' => -1500,
+    ]);
+
+    actingAs($user);
+
+    $page = visit('/transactions');
+
+    $page->assertSee('Transactions')
+        ->waitForText('Disposable transaction', 10)
+        ->click('button:has-text("Open menu")')
+        ->click('Delete')
+        ->assertSee('Delete Transaction')
+        ->click('button:has-text("Delete")')
+        ->assertDontSee('Disposable transaction')
+        ->assertNoJavascriptErrors();
+});
+
+it('keeps the account page up when a fifth year digit is typed into the date', function () {
+    // Without a max, Chromium lets the year segment of a date input take six
+    // digits, so the field could hold "20266-10-01" — a value date-fns' parseISO
+    // rejects. Formatting that Invalid Date threw during render (Sentry
+    // PHP-LARAVEL-5G) and the page fell to the error boundary.
+    $user = User::factory()->onboarded()->create();
+    $account = Account::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Date Typo Account',
+        'currency_code' => 'USD',
+        'type' => 'checking',
+    ]);
+
+    Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'description' => 'Typo-prone transaction',
+        'amount' => -1500,
+        'transaction_date' => '2026-09-15',
+        'source' => 'manually_created',
+    ]);
+
+    actingAs($user);
+
+    $page = visit("/accounts/{$account->id}");
+
+    $page->waitForText('Typo-prone transaction', 10)
+        ->click('Typo-prone transaction')
+        ->waitForText('Edit Transaction', 5)
+        ->typeSlowly('#date', '100120266', 50)
+        ->assertDontSee('Something went wrong.')
+        ->assertSee('Edit Transaction')
+        ->assertNoJavascriptErrors();
+
+    expect($page->value('#date'))->toMatch('/^\d{4}-\d{2}-\d{2}$/');
+});

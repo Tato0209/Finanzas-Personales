@@ -1,0 +1,188 @@
+[
+    {
+        "name": "in operator matches description",
+        "rule": { "in": ["grocery", { "var": "description" }] },
+        "transaction": { "description": "Grocery Store Purchase", "amount": -50, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "in operator does not match unrelated description",
+        "rule": { "in": ["grocery", { "var": "description" }] },
+        "transaction": { "description": "Coffee Shop Downtown", "amount": -50, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "in operator matches creditor_name",
+        "rule": { "in": ["amazon", { "var": "creditor_name" }] },
+        "transaction": { "description": "Card payment", "amount": -50, "creditor_name": "Amazon EU", "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "in operator does not match unrelated creditor_name",
+        "rule": { "in": ["ikea", { "var": "creditor_name" }] },
+        "transaction": { "description": "Card payment", "amount": -50, "creditor_name": "Amazon EU", "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "in operator matches debtor_name",
+        "rule": { "in": ["payroll", { "var": "debtor_name" }] },
+        "transaction": { "description": "Incoming transfer", "amount": 5000, "creditor_name": null, "debtor_name": "Payroll GmbH", "notes": null },
+        "expected": true
+    },
+    {
+        "name": "equals operator matches exact lowercased description",
+        "rule": { "==": [{ "var": "description" }, "salary payment"] },
+        "transaction": { "description": "Salary Payment", "amount": 1000, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "rule value is matched case-insensitively",
+        "rule": { "in": ["GROCERY", { "var": "description" }] },
+        "transaction": { "description": "grocery store", "amount": -30, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "description whitespace is normalized before matching",
+        "rule": { "in": ["grocery store", { "var": "description" }] },
+        "transaction": { "description": "  Grocery   Store  Purchase  ", "amount": -30, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "in operator matches notes",
+        "rule": { "in": ["reimburse", { "var": "notes" }] },
+        "transaction": { "description": "Bank transfer", "amount": 200, "creditor_name": null, "debtor_name": null, "notes": "Please Reimburse Me" },
+        "expected": true
+    },
+    {
+        "name": "greater than amount comparison uses dollars",
+        "rule": { ">": [{ "var": "amount" }, 50] },
+        "transaction": { "description": "Salary", "amount": 100, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "greater than amount comparison fails below threshold",
+        "rule": { ">": [{ "var": "amount" }, 200] },
+        "transaction": { "description": "Small purchase", "amount": 50, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "compound and rule matches when both conditions hold",
+        "rule": { "and": [{ "in": ["grocery", { "var": "description" }] }, { "<": [{ "var": "amount" }, 0] }] },
+        "transaction": { "description": "Grocery Store", "amount": -50, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "compound and rule fails when one condition fails",
+        "rule": { "and": [{ "in": ["grocery", { "var": "description" }] }, { ">": [{ "var": "amount" }, 0] }] },
+        "transaction": { "description": "Grocery Store", "amount": -50, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "not contains matches when the description lacks the token",
+        "rule": { "!": { "in": ["visa card", { "var": "description" }] } },
+        "transaction": { "description": "Netflix Subscription", "amount": -12, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "not contains fails when the description carries the token",
+        "rule": { "!": { "in": ["visa card", { "var": "description" }] } },
+        "transaction": { "description": "Netflix Visa Card", "amount": -12, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "not contains accepts the array form of the negation",
+        "rule": { "!": [{ "in": ["visa card", { "var": "description" }] }] },
+        "transaction": { "description": "Netflix Subscription", "amount": -12, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "not contains matches a null creditor_name",
+        "rule": { "!": { "in": ["amazon", { "var": "creditor_name" }] } },
+        "transaction": { "description": "Card payment", "amount": -20, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "not equals matches a different description",
+        "rule": { "!=": [{ "var": "description" }, "salary payment"] },
+        "transaction": { "description": "Grocery Store", "amount": -30, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "not equals fails on an exact lowercased match",
+        "rule": { "!=": [{ "var": "description" }, "salary payment"] },
+        "transaction": { "description": "Salary Payment", "amount": 1000, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "not equals matches null notes",
+        "rule": { "!=": [{ "var": "notes" }, "reimburse"] },
+        "transaction": { "description": "Bank transfer", "amount": 200, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "equals amount matches the same signed expense",
+        "rule": { "==": [{ "var": "amount" }, -14] },
+        "transaction": { "description": "GitHub", "amount": -14, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "not equals amount matches a different expense",
+        "rule": { "!=": [{ "var": "amount" }, -14] },
+        "transaction": { "description": "GitHub", "amount": -3.27, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "not equals amount fails on the same signed expense",
+        "rule": { "!=": [{ "var": "amount" }, -14] },
+        "transaction": { "description": "GitHub", "amount": -14, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "not equals amount matches income of the same size as the expense",
+        "rule": { "!=": [{ "var": "amount" }, -14] },
+        "transaction": { "description": "GitHub refund", "amount": 14, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "not equals amount fails on the same amount with cents",
+        "rule": { "!=": [{ "var": "amount" }, -21.99] },
+        "transaction": { "description": "Streaming", "amount": -21.99, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "negated amount equality matches a different expense",
+        "rule": { "!": { "==": [{ "var": "amount" }, -14] } },
+        "transaction": { "description": "GitHub", "amount": -3.27, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "negated amount equality fails on the same signed expense",
+        "rule": { "!": { "==": [{ "var": "amount" }, -14] } },
+        "transaction": { "description": "GitHub", "amount": -14, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "amount exception rule matches the merchant at another amount",
+        "rule": { "and": [{ "in": ["github", { "var": "description" }] }, { "!=": [{ "var": "amount" }, -14] }] },
+        "transaction": { "description": "GITHUB, INC.", "amount": -41.5, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "amount exception rule fails on the excluded amount",
+        "rule": { "and": [{ "in": ["github", { "var": "description" }] }, { "!=": [{ "var": "amount" }, -14] }] },
+        "transaction": { "description": "GITHUB, INC.", "amount": -14, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    },
+    {
+        "name": "exception rule matches the keyword without the excluded token",
+        "rule": { "and": [{ "in": ["keyword", { "var": "description" }] }, { "!": { "in": ["visa card", { "var": "description" }] } }] },
+        "transaction": { "description": "Keyword Purchase", "amount": -40, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": true
+    },
+    {
+        "name": "exception rule fails when the excluded token is present",
+        "rule": { "and": [{ "in": ["keyword", { "var": "description" }] }, { "!": { "in": ["visa card", { "var": "description" }] } }] },
+        "transaction": { "description": "Keyword Purchase Visa Card", "amount": -40, "creditor_name": null, "debtor_name": null, "notes": null },
+        "expected": false
+    }
+]

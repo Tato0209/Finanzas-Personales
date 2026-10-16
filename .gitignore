@@ -1,0 +1,41 @@
+/.phpunit.cache
+/bootstrap/ssr
+/node_modules
+node_modules/
+/public/build
+/public/hot
+/public/storage
+/resources/js/actions
+/resources/js/routes
+/resources/js/wayfinder
+/storage/*.key
+/storage/keys/
+/storage/pail
+/vendor
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+.php-cs-fixer.cache
+.claude/settings.local.json
+.php-version
+.pint.cache
+/.playwright-mcp
+/build
+
+# Written by DocumentationImagesTest and deleted again when it finishes: on
+# disk only while the suite runs, so an interrupted run cannot leave it behind
+# for the next `git add` to sweep up.
+/tests/.documentation-images/

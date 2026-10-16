@@ -1,0 +1,411 @@
+import { __ } from '@/utils/i18n';
+import { Head, router } from '@inertiajs/react';
+import {
+    Cell,
+    ColumnDef,
+    ColumnFiltersState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getSortedRowModel,
+    Row,
+    SortingState,
+    useReactTable,
+    VisibilityState,
+} from '@tanstack/react-table';
+import { ArrowUpDown, Link2, MoreHorizontal } from 'lucide-react';
+import { useState } from 'react';
+
+import { updateArchived } from '@/actions/App/Http/Controllers/AccountController';
+import { index as accountsIndex } from '@/actions/App/Http/Controllers/Settings/AccountController';
+import { ArchiveAccountDialog } from '@/components/accounts/archive-account-dialog';
+import { CreateAccountDialog } from '@/components/accounts/create-account-dialog';
+import { DeleteAccountDialog } from '@/components/accounts/delete-account-dialog';
+import { EditAccountDialog } from '@/components/accounts/edit-account-dialog';
+import { BankLogo } from '@/components/bank-logo';
+import HeadingSmall from '@/components/heading-small';
+import { SettingsTable } from '@/components/shared/settings-table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuLabel,
+    ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { TableCell, TableRow } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import SettingsLayout from '@/layouts/settings/layout';
+import { type BreadcrumbItem } from '@/types';
+import { type Account, formatAccountType } from '@/types/account';
+
+/**
+ * This settings list is the one place an archived account stays visible, so it
+ * can be brought back. Restoring needs no warning; archiving explains itself in
+ * ArchiveAccountDialog first.
+ *
+ * Deleting is offered on manual accounts only, matching the account page: a
+ * connected one has to be archived first, which is what detaches it from the
+ * bank and revokes the connection. Archiving clears the connection, so an
+ * archived account can then be deleted from here.
+ */
+function unarchive(account: Account) {
+    router.patch(
+        updateArchived.url(account.id),
+        { archived: false },
+        { preserveScroll: true, preserveState: true },
+    );
+}
+
+function AccountActions({
+    account,
+    onSuccess,
+}: {
+    account: Account;
+    onSuccess?: () => void;
+}) {
+    const [editOpen, setEditOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [archiveOpen, setArchiveOpen] = useState(false);
+
+    return (
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        aria-label={__('Open menu')}
+                    >
+                        <span className="sr-only">{__('Open menu')}</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{__('Actions')}</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                        {__('Edit')}
+                    </DropdownMenuItem>
+                    {account.archived_at ? (
+                        <DropdownMenuItem onClick={() => unarchive(account)}>
+                            {__('Unarchive')}
+                        </DropdownMenuItem>
+                    ) : (
+                        <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
+                            {__('Archive')}
+                        </DropdownMenuItem>
+                    )}
+                    {!account.banking_connection_id && (
+                        <DropdownMenuItem
+                            onClick={() => setDeleteOpen(true)}
+                            className="text-red-600"
+                        >
+                            {__('Delete')}
+                        </DropdownMenuItem>
+                    )}
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <EditAccountDialog
+                account={account}
+                open={editOpen}
+                onOpenChange={setEditOpen}
+                onSuccess={onSuccess}
+            />
+
+            <DeleteAccountDialog
+                account={account}
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                onSuccess={onSuccess}
+            />
+
+            <ArchiveAccountDialog
+                account={account}
+                open={archiveOpen}
+                onOpenChange={setArchiveOpen}
+                onSuccess={onSuccess}
+            />
+        </>
+    );
+}
+
+function AccountRow({
+    row,
+    onSuccess,
+}: {
+    row: Row<Account>;
+    onSuccess?: () => void;
+}) {
+    const account = row.original;
+    const [editOpen, setEditOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [archiveOpen, setArchiveOpen] = useState(false);
+    const [contextMenuOpen, setContextMenuOpen] = useState(false);
+
+    return (
+        <>
+            <ContextMenu onOpenChange={setContextMenuOpen}>
+                <ContextMenuTrigger asChild>
+                    <TableRow
+                        data-state={
+                            (row.getIsSelected() || contextMenuOpen) &&
+                            'selected'
+                        }
+                    >
+                        {row
+                            .getVisibleCells()
+                            .map((cell: Cell<Account, unknown>) => (
+                                <TableCell key={cell.id}>
+                                    {flexRender(
+                                        cell.column.columnDef.cell,
+                                        cell.getContext(),
+                                    )}
+                                </TableCell>
+                            ))}
+                    </TableRow>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                    <ContextMenuLabel>{__('Actions')}</ContextMenuLabel>
+                    <ContextMenuItem onClick={() => setEditOpen(true)}>
+                        {__('Edit')}
+                    </ContextMenuItem>
+                    {account.archived_at ? (
+                        <ContextMenuItem onClick={() => unarchive(account)}>
+                            {__('Unarchive')}
+                        </ContextMenuItem>
+                    ) : (
+                        <ContextMenuItem onClick={() => setArchiveOpen(true)}>
+                            {__('Archive')}
+                        </ContextMenuItem>
+                    )}
+                    {!account.banking_connection_id && (
+                        <ContextMenuItem
+                            onClick={() => setDeleteOpen(true)}
+                            className="text-red-600"
+                        >
+                            {__('Delete')}
+                        </ContextMenuItem>
+                    )}
+                </ContextMenuContent>
+            </ContextMenu>
+
+            <EditAccountDialog
+                account={account}
+                open={editOpen}
+                onOpenChange={setEditOpen}
+                onSuccess={onSuccess}
+            />
+
+            <DeleteAccountDialog
+                account={account}
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                onSuccess={onSuccess}
+            />
+
+            <ArchiveAccountDialog
+                account={account}
+                open={archiveOpen}
+                onOpenChange={setArchiveOpen}
+                onSuccess={onSuccess}
+            />
+        </>
+    );
+}
+
+interface AccountsPageProps {
+    accounts: Account[];
+}
+
+export default function Accounts({ accounts }: AccountsPageProps) {
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+        {},
+    );
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: __('Bank accounts'),
+            href: accountsIndex.url(),
+        },
+    ];
+
+    const handleAccountCreated = () => {
+        router.reload();
+    };
+
+    const columns: ColumnDef<Account>[] = [
+        {
+            accessorKey: 'name',
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === 'asc')
+                        }
+                    >
+                        {__('Name')}
+
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => {
+                return (
+                    <div className="flex items-center gap-2 pl-3 font-medium">
+                        <span>{row.original.name}</span>
+                        {row.original.archived_at && (
+                            <Badge variant="secondary">{__('Archived')}</Badge>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'bank',
+            header: () => __('Bank'),
+            cell: ({ row }) => {
+                const bank = row.original.bank;
+                if (!bank) {
+                    return (
+                        <div className="min-w-32 text-sm text-muted-foreground">
+                            —
+                        </div>
+                    );
+                }
+                return (
+                    <div className="flex min-w-32 items-center gap-2">
+                        <BankLogo
+                            src={bank.logo}
+                            name={bank.name}
+                            className="h-6 w-6 shrink-0"
+                            fallback="empty"
+                        />
+                        <span className="truncate">{bank.name}</span>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'type',
+            header: () => __('Type'),
+            cell: ({ row }) => {
+                const isConnected = !!row.original.banking_connection_id;
+
+                return (
+                    <div className="flex items-center gap-2">
+                        <Badge variant="outline">
+                            {formatAccountType(row.getValue('type'))}
+                        </Badge>
+                        {isConnected && (
+                            <Link2
+                                className="size-4 text-emerald-600 dark:text-emerald-400"
+                                aria-label={__('Connected account')}
+                            />
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'currency_code',
+            header: () => __('Currency'),
+            cell: ({ row }) => {
+                return (
+                    <div className="font-medium">
+                        {row.getValue('currency_code')}
+                    </div>
+                );
+            },
+        },
+        {
+            id: 'actions',
+            enableHiding: false,
+            cell: ({ row }) => (
+                <AccountActions
+                    account={row.original}
+                    onSuccess={handleAccountCreated}
+                />
+            ),
+        },
+    ];
+
+    const table = useReactTable({
+        data: accounts,
+        columns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getRowId: (row) => row.id,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        state: {
+            sorting,
+            columnFilters,
+            columnVisibility,
+        },
+    });
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title={__('Bank accounts')} />
+
+            <SettingsLayout>
+                <div className="space-y-6">
+                    <HeadingSmall
+                        title={__('Bank accounts')}
+                        description={__('Manage your bank accounts')}
+                    />
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-4">
+                            <Input
+                                placeholder={__('Filter accounts...')}
+                                value={
+                                    (table
+                                        .getColumn('name')
+                                        ?.getFilterValue() as string) ?? ''
+                                }
+                                onChange={(event) =>
+                                    table
+                                        .getColumn('name')
+                                        ?.setFilterValue(event.target.value)
+                                }
+                                className="max-w-sm"
+                            />
+
+                            <CreateAccountDialog
+                                onSuccess={handleAccountCreated}
+                            />
+                        </div>
+
+                        <SettingsTable
+                            table={table}
+                            emptyMessage={__('No accounts found.')}
+                            renderRow={(row) => (
+                                <AccountRow
+                                    key={row.id}
+                                    row={row}
+                                    onSuccess={handleAccountCreated}
+                                />
+                            )}
+                        />
+                    </div>
+                </div>
+            </SettingsLayout>
+        </AppLayout>
+    );
+}

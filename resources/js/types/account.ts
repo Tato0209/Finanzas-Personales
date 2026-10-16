@@ -1,0 +1,411 @@
+import { __ } from '@/utils/i18n';
+import {
+    BadgeQuestionMarkIcon,
+    Banknote,
+    Building2,
+    CreditCard,
+    FolderKanban,
+    Home,
+    LineChart,
+    LucideIcon,
+    PiggyBank,
+    TrendingUp,
+    Wallet,
+} from 'lucide-react';
+import { UUID } from './uuid';
+
+export const ACCOUNT_TYPES = [
+    'checking',
+    'credit_card',
+    'investment',
+    'loan',
+    'real_estate',
+    'retirement',
+    'savings',
+    'salary',
+    'others',
+] as const;
+
+export type AccountType = (typeof ACCOUNT_TYPES)[number];
+
+export interface SalaryCategoryBreakdown {
+    category_id: string | null;
+    name: string;
+    icon: string;
+    color: string;
+    total: number;
+    percentage: number;
+    count: number;
+}
+
+export interface SalaryStatement {
+    month: string;
+    month_name: string;
+    is_current_month: boolean;
+    salary_amount: number;
+    has_salary_set: boolean;
+    total_spent: number;
+    remaining_balance: number;
+    savings_rate: number;
+    spent_percentage: number;
+    categories_breakdown: SalaryCategoryBreakdown[];
+    available_months: string[];
+    transaction_count: number;
+}
+
+export type CurrencyCode = string;
+
+export interface CurrencyOption {
+    code: CurrencyCode;
+    name: string;
+}
+
+export interface Bank {
+    id: UUID;
+    user_id: UUID | null;
+    name: string;
+    logo: string | null;
+}
+
+export interface Account {
+    id: UUID;
+    name: string;
+    bank: Bank | null;
+    type: AccountType;
+    currency_code: CurrencyCode;
+    banking_connection_id: UUID | null;
+    external_account_id: string | null;
+    linked_at: string | null;
+    linked_loan_account_id?: UUID | null;
+    archived_at?: string | null;
+    ownership_percentage?: number;
+    ownership_applies_to_balance?: boolean;
+}
+
+export interface AccountBalance {
+    id: UUID;
+    account_id: UUID;
+    balance_date: string;
+    balance: number;
+    invested_amount: number | null;
+    derived: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export const PROPERTY_TYPES = [
+    'residential',
+    'commercial',
+    'land',
+    'vacation',
+    'other',
+] as const;
+
+export type PropertyType = (typeof PROPERTY_TYPES)[number];
+
+export const AREA_UNITS = ['sqm', 'sqft', 'acres', 'hectares'] as const;
+
+export type AreaUnit = (typeof AREA_UNITS)[number];
+
+export interface RealEstateDetail {
+    id: UUID;
+    property_type: PropertyType;
+    address: string | null;
+    purchase_price: number | null;
+    purchase_date: string | null;
+    area_value: string | null;
+    area_unit: AreaUnit | null;
+    notes: string | null;
+    revaluation_percentage: number | null;
+    linked_loan_account_id: UUID | null;
+    linked_loan_account: Account | null;
+    current_market_value: number | null;
+    current_loan_balance: number | null;
+}
+
+export interface LoanDetail {
+    id: UUID;
+    annual_interest_rate: string;
+    loan_term_months: number;
+    start_date: string;
+    original_amount: number;
+    monthly_payment: number | null;
+    remaining_months: number | null;
+}
+
+/** How often a credit card statement closes, mirroring App\Enums\StatementFrequency. */
+export type StatementFrequency = 'monthly' | 'weekly';
+
+/**
+ * What the user set on a credit card. The statement dates are the anchor its
+ * cycles repeat from, every month or every week; they travel together, both
+ * set or both null.
+ */
+export interface CreditCardDetail {
+    statement_closing_date: string | null;
+    payment_due_date: string | null;
+    statement_frequency: StatementFrequency;
+    /** In the card currency's minor units. */
+    credit_limit: number | null;
+}
+
+/** One statement cycle and what it adds up to, as an amount to pay. */
+export interface CreditCardStatementCycle {
+    period_from: string;
+    closing_date: string;
+    due_date: string;
+    amount: number;
+}
+
+/**
+ * A repayment booked on the card, with the statement it pays: the last one
+ * closed before it was made. `amount` is positive, in minor units.
+ */
+export interface CreditCardPayment {
+    transaction_id: string;
+    date: string;
+    amount: number;
+    period_from: string;
+    closing_date: string;
+    due_date: string;
+}
+
+/**
+ * The statement before the one charged next, against what was paid on it.
+ * `pending` never goes below zero. `has_recorded_purchases` is false when the
+ * statement ends before the card's first recorded purchase, so the app has no
+ * data to check the payments against.
+ */
+export interface CreditCardPreviousStatement {
+    period_from: string;
+    closing_date: string;
+    due_date: string;
+    purchases: number;
+    paid: number;
+    pending: number;
+    has_recorded_purchases: boolean;
+}
+
+/** The server's estimate of what a credit card charges next. */
+export interface CreditCardStatement {
+    /**
+     * `is_final` once the statement has closed and its amount no longer moves;
+     * `paid` adds up the repayments already made on it.
+     */
+    next_payment: CreditCardStatementCycle & {
+        is_final: boolean;
+        paid: number;
+    };
+    current_cycle: CreditCardStatementCycle;
+    /** Repayments booked in the usage window, oldest first. */
+    payments: CreditCardPayment[];
+    previous_statement: CreditCardPreviousStatement;
+}
+
+/**
+ * How much of a credit card is in use, computed by the server from the card's
+ * own ledger. `used` covers what is still to be charged (the pending
+ * statement plus the open cycle, or the calendar month on a card without
+ * statement dates) up to today. Amounts are in minor units.
+ */
+export interface CreditCardUsage {
+    limit: number | null;
+    used: number;
+    /** `limit - used`: negative over the limit, null without a limit. */
+    available: number | null;
+    /** The window `used` covers, `Y-m-d`; it runs past today to its end. */
+    period_from: string;
+    period_to: string;
+    /** Cumulative `used` per day from `period_from` through today. */
+    daily: { date: string; used: number }[];
+}
+
+export function formatPropertyType(type: PropertyType): string {
+    const typeMap: Record<PropertyType, string> = {
+        residential: __('Residential'),
+        commercial: __('Commercial'),
+        land: __('Land'),
+        vacation: __('Vacation'),
+        other: __('Other'),
+    };
+    return typeMap[type] || type;
+}
+
+export function formatAreaUnit(unit: AreaUnit): string {
+    const unitMap: Record<AreaUnit, string> = {
+        sqm: __('m²'),
+        sqft: __('ft²'),
+        acres: __('acres'),
+        hectares: __('ha'),
+    };
+    return unitMap[unit] || unit;
+}
+
+export function formatAccountType(type: AccountType): string {
+    const typeMap: Record<AccountType, string> = {
+        checking: __('Checking'),
+        credit_card: __('Credit Card'),
+        investment: __('Investment'),
+        loan: __('Loan'),
+        real_estate: __('Real Estate'),
+        retirement: __('Retirement / Pension'),
+        savings: __('Savings'),
+        salary: __('Salary'),
+        others: __('Others'),
+    };
+    return typeMap[type] || type;
+}
+
+const NON_TRANSACTIONAL_ACCOUNT_TYPES: AccountType[] = [
+    'investment',
+    'loan',
+    'real_estate',
+    'retirement',
+];
+
+export function isTransactionalAccount(account: Account): boolean {
+    return !NON_TRANSACTIONAL_ACCOUNT_TYPES.includes(account.type);
+}
+
+const INVESTED_AMOUNT_ACCOUNT_TYPES: AccountType[] = [
+    'investment',
+    'retirement',
+    'savings',
+];
+
+export function supportsInvestedAmount(
+    account: Pick<Account, 'type'>,
+): boolean {
+    return INVESTED_AMOUNT_ACCOUNT_TYPES.includes(account.type);
+}
+
+/**
+ * What a transaction tagged to a savings goal contributes to it. On a savings
+ * account the money arriving IS the contribution, so the amount counts as it
+ * stands. On any other account type the transaction is the outflow that funded
+ * the goal, so its sign is negated.
+ *
+ * Mirrors the backend `SavingsGoal::CONTRIBUTION_AMOUNT_SQL`.
+ */
+export function savingsContributionAmount(transaction: {
+    amount: number;
+    account?: Pick<Account, 'type'> | null;
+}): number {
+    return transaction.account?.type === 'savings'
+        ? transaction.amount
+        : -transaction.amount;
+}
+
+export function accountIconByType(type: AccountType): LucideIcon {
+    const typeMap: Record<AccountType, LucideIcon> = {
+        checking: Wallet,
+        credit_card: CreditCard,
+        investment: LineChart,
+        loan: Building2,
+        real_estate: Home,
+        retirement: TrendingUp,
+        savings: PiggyBank,
+        salary: Banknote,
+        others: FolderKanban,
+    };
+
+    return typeMap[type] ?? BadgeQuestionMarkIcon;
+}
+
+export function isSalaryAccount(account: Pick<Account, 'type'>): boolean {
+    return account.type === 'salary';
+}
+
+export function isInvestmentAccount(account: Pick<Account, 'type'>): boolean {
+    return account.type === 'investment';
+}
+
+export interface InvestmentContributionItem {
+    id: UUID;
+    contribution_date: string;
+    formatted_date: string;
+    month?: string;
+    amount: number;
+    notes: string | null;
+}
+
+export interface InvestmentMonthlySummary {
+    month: string;
+    month_name: string;
+    total: number;
+    count: number;
+    items: InvestmentContributionItem[];
+}
+
+export interface InvestmentContributionsData {
+    has_contributions: boolean;
+    total_contributed: number;
+    current_month: string;
+    current_month_name: string;
+    current_month_contributed: number;
+    current_month_has_contribution: boolean;
+    average_monthly: number;
+    contributions_count: number;
+    latest_market_value: number;
+    invested_amount: number;
+    net_gain: number;
+    gain_percentage: number;
+    monthly_breakdown: InvestmentMonthlySummary[];
+    contributions: InvestmentContributionItem[];
+}
+
+/**
+ * The accounts money can be assigned to: everything but the types without a
+ * ledger and anything the user has archived.
+ */
+export function filterTransactionalAccounts<
+    T extends { type: AccountType; archived_at?: string | null },
+>(accounts: T[]): T[] {
+    return accounts.filter(
+        (account) =>
+            !account.archived_at &&
+            !NON_TRANSACTIONAL_ACCOUNT_TYPES.includes(account.type),
+    );
+}
+
+export function isLoanAccount(account: Pick<Account, 'type'>): boolean {
+    return account.type === 'loan';
+}
+
+export function isRealEstateAccount(account: Pick<Account, 'type'>): boolean {
+    return account.type === 'real_estate';
+}
+
+/**
+ * Returns the appropriate term for "balance" based on account type.
+ * Loan accounts use "owed amount", real estate uses "market value".
+ */
+export function balanceTerm(
+    type: AccountType,
+    variant: 'singular' | 'plural' = 'singular',
+): string {
+    if (type === 'loan') {
+        return variant === 'plural' ? __('owed amounts') : __('owed amount');
+    }
+    if (type === 'real_estate') {
+        return variant === 'plural' ? __('market values') : __('market value');
+    }
+    return variant === 'plural' ? __('balances') : __('balance');
+}
+
+/**
+ * Returns the appropriate capitalized term for "Balance" based on account type.
+ * Loan accounts use "Owed Amount", real estate uses "Market Value".
+ */
+export function balanceTermCapitalized(
+    type: AccountType,
+    variant: 'singular' | 'plural' = 'singular',
+): string {
+    if (type === 'loan') {
+        return variant === 'plural' ? __('Owed Amounts') : __('Owed Amount');
+    }
+    if (type === 'real_estate') {
+        return variant === 'plural' ? __('Market Values') : __('Market Value');
+    }
+    return variant === 'plural' ? __('Balances') : __('Balance');
+}

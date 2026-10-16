@@ -1,0 +1,83 @@
+<?php
+
+namespace App\Services\Achievements;
+
+/**
+ * A medal the evaluator found in a user's history: which one, the month it
+ * happened, and the figure that earned it.
+ *
+ * The named constructors are the only way to build one, so the figure and the
+ * column it lands in can never disagree.
+ */
+final readonly class Unlock
+{
+    /**
+     * The largest rate the `percent` column holds, as `decimal(8, 2)`.
+     */
+    private const float MAX_PERCENT = 999999.99;
+
+    private function __construct(
+        public string $month,
+        private ?int $value = null,
+        private ?float $percent = null,
+        private ?string $currency = null,
+        private ?string $on = null,
+    ) {}
+
+    /**
+     * @param  int  $amount  minor units of $currency
+     */
+    public static function money(string $month, int $amount, string $currency): self
+    {
+        return new self($month, value: $amount, currency: $currency);
+    }
+
+    /**
+     * A count of transactions, or of months in a row.
+     */
+    public static function count(string $month, int $count): self
+    {
+        return new self($month, value: $count);
+    }
+
+    /**
+     * A run of days or weeks visiting, dated to the day itself rather than to
+     * the month: a run that ended on the 20th did not happen on the 1st.
+     */
+    public static function run(string $date, int $length): self
+    {
+        return new self(substr($date, 0, 7), value: $length, on: $date);
+    }
+
+    /**
+     * A rate is bounded by what the `percent` column can hold: a net worth that
+     * grew out of nothing gives a figure with no ceiling, and a medal that was
+     * really earned should be recorded rather than rejected by the column.
+     */
+    public static function rate(string $month, float $percent): self
+    {
+        return new self($month, percent: max(-self::MAX_PERCENT, min(self::MAX_PERCENT, $percent)));
+    }
+
+    /**
+     * Something that happened, with no figure to it: a first bank connected, a
+     * loan paid off.
+     */
+    public static function event(string $month): self
+    {
+        return new self($month);
+    }
+
+    /**
+     * @return array<string, mixed> the columns of an `achievements` row
+     */
+    public function attributes(): array
+    {
+        return [
+            'achieved_on' => $this->on ?? $this->month.'-01',
+            'value' => $this->value,
+            'percent' => $this->percent,
+            'currency_code' => $this->currency,
+        ];
+    }
+}

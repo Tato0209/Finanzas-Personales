@@ -1,0 +1,20 @@
+{
+  "name": "Finanzas Personales",
+  "short_name": "Finanzas Personales",
+  "description": "Tu gestor financiero personal privado y seguro",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ]
+}

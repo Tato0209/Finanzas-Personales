@@ -1,0 +1,412 @@
+import { update } from '@/actions/App/Http/Controllers/Settings/AccountController';
+import { store as storeBank } from '@/actions/App/Http/Controllers/Settings/BankController';
+import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getCsrfToken } from '@/lib/csrf';
+import type { Account, LoanDetail, RealEstateDetail } from '@/types/account';
+import { __ } from '@/utils/i18n';
+import { router } from '@inertiajs/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    AccountForm,
+    AccountFormData,
+    LoanFormData,
+    RealEstateFormData,
+} from './account-form';
+import { DeleteAccountDialog } from './delete-account-dialog';
+
+interface AccountWithDetails extends Account {
+    loan_detail?: LoanDetail | null;
+    real_estate_detail?: RealEstateDetail | null;
+}
+
+interface EditAccountDialogProps {
+    account: AccountWithDetails;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSuccess?: () => void;
+    redirectTo?: string;
+    deleteRedirectTo?: string;
+}
+
+export function EditAccountDialog({
+    account,
+    open,
+    onOpenChange,
+    onSuccess,
+    redirectTo,
+    deleteRedirectTo,
+}: EditAccountDialogProps) {
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [ownershipPercentage, setOwnershipPercentage] = useState(
+        String(account.ownership_percentage ?? 100),
+    );
+    const [ownershipAppliesToBalance, setOwnershipAppliesToBalance] = useState(
+        account.ownership_applies_to_balance ?? false,
+    );
+    const formDataRef = useRef<AccountFormData>({
+        displayName: '',
+        bankId: account.bank?.id ?? null,
+        type: account.type,
+        currencyCode: account.currency_code,
+        customBank: null,
+        balance: null,
+        investedAmount: null,
+        realEstate: null,
+        loan: null,
+        creditLimit: null,
+    });
+
+    const loanInitialData: LoanFormData | null = useMemo(() => {
+        const detail = account.loan_detail;
+        if (!detail) return null;
+        return {
+            annualInterestRate: detail.annual_interest_rate ?? '',
+            loanTermMonths: detail.loan_term_months?.toString() ?? '',
+            startDate: detail.start_date?.slice(0, 10) ?? '',
+            originalAmount: detail.original_amount ?? 0,
+            linkedRealEstateAccountId: null,
+        };
+    }, [account.loan_detail]);
+
+    const realEstateInitialData: RealEstateFormData | null = useMemo(() => {
+        const detail = account.real_estate_detail;
+        if (!detail) return null;
+        return {
+            propertyType: detail.property_type ?? null,
+            address: detail.address ?? '',
+            purchasePrice: detail.purchase_price ?? 0,
+            purchaseDate: detail.purchase_date?.slice(0, 10) ?? '',
+            areaValue: detail.area_value ?? '',
+            areaUnit: detail.area_unit ?? null,
+            linkedLoanAccountId: detail.linked_loan_account_id ?? null,
+            notes: detail.notes ?? '',
+            revaluationPercentage:
+                detail.revaluation_percentage != null
+                    ? String(detail.revaluation_percentage)
+                    : '',
+        };
+    }, [account.real_estate_detail]);
+
+    const initialValues = useMemo(
+        () => ({
+            displayName: account.name,
+            bank: account.bank,
+            type: account.type,
+            currencyCode: account.currency_code,
+            loan: loanInitialData,
+            realEstate: realEstateInitialData,
+        }),
+        [
+            account.name,
+            account.bank,
+            account.type,
+            account.currency_code,
+            loanInitialData,
+            realEstateInitialData,
+        ],
+    );
+
+    const handleFormChange = useCallback((data: AccountFormData) => {
+        formDataRef.current = data;
+    }, []);
+
+    // An empty field means "leave it as it is" rather than a silent reset to
+    // full ownership. Anything else is sent as the number typed, so a decimal
+    // or out-of-range value comes back as a validation error instead of being
+    // quietly truncated.
+    const shareIsBlank = ownershipPercentage.trim() === '';
+    const sharePercentage = shareIsBlank
+        ? (account.ownership_percentage ?? 100)
+        : Number(ownershipPercentage);
+
+    useEffect(() => {
+        if (open) {
+            setErrors({});
+            setOwnershipPercentage(String(account.ownership_percentage ?? 100));
+            setOwnershipAppliesToBalance(
+                account.ownership_applies_to_balance ?? false,
+            );
+        }
+    }, [
+        open,
+        account.ownership_percentage,
+        account.ownership_applies_to_balance,
+    ]);
+
+    async function createBankAndGetId(): Promise<string | null> {
+        const customBank = formDataRef.current.customBank;
+        if (!customBank) return null;
+
+        const formData = new FormData();
+        formData.append('name', customBank.name);
+        if (customBank.logo) {
+            formData.append('logo', customBank.logo);
+        }
+
+        try {
+            const response = await fetch(storeBank.url(), {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-XSRF-TOKEN': getCsrfToken(),
+                    Accept: 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create bank');
+            }
+
+            const data = await response.json();
+            return data.id;
+        } catch (err) {
+            console.error('Failed to create bank:', err);
+            throw err;
+        }
+    }
+
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        const { displayName, bankId, type, currencyCode, customBank } =
+            formDataRef.current;
+
+        if (!type || !currencyCode) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        const isRealEstate = type === 'real_estate';
+
+        setIsSubmitting(true);
+
+        try {
+            let finalBankId: string | null = null;
+
+            if (!isRealEstate) {
+                if (customBank) {
+                    if (!customBank.name.trim()) {
+                        alert('Please enter a bank name.');
+                        setIsSubmitting(false);
+                        return;
+                    }
+                    const createdBankId = await createBankAndGetId();
+                    if (!createdBankId) {
+                        throw new Error('Failed to create bank');
+                    }
+                    finalBankId = createdBankId;
+                } else if (bankId) {
+                    finalBankId = String(bankId);
+                }
+            }
+
+            router.patch(
+                update.url(account.id),
+                {
+                    name: displayName,
+                    bank_id: finalBankId,
+                    type: type,
+                    currency_code: currencyCode,
+                    ownership_percentage: sharePercentage,
+                    ownership_applies_to_balance:
+                        sharePercentage < 100 && ownershipAppliesToBalance,
+                    ...(formDataRef.current.loan
+                        ? {
+                              annual_interest_rate:
+                                  formDataRef.current.loan.annualInterestRate ||
+                                  null,
+                              loan_term_months:
+                                  formDataRef.current.loan.loanTermMonths ||
+                                  null,
+                              loan_start_date:
+                                  formDataRef.current.loan.startDate || null,
+                              original_amount:
+                                  formDataRef.current.loan.originalAmount ??
+                                  null,
+                          }
+                        : {}),
+                    ...(formDataRef.current.realEstate
+                        ? {
+                              property_type:
+                                  formDataRef.current.realEstate.propertyType,
+                              address:
+                                  formDataRef.current.realEstate.address ||
+                                  null,
+                              purchase_price:
+                                  formDataRef.current.realEstate
+                                      .purchasePrice ?? null,
+                              purchase_date:
+                                  formDataRef.current.realEstate.purchaseDate ||
+                                  null,
+                              area_value:
+                                  formDataRef.current.realEstate.areaValue ||
+                                  null,
+                              area_unit:
+                                  formDataRef.current.realEstate.areaUnit ||
+                                  null,
+                              linked_loan_account_id:
+                                  formDataRef.current.realEstate
+                                      .linkedLoanAccountId || null,
+                              notes:
+                                  formDataRef.current.realEstate.notes || null,
+                              revaluation_percentage:
+                                  formDataRef.current.realEstate
+                                      .revaluationPercentage || null,
+                          }
+                        : {}),
+                },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setErrors({});
+                        onOpenChange(false);
+                        if (redirectTo) {
+                            router.visit(redirectTo);
+                        } else {
+                            onSuccess?.();
+                        }
+                    },
+                    onError: (errors) => setErrors(errors),
+                    onFinish: () => {
+                        setIsSubmitting(false);
+                    },
+                },
+            );
+        } catch (err) {
+            console.error('Submission failed:', err);
+            alert(
+                err instanceof Error
+                    ? err.message
+                    : 'Failed to update account. Please try again.',
+            );
+            setIsSubmitting(false);
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent hasKeyboard className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>{__('Edit Account')}</DialogTitle>
+                    <DialogDescription>
+                        {__('Update the account information.')}
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-2">
+                    <AccountForm
+                        initialValues={initialValues}
+                        isConnected={!!account.banking_connection_id}
+                        onChange={handleFormChange}
+                        errors={errors}
+                    />
+
+                    <div className="grid gap-2 pt-2">
+                        <Label htmlFor="ownership-percentage">
+                            {__('My share of this account (%)')}
+                        </Label>
+                        <Input
+                            id="ownership-percentage"
+                            type="number"
+                            min={1}
+                            max={100}
+                            step={1}
+                            value={ownershipPercentage}
+                            aria-describedby="ownership-percentage-hint"
+                            onChange={(event) =>
+                                setOwnershipPercentage(event.target.value)
+                            }
+                            disabled={isSubmitting}
+                        />
+                        <p
+                            id="ownership-percentage-hint"
+                            className="text-xs text-muted-foreground"
+                        >
+                            {__(
+                                'For accounts you share with someone else. Income and expenses only count towards your figures by this percentage. Changing it also rewrites what this account has already spent in your budgets, past periods included.',
+                            )}
+                        </p>
+                        <InputError message={errors.ownership_percentage} />
+
+                        {sharePercentage < 100 && (
+                            <div className="flex items-start gap-2 pt-1">
+                                <Checkbox
+                                    id="ownership-applies-to-balance"
+                                    checked={ownershipAppliesToBalance}
+                                    onCheckedChange={(checked) =>
+                                        setOwnershipAppliesToBalance(
+                                            checked === true,
+                                        )
+                                    }
+                                    disabled={isSubmitting}
+                                />
+                                <Label
+                                    htmlFor="ownership-applies-to-balance"
+                                    className="cursor-pointer font-normal"
+                                >
+                                    {__(
+                                        'Apply it to the balance too, so only my share counts towards net worth',
+                                    )}
+                                </Label>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 pt-4">
+                        {deleteRedirectTo ? (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                                onClick={() => setDeleteOpen(true)}
+                                disabled={isSubmitting}
+                            >
+                                {__('Delete account')}
+                            </Button>
+                        ) : (
+                            <span />
+                        )}
+
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onOpenChange(false)}
+                                disabled={isSubmitting}
+                            >
+                                {__('Cancel')}
+                            </Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting
+                                    ? __('Updating...')
+                                    : __('Update')}
+                            </Button>
+                        </div>
+                    </div>
+                </form>
+
+                {deleteRedirectTo && (
+                    <DeleteAccountDialog
+                        account={account}
+                        open={deleteOpen}
+                        onOpenChange={setDeleteOpen}
+                        redirectTo={deleteRedirectTo}
+                    />
+                )}
+            </DialogContent>
+        </Dialog>
+    );
+}

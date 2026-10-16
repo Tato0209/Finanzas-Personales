@@ -1,0 +1,687 @@
+<?php
+
+use App\Enums\AccountType;
+use App\Models\Account;
+use App\Models\Bank;
+use App\Models\RealEstateDetail;
+use App\Models\Transaction;
+use App\Models\User;
+
+use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertDatabaseHas;
+use function Pest\Laravel\assertDatabaseMissing;
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->bank = Bank::factory()->create();
+});
+
+it('displays user accounts on index page', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+    ]);
+
+    $response = $this->get(route('accounts.index'));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('settings/accounts')
+        ->has('accounts', 1));
+});
+
+it('can create a new account with plaintext name', function () {
+    actingAs($this->user);
+
+    $data = [
+        'name' => 'My Checking Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Checking->value,
+    ];
+
+    $response = $this->post(route('accounts.store'), $data);
+
+    $response->assertRedirect();
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'name' => 'My Checking Account',
+        'currency_code' => 'USD',
+        'type' => AccountType::Checking->value,
+    ]);
+});
+
+it('updates user currency from first manually created account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'My Euro Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertRedirect();
+
+    expect($this->user->refresh()->currency_code)->toBe('EUR');
+});
+
+it('can create a new account without a bank', function () {
+    actingAs($this->user);
+
+    $data = [
+        'name' => 'My Savings Account',
+        'currency_code' => 'USD',
+        'type' => AccountType::Savings->value,
+    ];
+
+    $response = $this->post(route('accounts.store'), $data);
+
+    $response->assertRedirect();
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => null,
+        'name' => 'My Savings Account',
+        'currency_code' => 'USD',
+        'type' => AccountType::Savings->value,
+    ]);
+});
+
+it('clears the bank when updating an account with a null bank_id', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+    ]);
+
+    $response = $this->patch(route('accounts.update', $account), [
+        'name' => 'Cash',
+        'bank_id' => null,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Others->value,
+    ]);
+
+    $response->assertRedirect(route('accounts.index'));
+    assertDatabaseHas('accounts', [
+        'id' => $account->id,
+        'bank_id' => null,
+        'name' => 'Cash',
+        'type' => AccountType::Others->value,
+    ]);
+});
+
+it('validates required fields when creating account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), []);
+
+    $response->assertSessionHasErrors(['name', 'currency_code', 'type']);
+});
+
+it('validates currency_code must be in allowed list', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'My Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'INVALID',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertSessionHasErrors(['currency_code']);
+});
+
+it('accepts new latam currency when creating account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'Argentina Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'ARS',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertRedirect();
+
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'ARS',
+    ]);
+});
+
+it('accepts Colombian peso when creating account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'Colombia Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'COP',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertRedirect();
+
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'COP',
+    ]);
+});
+
+it('accepts Dominican peso when creating account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'Dominican Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'DOP',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertRedirect();
+
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'DOP',
+    ]);
+});
+
+it('accepts Pakistani rupee when creating account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'Pakistan Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'PKR',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertRedirect();
+
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'PKR',
+    ]);
+});
+
+it('accepts Brazilian real when creating account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'Brazil Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'BRL',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertRedirect();
+
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'BRL',
+    ]);
+});
+
+it('accepts Saudi riyal when creating account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'Saudi Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'SAR',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertRedirect();
+
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'SAR',
+    ]);
+});
+
+it('accepts bitcoin when creating account', function () {
+    actingAs($this->user);
+
+    Account::factory()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+    ]);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'Bitcoin Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'BTC',
+        'type' => AccountType::Investment->value,
+    ]);
+
+    $response->assertRedirect();
+
+    assertDatabaseHas('accounts', [
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'BTC',
+    ]);
+});
+
+it('rejects bitcoin when creating a first account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'Bitcoin Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'BTC',
+        'type' => AccountType::Investment->value,
+    ]);
+
+    $response->assertSessionHasErrors(['currency_code']);
+});
+
+it('validates type must be valid AccountType', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'My Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => 'invalid_type',
+    ]);
+
+    $response->assertSessionHasErrors(['type']);
+});
+
+it('can update an account', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+    ]);
+
+    $newBank = Bank::factory()->create();
+
+    $data = [
+        'name' => 'Updated Account Name',
+        'bank_id' => $newBank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Savings->value,
+    ];
+
+    $response = $this->patch(route('accounts.update', $account), $data);
+
+    $response->assertRedirect(route('accounts.index'));
+    assertDatabaseHas('accounts', [
+        'id' => $account->id,
+        'name' => 'Updated Account Name',
+        'bank_id' => $newBank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Savings->value,
+    ]);
+});
+
+it('prevents updating another users account', function () {
+    $otherUser = User::factory()->create();
+    $account = Account::factory()->create([
+        'user_id' => $otherUser->id,
+        'bank_id' => $this->bank->id,
+    ]);
+
+    actingAs($this->user);
+
+    $response = $this->patch(route('accounts.update', $account), [
+        'name' => 'hacked_name',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertForbidden();
+});
+
+it('can delete an account', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+    ]);
+
+    $response = $this->delete(route('accounts.destroy', $account));
+
+    $response->assertRedirect(route('accounts.index'));
+    expect(Account::withTrashed()->find($account->id))->not->toBeNull();
+    expect(Account::withTrashed()->find($account->id)->deleted_at)->not->toBeNull();
+    expect(Account::find($account->id))->toBeNull();
+});
+
+it('deletes all transactions when deleting account', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+    ]);
+
+    $transaction1 = Transaction::factory()->create([
+        'user_id' => $this->user->id,
+        'account_id' => $account->id,
+    ]);
+
+    $transaction2 = Transaction::factory()->create([
+        'user_id' => $this->user->id,
+        'account_id' => $account->id,
+    ]);
+
+    $response = $this->delete(route('accounts.destroy', $account));
+
+    $response->assertRedirect(route('accounts.index'));
+    expect(Account::find($account->id))->toBeNull();
+    expect(Account::withTrashed()->find($account->id))->not->toBeNull();
+    expect(Transaction::find($transaction1->id))->toBeNull();
+    expect(Transaction::find($transaction2->id))->toBeNull();
+});
+
+it('keeps the currency of a connected account', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->connected()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Checking,
+    ]);
+
+    $response = $this->patch(route('accounts.update', $account), [
+        'name' => 'Renamed',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertSessionHasErrors(['currency_code']);
+    assertDatabaseHas('accounts', [
+        'id' => $account->id,
+        'currency_code' => 'EUR',
+    ]);
+});
+
+it('keeps the bank of a connected account', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->connected()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Checking,
+    ]);
+    $otherBank = Bank::factory()->create();
+
+    $response = $this->patch(route('accounts.update', $account), [
+        'name' => 'Renamed',
+        'bank_id' => $otherBank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertSessionHasErrors(['bank_id']);
+    assertDatabaseHas('accounts', [
+        'id' => $account->id,
+        'bank_id' => $this->bank->id,
+    ]);
+});
+
+it('refuses to clear the bank of a connected account', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->connected()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Checking,
+    ]);
+
+    $response = $this->patch(route('accounts.update', $account), [
+        'name' => 'Renamed',
+        'bank_id' => null,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertSessionHasErrors(['bank_id']);
+    assertDatabaseHas('accounts', [
+        'id' => $account->id,
+        'bank_id' => $this->bank->id,
+    ]);
+});
+
+it('still updates a connected account when the currency is left alone', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->connected()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Checking,
+    ]);
+
+    $response = $this->patch(route('accounts.update', $account), [
+        'name' => 'Renamed',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'EUR',
+        'type' => AccountType::Checking->value,
+    ]);
+
+    $response->assertRedirect(route('accounts.index'));
+    assertDatabaseHas('accounts', [
+        'id' => $account->id,
+        'name' => 'Renamed',
+    ]);
+});
+
+// Archiving is what detaches an account from the bank (see AccountControllerTest),
+// and an archived account is no longer connected, so it can then be deleted.
+it('prevents deleting a connected account', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->connected()->create([
+        'user_id' => $this->user->id,
+        'bank_id' => $this->bank->id,
+    ]);
+
+    $response = $this->delete(route('accounts.destroy', $account));
+
+    $response->assertForbidden();
+    assertDatabaseHas('accounts', ['id' => $account->id, 'deleted_at' => null]);
+});
+
+it('prevents deleting another users account', function () {
+    $otherUser = User::factory()->create();
+    $account = Account::factory()->create([
+        'user_id' => $otherUser->id,
+        'bank_id' => $this->bank->id,
+    ]);
+
+    actingAs($this->user);
+
+    $response = $this->delete(route('accounts.destroy', $account));
+
+    $response->assertForbidden();
+    assertDatabaseHas('accounts', ['id' => $account->id]);
+});
+
+it('can create an account with an initial balance', function () {
+    actingAs($this->user);
+
+    $data = [
+        'name' => 'My Savings Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Savings->value,
+        'balance' => 150000,
+    ];
+
+    $response = $this->post(route('accounts.store'), $data);
+
+    $response->assertRedirect();
+
+    $account = Account::where('user_id', $this->user->id)
+        ->where('name', 'My Savings Account')
+        ->first();
+
+    expect($account)->not->toBeNull();
+
+    assertDatabaseHas('account_balances', [
+        'account_id' => $account->id,
+        'balance_date' => now()->toDateString(),
+        'balance' => 150000,
+    ]);
+});
+
+it('creates account without balance record when balance is not provided', function () {
+    actingAs($this->user);
+
+    $data = [
+        'name' => 'My Investment Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Investment->value,
+    ];
+
+    $response = $this->post(route('accounts.store'), $data);
+
+    $response->assertRedirect();
+
+    $account = Account::where('user_id', $this->user->id)
+        ->where('name', 'My Investment Account')
+        ->first();
+
+    expect($account)->not->toBeNull();
+
+    assertDatabaseMissing('account_balances', [
+        'account_id' => $account->id,
+    ]);
+});
+
+it('records the invested amount on the opening balance of an investment account', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'My Index Fund',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Investment->value,
+        'balance' => 150000,
+        'invested_amount' => 120000,
+    ]);
+
+    $response->assertRedirect();
+
+    $account = Account::where('user_id', $this->user->id)
+        ->where('name', 'My Index Fund')
+        ->first();
+
+    assertDatabaseHas('account_balances', [
+        'account_id' => $account->id,
+        'balance' => 150000,
+        'invested_amount' => 120000,
+    ]);
+
+    expect($account->balances()->count())->toBe(1);
+});
+
+it('opens the balance at the invested amount when only that is known', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'My Pension Plan',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Retirement->value,
+        'invested_amount' => 120000,
+    ]);
+
+    $response->assertRedirect();
+
+    $account = Account::where('user_id', $this->user->id)
+        ->where('name', 'My Pension Plan')
+        ->first();
+
+    assertDatabaseHas('account_balances', [
+        'account_id' => $account->id,
+        'balance' => 120000,
+        'invested_amount' => 120000,
+    ]);
+});
+
+it('ignores an invested amount on a type that does not track one', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'My Current Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Checking->value,
+        'balance' => 150000,
+        'invested_amount' => 120000,
+    ]);
+
+    $response->assertRedirect();
+
+    $account = Account::where('user_id', $this->user->id)
+        ->where('name', 'My Current Account')
+        ->first();
+
+    assertDatabaseHas('account_balances', [
+        'account_id' => $account->id,
+        'balance' => 150000,
+        'invested_amount' => null,
+    ]);
+});
+
+it('validates balance must be an integer when provided', function () {
+    actingAs($this->user);
+
+    $response = $this->post(route('accounts.store'), [
+        'name' => 'My Account',
+        'bank_id' => $this->bank->id,
+        'currency_code' => 'USD',
+        'type' => AccountType::Savings->value,
+        'balance' => 'not-a-number',
+    ]);
+
+    $response->assertSessionHasErrors(['balance']);
+});
+
+it('includes real estate detail when listing accounts with real estate type', function () {
+    actingAs($this->user);
+
+    $account = Account::factory()->realEstate()->create([
+        'user_id' => $this->user->id,
+    ]);
+
+    $realEstateDetail = RealEstateDetail::factory()->create([
+        'account_id' => $account->id,
+    ]);
+
+    $response = $this->get(route('accounts.index'));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('settings/accounts')
+        ->has('accounts', 1)
+        ->has('accounts.0.real_estate_detail')
+        ->where('accounts.0.real_estate_detail.property_type', $realEstateDetail->property_type->value)
+        ->where('accounts.0.real_estate_detail.address', $realEstateDetail->address)
+        ->where('accounts.0.real_estate_detail.purchase_price', $realEstateDetail->purchase_price)
+    );
+});

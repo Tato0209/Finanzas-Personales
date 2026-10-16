@@ -1,0 +1,760 @@
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+import * as RechartsPrimitive from 'recharts';
+
+import { computeTooltipPosition } from '@/lib/chart-tooltip-position';
+import { usePrivacyMode } from '@/contexts/privacy-mode-context';
+import { useLocale } from '@/hooks/use-locale';
+import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/utils/currency';
+import { __ } from '@/utils/i18n';
+
+const THEMES = { light: '', dark: '.dark' } as const;
+
+export type ChartConfig = {
+    [k in string]: {
+        label?: React.ReactNode;
+        icon?: React.ComponentType;
+        color?: string;
+    };
+};
+
+type ChartContextProps = {
+    config: ChartConfig;
+};
+
+const ChartContext = React.createContext<ChartContextProps | null>(null);
+
+function useChart() {
+    const context = React.useContext(ChartContext);
+
+    if (!context) {
+        throw new Error('useChart must be used within a <ChartContainer />');
+    }
+
+    return context;
+}
+
+const ChartContainer = React.forwardRef<
+    HTMLDivElement,
+    React.ComponentProps<'div'> & {
+        config: ChartConfig;
+        children: React.ComponentProps<
+            typeof RechartsPrimitive.ResponsiveContainer
+        >['children'];
+    }
+>(({ id, className, children, config, ...props }, ref) => {
+    const uniqueId = React.useId();
+    const chartId = `chart-${id || uniqueId.replace(/:/g, '')}`;
+
+    return (
+        <ChartContext.Provider value={{ config }}>
+            <div
+                data-chart={chartId}
+                ref={ref}
+                className={cn(
+                    "flex aspect-video justify-center text-xs min-w-0 overflow-hidden [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+                    className,
+                )}
+                {...props}
+            >
+                <ChartStyle id={chartId} config={config} />
+                <RechartsPrimitive.ResponsiveContainer
+                    initialDimension={{ width: 1, height: 1 }}
+                >
+                    {children}
+                </RechartsPrimitive.ResponsiveContainer>
+            </div>
+        </ChartContext.Provider>
+    );
+});
+ChartContainer.displayName = 'Chart';
+
+const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+    const colorConfig = Object.entries(config).filter(
+        ([, itemConfig]) => itemConfig.color,
+    );
+
+    if (!colorConfig.length) {
+        return null;
+    }
+
+    return (
+        <style
+            dangerouslySetInnerHTML={{
+                __html: Object.entries(THEMES)
+                    .map(
+                        ([, prefix]) => `
+${prefix} [data-chart=${id}] {
+${colorConfig
+                                .map(([key, itemConfig]) => {
+                                    return itemConfig.color
+                                        ? `  --color-${key}: ${itemConfig.color};`
+                                        : null;
+                                })
+                                .filter(Boolean)
+                                .join('\n')}
+}
+`,
+                    )
+                    .join('\n'),
+            }}
+        />
+    );
+};
+
+const ChartTooltip = RechartsPrimitive.Tooltip;
+
+/**
+ * Portals the tooltip content to document.body, anchoring it to the
+ * Recharts-applied position of its parent wrapper. Escapes ancestor
+ * `overflow-hidden` clipping while preserving Recharts' positioning.
+ */
+function ChartTooltipPortal({
+    children,
+    coordinate,
+    offset = 12,
+}: {
+    children: React.ReactNode;
+    coordinate?: { x?: number; y?: number };
+    offset?: number;
+}) {
+    const anchorRef = React.useRef<HTMLDivElement>(null);
+    const tooltipRef = React.useRef<HTMLDivElement>(null);
+    const [pos, setPos] = React.useState<{ x: number; y: number } | null>(
+        null,
+    );
+    const [hidden, setHidden] = React.useState(false);
+
+    // Reset hidden flag whenever Recharts reports a new cursor coordinate
+    // (pointer moved back onto a bar after a scroll).
+    React.useEffect(() => {
+        setHidden(false);
+    }, [coordinate?.x, coordinate?.y]);
+
+    // Hide tooltip on scroll/resize: portaled fixed position would otherwise
+    // remain anchored to stale viewport coords while the chart scrolls away.
+    React.useEffect(() => {
+        const hide = () => setHidden(true);
+        window.addEventListener('scroll', hide, true);
+        window.addEventListener('resize', hide);
+        return () => {
+            window.removeEventListener('scroll', hide, true);
+            window.removeEventListener('resize', hide);
+        };
+    }, []);
+
+    // Only recompute when the cursor coordinate (or offset) changes. Depending
+    // on nothing re-ran this effect after its own setPos, and the equality
+    // guard alone could not stop the render→effect→setPos loop once positions
+    // oscillated by a sub-pixel — React aborted with "Maximum update depth
+    // exceeded". `pos` is deliberately not a dependency.
+    React.useLayoutEffect(() => {
+        if (!anchorRef.current || !coordinate) {
+            return;
+        }
+        const wrapper = anchorRef.current.closest('.recharts-wrapper');
+        if (!wrapper) {
+            return;
+        }
+        const rect = wrapper.getBoundingClientRect();
+        const tipEl = tooltipRef.current;
+
+        const next = computeTooltipPosition({
+            cx: (coordinate.x ?? 0) + rect.left,
+            cy: (coordinate.y ?? 0) + rect.top,
+            tipW: tipEl?.offsetWidth ?? 0,
+            tipH: tipEl?.offsetHeight ?? 0,
+            offset,
+            viewportW: window.innerWidth,
+            viewportH: window.innerHeight,
+        });
+
+        setPos((prev) =>
+            prev && prev.x === next.x && prev.y === next.y ? prev : next,
+        );
+        // Depend on the primitive x/y, not the `coordinate` object: Recharts
+        // passes a fresh object every render, so depending on it would run this
+        // effect on every render again and reopen the loop.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [coordinate?.x, coordinate?.y, offset]);
+
+    return (
+        <>
+            <div
+                ref={anchorRef}
+                style={{ width: 0, height: 0, pointerEvents: 'none' }}
+            />
+            {typeof document !== 'undefined'
+                ? createPortal(
+                      <div
+                          ref={tooltipRef}
+                          style={{
+                              position: 'fixed',
+                              left: pos?.x ?? -9999,
+                              top: pos?.y ?? -9999,
+                              opacity: pos && !hidden ? 1 : 0,
+                              transition: 'opacity 120ms ease-out',
+                              pointerEvents: 'none',
+                              zIndex: 50,
+                          }}
+                      >
+                          {children}
+                      </div>,
+                      document.body,
+                  )
+                : null}
+        </>
+    );
+}
+
+interface TooltipPayloadItem {
+    dataKey?: string | number;
+    name?: string;
+    value?: number | string;
+    color?: string;
+    payload?: Record<string, unknown>;
+}
+
+/**
+ * Net-worth chart mode shared by the stacked bar/area charts and this tooltip.
+ * When set, the tooltip shows liability rows and a net-worth total instead of a
+ * plain sum, and the charts can draw a negative net worth as a downward series.
+ */
+export interface NetWorthMode {
+    liabilityTypeLabel: string;
+    liabilityDotColor?: string;
+    /**
+     * Synthetic data key holding a period's negative net worth. The charts draw
+     * it as a single downward bar/area; the tooltip hides it from the per-account
+     * rows since the negative total already shows in the net-worth row.
+     */
+    deficitKey?: string;
+}
+
+interface ChartTooltipContentProps {
+    active?: boolean;
+    payload?: TooltipPayloadItem[];
+    coordinate?: { x?: number; y?: number };
+    className?: string;
+    indicator?: 'line' | 'dot' | 'dashed';
+    hideLabel?: boolean;
+    label?: string;
+    labelFormatter?: (
+        value: unknown,
+        payload: TooltipPayloadItem[],
+    ) => React.ReactNode;
+    labelClassName?: string;
+    formatter?: (
+        value: unknown,
+        name: string,
+        item: TooltipPayloadItem,
+        index: number,
+        payload: Record<string, unknown>,
+    ) => React.ReactNode;
+    nameKey?: string;
+    labelKey?: string;
+    valueFormatter?: (value: number, accountId?: string) => React.ReactNode;
+    accountCurrencies?: Record<string, string>;
+    displayCurrency?: string;
+    /** When set, tooltip shows liability rows and net-worth total instead of simple sum. */
+    netWorthMode?: NetWorthMode;
+    /**
+     * Drops the rows whose value at the hovered point is exactly zero. Off by
+     * default, so every other chart keeps listing them.
+     */
+    hideZeroValues?: boolean;
+}
+
+/**
+ * The value a tooltip row shows. In net-worth mode the rendered series is
+ * scaled to fit the bar, so the row reads the unscaled original stored
+ * alongside it in the data point.
+ */
+function getTooltipItemValue(
+    item: TooltipPayloadItem,
+    netWorthMode?: NetWorthMode,
+): number | string | undefined {
+    if (!netWorthMode) {
+        return item.value;
+    }
+
+    const accountId = String(item.dataKey || item.name || '');
+
+    return (
+        (item.payload?.[`${accountId}_display`] as number | undefined) ??
+        item.value
+    );
+}
+
+function formatCurrencyWithCode(
+    value: number,
+    currencyCode: string,
+    locale: string,
+): string {
+    return formatCurrency(value, currencyCode, locale);
+}
+
+const ChartTooltipContent = React.forwardRef<
+    HTMLDivElement,
+    ChartTooltipContentProps
+>(
+    (
+        {
+            active,
+            payload,
+            className,
+            indicator = 'dot',
+            hideLabel = false,
+            label,
+            labelFormatter,
+            labelClassName,
+            formatter,
+            nameKey,
+            labelKey,
+            valueFormatter,
+            accountCurrencies,
+            displayCurrency,
+            netWorthMode,
+            hideZeroValues,
+            coordinate,
+        },
+        ref,
+    ) => {
+        const { config } = useChart();
+        const locale = useLocale();
+        const { isPrivacyModeEnabled } = usePrivacyMode();
+
+        const tooltipLabel = React.useMemo(() => {
+            if (hideLabel || !payload?.length) {
+                return null;
+            }
+
+            const [item] = payload;
+            const key = `${labelKey || item?.dataKey || item?.name || 'value'}`;
+            const itemConfig = getPayloadConfigFromPayload(config, item, key);
+            const value =
+                !labelKey && typeof label === 'string'
+                    ? config[label as keyof typeof config]?.label || label
+                    : itemConfig?.label;
+
+            if (labelFormatter) {
+                return (
+                    <div className={cn('font-medium', labelClassName)}>
+                        {labelFormatter(value, payload)}
+                    </div>
+                );
+            }
+
+            if (!value) {
+                return null;
+            }
+
+            return (
+                <div className={cn('font-medium', labelClassName)}>{value}</div>
+            );
+        }, [
+            label,
+            labelFormatter,
+            payload,
+            hideLabel,
+            labelClassName,
+            config,
+            labelKey,
+        ]);
+
+        const currencyTotals = React.useMemo(() => {
+            if (!payload?.length) {
+                return null;
+            }
+
+            // In net worth mode, use pre-computed net worth from data point.
+            // This returns before the raw-payload sums below, so the synthetic
+            // deficit series never gets double-counted into a currency total.
+            if (netWorthMode && displayCurrency) {
+                const netWorth = payload[0]?.payload?.__net_worth as number | undefined;
+                if (netWorth !== undefined) {
+                    return [[displayCurrency, netWorth] as [string, number]];
+                }
+            }
+
+            // When displayCurrency is set, all values are in a single currency
+            if (displayCurrency) {
+                const total = payload.reduce((sum, item) => {
+                    return sum + (typeof item.value === 'number' ? item.value : 0);
+                }, 0);
+                return [[displayCurrency, total] as [string, number]];
+            }
+
+            if (!accountCurrencies) {
+                return null;
+            }
+
+            const totals: Record<string, number> = {};
+            payload.forEach((item) => {
+                const accountId = String(item.dataKey || item.name || '');
+                const currency = accountCurrencies[accountId] || 'USD';
+                const value =
+                    typeof item.value === 'number' ? item.value : 0;
+                totals[currency] = (totals[currency] || 0) + value;
+            });
+
+            return Object.entries(totals).sort((a, b) => b[1] - a[1]);
+        }, [payload, accountCurrencies, displayCurrency, netWorthMode]);
+
+        if (!active || !payload?.length) {
+            return null;
+        }
+
+        // The synthetic deficit series is rendering-only; the negative net
+        // worth already shows in the total row, so drop it from the item list.
+        const seriesPayload = netWorthMode?.deficitKey
+            ? payload.filter((item) => item.dataKey !== netWorthMode.deficitKey)
+            : payload;
+
+        // An account holding nothing at the hovered point carries no
+        // information; its row only pushes the ones that do out of sight.
+        const itemPayload = hideZeroValues
+            ? seriesPayload.filter(
+                  (item) => getTooltipItemValue(item, netWorthMode) !== 0,
+              )
+            : seriesPayload;
+
+        const liabilitiesTotal = netWorthMode
+            ? (payload[0]?.payload?.__liabilities_total as number | undefined)
+            : undefined;
+        const hasLiabilities =
+            typeof liabilitiesTotal === 'number' && liabilitiesTotal > 0;
+
+        // The filter left no rows and there is no liability row to fall back
+        // on: an empty box reads as broken, so draw nothing at all. Gated on
+        // the same opt-in, so no other chart can reach it.
+        if (hideZeroValues && itemPayload.length === 0 && !hasLiabilities) {
+            return null;
+        }
+
+        const nestLabel = itemPayload.length === 1 && indicator !== 'dot';
+        const hasMultipleCurrencies =
+            currencyTotals && currencyTotals.length > 1;
+
+        return (
+            <ChartTooltipPortal coordinate={coordinate}>
+            <div
+                ref={ref}
+                className={cn(
+                    'border-border/50 bg-background grid grid-cols-[minmax(0,1fr)] min-w-[8rem] max-w-[min(20rem,calc(100vw-2rem))] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl',
+                    className,
+                )}
+            >
+                {!nestLabel ? tooltipLabel : null}
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-1.5">
+                    {itemPayload.map(
+                        (item: TooltipPayloadItem, index: number) => {
+                            const key = `${nameKey || item.name || item.dataKey || 'value'}`;
+                            const itemConfig = getPayloadConfigFromPayload(
+                                config,
+                                item,
+                                key,
+                            );
+                            const accountId = String(
+                                item.dataKey || item.name || '',
+                            );
+
+                            const displayValue = getTooltipItemValue(
+                                item,
+                                netWorthMode,
+                            );
+
+                            return (
+                                <div
+                                    key={String(item.dataKey)}
+                                    className={cn(
+                                        'flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground',
+                                        indicator === 'dot' && 'items-center',
+                                    )}
+                                >
+                                    {formatter &&
+                                        item?.value !== undefined &&
+                                        item.name ? (
+                                        formatter(
+                                            item.value,
+                                            item.name,
+                                            item,
+                                            index,
+                                            item.payload || {},
+                                        )
+                                    ) : (
+                                        <>
+                                            {itemConfig?.icon ? (
+                                                <itemConfig.icon />
+                                            ) : null}
+                                            <div
+                                                className={cn(
+                                                    'flex flex-1 min-w-0 gap-4 justify-between leading-none',
+                                                    nestLabel ? 'items-end' : '',
+                                                )}
+                                            >
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    {nestLabel
+                                                        ? tooltipLabel
+                                                        : <div style={{ backgroundColor: item.color }} className={cn([
+                                                            'size-2.5 shrink-0 rounded-xs'
+                                                        ])}></div>}
+                                                    <span className="text-muted-foreground ml-0 truncate">
+                                                        {itemConfig?.label ||
+                                                            item.name}
+                                                    </span>
+                                                </div>
+                                                {item.value !== undefined && (
+                                                    <span className="text-foreground font-mono font-medium tabular-nums shrink-0 whitespace-nowrap">
+                                                        {(() => {
+                                                            const originalKey = `${accountId}_original`;
+                                                            const original = item.payload?.[originalKey] as { amount: number; currency_code: string } | undefined;
+                                                            if (original) {
+                                                                return (
+                                                                    <span className="text-muted-foreground mr-1 text-[10px]">
+                                                                        ({formatCurrencyWithCode(original.amount, original.currency_code, locale)})
+                                                                    </span>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })()}
+                                                        {valueFormatter
+                                                            ? valueFormatter(
+                                                                displayValue as number,
+                                                                accountId,
+                                                            )
+                                                            : typeof displayValue ===
+                                                                'number'
+                                                                ? displayValue.toLocaleString(locale)
+                                                                : displayValue}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            );
+                        },
+                    )}
+                    {(() => {
+                        const liabilitiesJson = netWorthMode
+                            ? (payload[0]?.payload?.__liabilities as string | undefined)
+                            : undefined;
+                        const liabilities: Array<{ name: string; amount: number }> = liabilitiesJson
+                            ? (JSON.parse(liabilitiesJson) as Array<{ name: string; amount: number }>)
+                            : [];
+                        const showTotalSection = itemPayload.length > 1 || hasLiabilities;
+
+                        if (!showTotalSection) return null;
+
+                        const totalLabel = hasLiabilities
+                            ? __('Net Worth')
+                            : __('Total');
+
+                        return (
+                            <div className="border-border/50 flex flex-col gap-1 border-t pt-1.5 min-w-0">
+                                {hasLiabilities && displayCurrency && liabilities.map((liability, index) => (
+                                    <div key={index} className="flex min-w-0 justify-between gap-2">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <div
+                                                className="size-2.5 shrink-0 rounded-xs"
+                                                style={{ backgroundColor: netWorthMode?.liabilityDotColor ?? 'var(--color-destructive)' }}
+                                            />
+                                            <span className="text-muted-foreground truncate font-medium">
+                                                {netWorthMode?.liabilityTypeLabel}: {liability.name}
+                                            </span>
+                                        </div>
+                                        <span className="text-foreground font-mono font-medium tabular-nums shrink-0 whitespace-nowrap">
+                                            {isPrivacyModeEnabled
+                                                ? formatCurrencyWithCode(-liability.amount, displayCurrency, locale).replace(/\d/g, '*')
+                                                : formatCurrencyWithCode(-liability.amount, displayCurrency, locale)}
+                                        </span>
+                                    </div>
+                                ))}
+                                {hasMultipleCurrencies ? (
+                                    currencyTotals.map(([currency, total]) => (
+                                        <div
+                                            key={currency}
+                                            className="flex justify-between"
+                                        >
+                                            <span className="text-muted-foreground font-medium">
+                                                {totalLabel} {currency}
+                                            </span>
+                                            <span className="text-foreground font-mono font-medium tabular-nums">
+                                                {isPrivacyModeEnabled
+                                                    ? formatCurrencyWithCode(total, currency, locale).replace(/\d/g, '*')
+                                                    : formatCurrencyWithCode(total, currency, locale)}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground font-medium">
+                                            {totalLabel}
+                                        </span>
+                                        <span className="text-foreground font-mono font-medium tabular-nums">
+                                            {currencyTotals && currencyTotals[0]
+                                                ? isPrivacyModeEnabled
+                                                    ? formatCurrencyWithCode(currencyTotals[0][1], currencyTotals[0][0], locale).replace(/\d/g, '*')
+                                                    : formatCurrencyWithCode(currencyTotals[0][1], currencyTotals[0][0], locale)
+                                                : payload
+                                                    .reduce(
+                                                        (
+                                                            sum: number,
+                                                            item: TooltipPayloadItem,
+                                                        ) => {
+                                                            const value =
+                                                                item.value;
+                                                            return (
+                                                                sum +
+                                                                (typeof value ===
+                                                                    'number'
+                                                                    ? value
+                                                                    : 0)
+                                                            );
+                                                        },
+                                                        0,
+                                                    )
+                                                    .toLocaleString(locale)}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
+                </div>
+            </div>
+            </ChartTooltipPortal>
+        );
+    },
+);
+ChartTooltipContent.displayName = 'ChartTooltip';
+
+const ChartLegend = RechartsPrimitive.Legend;
+
+interface LegendPayloadItem {
+    value?: string;
+    dataKey?: string | number;
+    color?: string;
+}
+
+interface ChartLegendContentProps {
+    className?: string;
+    hideIcon?: boolean;
+    payload?: LegendPayloadItem[];
+    verticalAlign?: 'top' | 'bottom';
+    nameKey?: string;
+}
+
+const ChartLegendContent = React.forwardRef<
+    HTMLDivElement,
+    ChartLegendContentProps
+>(
+    (
+        {
+            className,
+            hideIcon = false,
+            payload,
+            verticalAlign = 'bottom',
+            nameKey,
+        },
+        ref,
+    ) => {
+        const { config } = useChart();
+
+        if (!payload?.length) {
+            return null;
+        }
+
+        return (
+            <div
+                ref={ref}
+                className={cn(
+                    'flex items-center justify-center gap-4',
+                    verticalAlign === 'top' ? 'pb-3' : 'pt-3',
+                    className,
+                )}
+            >
+                {payload.map((item: LegendPayloadItem) => {
+                    const key = `${nameKey || item.dataKey || 'value'}`;
+                    const itemConfig = getPayloadConfigFromPayload(
+                        config,
+                        item,
+                        key,
+                    );
+
+                    return (
+                        <div
+                            key={item.value}
+                            className={cn(
+                                'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground',
+                            )}
+                        >
+                            {itemConfig?.icon && !hideIcon ? (
+                                <itemConfig.icon />
+                            ) : (
+                                <div
+                                    className="h-2 w-2 shrink-0 rounded-[2px]"
+                                    style={{
+                                        backgroundColor: item.color,
+                                    }}
+                                />
+                            )}
+                            {itemConfig?.label}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    },
+);
+ChartLegendContent.displayName = 'ChartLegend';
+
+function getPayloadConfigFromPayload(
+    config: ChartConfig,
+    payload: unknown,
+    key: string,
+) {
+    if (typeof payload !== 'object' || payload === null) {
+        return undefined;
+    }
+
+    const payloadPayload =
+        'payload' in payload &&
+            typeof payload.payload === 'object' &&
+            payload.payload !== null
+            ? payload.payload
+            : undefined;
+
+    let configLabelKey: string = key;
+
+    if (
+        key in payload &&
+        typeof (payload as Record<string, unknown>)[key] === 'string'
+    ) {
+        configLabelKey = (payload as Record<string, unknown>)[key] as string;
+    } else if (
+        payloadPayload &&
+        key in payloadPayload &&
+        typeof (payloadPayload as Record<string, unknown>)[key] === 'string'
+    ) {
+        configLabelKey = (payloadPayload as Record<string, unknown>)[
+            key
+        ] as string;
+    }
+
+    return configLabelKey in config
+        ? config[configLabelKey]
+        : config[key as keyof typeof config];
+}
+
+export {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    ChartTooltipPortal,
+    ChartLegend,
+    ChartLegendContent,
+    ChartStyle,
+};

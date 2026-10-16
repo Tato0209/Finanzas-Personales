@@ -1,0 +1,120 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\AccountType;
+use App\Models\Account;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+
+/**
+ * Net worth at a point in time, in the user's currency.
+ *
+ * This used to live inside DashboardAnalyticsController. It moved out because a
+ * third caller appeared — the monthly summary email — and a figure the user is
+ * told by email has to be the same one their dashboard shows, or they stop
+ * believing the rest of the report.
+ *
+ * The chart the dashboard draws honours two per-user toggles (loans and real
+ * estate), so this takes them too: pass the user's preferences and the total
+ * matches what they see. Credit cards are excluded whatever the preferences say
+ * — they are spending accounts, not wealth, and an account is dropped from the
+ * day it was archived, both matching what the chart draws.
+ */
+class NetWorthCalculator
+{
+    public function __construct(private ExchangeRateService $exchangeRateService) {}
+
+    /**
+     * Account types kept out of the user's net worth.
+     *
+     * Both start off: a mortgage or a flat they cannot spend swamps a first
+     * chart. Users who signed up before that was the default were backfilled an
+     * explicit row, so no row means a new account, not an old one.
+     *
+     * @return list<AccountType>
+     */
+    public function excludedTypesFor(User $user): array
+    {
+        $setting = $user->setting;
+
+        return array_values(array_filter([
+            ($setting->include_loans_in_net_worth_chart ?? false) ? null : AccountType::Loan,
+            ($setting->include_real_estate_in_net_worth_chart ?? false) ? null : AccountType::RealEstate,
+        ]));
+    }
+
+    /**
+     * @param  Collection<int, Account>  $accounts
+     * @param  list<AccountType>  $excludedTypes
+     */
+    public function at(
+        Collection $accounts,
+        BalanceLookup $lookup,
+        Carbon $date,
+        string $userCurrency,
+        array $excludedTypes = [],
+    ): int {
+        $total = 0;
+
+        foreach ($accounts as $account) {
+            if (! $this->countsOn($account, $excludedTypes, $date)) {
+                continue;
+            }
+
+            $total += $this->contributionOf($account, $lookup, $date, $userCurrency);
+        }
+
+        return $total;
+    }
+
+    /**
+     * Whether an account is part of the total on that date. Public because the
+     * onboarding reveal lists the accounts behind the figure it prints, and a
+     * list built on its own rules would sooner or later disagree with the sum.
+     *
+     * @param  list<AccountType>  $excludedTypes
+     */
+    public function countsOn(Account $account, array $excludedTypes, Carbon $date): bool
+    {
+        return $account->type->countsInNetWorth()
+            && ! in_array($account->type, $excludedTypes, true)
+            && ! $account->isArchivedOn($date);
+    }
+
+    /**
+     * What one account adds to, or takes off, the total. Liabilities are stored
+     * as positive magnitudes, so they always subtract. Assets keep their real
+     * sign, so an overdrawn checking account correctly reduces net worth instead
+     * of being flipped positive.
+     */
+    public function contributionOf(Account $account, BalanceLookup $lookup, Carbon $date, string $userCurrency): int
+    {
+        if ($account->type === AccountType::Salary) {
+            $start = $date->copy()->startOfMonth();
+            $end = $date->copy()->endOfMonth();
+            $income = (int) $account->transactions()
+                ->whereBetween('transaction_date', [$start->toDateString(), $end->toDateString()])
+                ->where('amount', '>', 0)
+                ->sum('amount');
+            $spent = (int) abs($account->transactions()
+                ->whereBetween('transaction_date', [$start->toDateString(), $end->toDateString()])
+                ->where('amount', '<', 0)
+                ->sum('amount'));
+
+            $rawBalance = max(0, $income - $spent);
+        } else {
+            $rawBalance = $lookup->getBalanceAt($account->id, $date);
+        }
+
+        $converted = $this->exchangeRateService->convert(
+            $account->currency_code,
+            $userCurrency,
+            $rawBalance,
+            $date->toDateString(),
+        );
+
+        return $account->type->reducesNetWorth() ? -abs($converted) : $converted;
+    }
+}

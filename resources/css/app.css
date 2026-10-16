@@ -1,0 +1,828 @@
+@import './fonts.css';
+
+@import 'tailwindcss';
+
+@import 'tw-animate-css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans:
+        'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    --font-mono: 'Google Sans Code', monospace;
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-success: var(--success);
+    --color-success-fill: var(--success-fill);
+    --color-success-border: var(--success-border);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-chart-6: var(--chart-6);
+    --color-chart-7: var(--chart-7);
+    --color-chart-8: var(--chart-8);
+    --color-chart-9: var(--chart-9);
+    --color-chart-10: var(--chart-10);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    /* Width the app pages are capped to, so they don't stretch on wide screens: max-w-page */
+    --container-page: 80rem;
+}
+
+:root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.577 0.245 27.325);
+
+    /* The first chroma in the interface proper, and deliberate, the same way
+       --destructive is: the money-back window is the one promise on a checkout
+       screen that is in the user's favour, and it has to be findable at a
+       glance rather than read in order. 5.7:1 on its own fill. */
+    --success: oklch(0.48 0.13 152);
+    --success-fill: oklch(0.972 0.022 152);
+    --success-border: oklch(0.88 0.13 152);
+
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.87 0 0);
+    --chart-1: var(--color-zinc-900);
+    --chart-2: var(--color-zinc-800);
+    --chart-3: var(--color-zinc-700);
+    --chart-4: var(--color-zinc-600);
+    --chart-5: var(--color-zinc-500);
+    --chart-6: var(--color-zinc-400);
+    --chart-7: var(--color-zinc-300);
+    --chart-8: var(--color-zinc-200);
+    --chart-9: var(--color-zinc-700);
+    --chart-10: var(--color-zinc-600);
+    --spent: var(--color-zinc-800);
+    --allocated: var(--color-zinc-200);
+    --spent-prev: var(--color-zinc-400);
+
+    /* Achievement tiers, as the metal each one is struck in: the medal itself
+       needs no theme (metal is metal), but the tier label sits on paper. */
+    --medal-copper: oklch(0.48 0.11 40);
+    --medal-steel: oklch(0.46 0.014 255);
+    --medal-gold: oklch(0.52 0.12 72);
+    --medal-obsidian: oklch(0.45 0.075 74);
+
+    /* The visit streak pill in the header, struck in the same chroma family as
+       the copper/gold medals so the chrome reads as one set of colours. */
+    --streak-fill: oklch(0.968 0.028 72);
+    --streak-border: oklch(0.885 0.075 70);
+    --streak-track: oklch(0.93 0.035 74);
+    --streak-from: oklch(0.72 0.16 52);
+    --streak-to: oklch(0.63 0.19 34);
+    --streak-ink: oklch(0.46 0.12 40);
+
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.87 0 0);
+}
+
+.dark {
+    --background: oklch(0.225 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.225 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.145 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.985 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.396 0.141 25.723);
+    --destructive-foreground: oklch(0.637 0.237 25.331);
+    --success: oklch(0.76 0.15 152);
+    --success-fill: oklch(0.3 0.05 152);
+    --success-border: oklch(0.44 0.09 152);
+    --border: oklch(0.325 0 0);
+    --input: oklch(0.41 0 0);
+    --ring: oklch(0.439 0 0);
+    --medal-copper: oklch(0.76 0.1 48);
+    --medal-steel: oklch(0.8 0.012 252);
+    --medal-gold: oklch(0.84 0.13 90);
+    --medal-obsidian: oklch(0.84 0.13 90);
+    --streak-fill: oklch(0.3 0.055 55);
+    --streak-border: oklch(0.44 0.09 55);
+    --streak-track: oklch(0.36 0.055 58);
+    --streak-from: oklch(0.8 0.15 66);
+    --streak-to: oklch(0.72 0.18 44);
+    --streak-ink: oklch(0.9 0.1 78);
+    --chart-1: var(--color-zinc-200);
+    --chart-2: var(--color-zinc-300);
+    --chart-3: var(--color-zinc-400);
+    --chart-4: var(--color-zinc-500);
+    --chart-5: var(--color-zinc-600);
+    --chart-6: var(--color-zinc-700);
+    --chart-7: var(--color-zinc-200);
+    --chart-8: var(--color-zinc-300);
+    --chart-9: var(--color-zinc-50);
+    --chart-10: var(--color-zinc-100);
+    --spent: var(--color-zinc-200);
+    --allocated: var(--color-zinc-700);
+    --spent-prev: var(--color-zinc-500);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.985 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(0.269 0 0);
+    --sidebar-ring: oklch(0.439 0 0);
+}
+
+/* Colorful chart color scheme */
+[data-chart-color='colorful'] {
+    --chart-1: var(--color-blue-600);
+    --chart-2: var(--color-emerald-500);
+    --chart-3: var(--color-amber-500);
+    --chart-4: var(--color-rose-500);
+    --chart-5: var(--color-violet-500);
+    --chart-6: var(--color-cyan-500);
+    --chart-7: var(--color-orange-500);
+    --chart-8: var(--color-teal-500);
+    --chart-9: var(--color-pink-400);
+    --chart-10: var(--color-indigo-400);
+    --spent: var(--color-blue-600);
+    --allocated: var(--color-blue-200);
+    --spent-prev: var(--color-blue-400);
+    --account-line: var(--color-zinc-800);
+    --cashflow-income: var(--color-emerald-500);
+    --cashflow-expense: var(--color-red-500);
+}
+
+.dark[data-chart-color='colorful'] {
+    --chart-1: var(--color-blue-400);
+    --chart-2: var(--color-emerald-400);
+    --chart-3: var(--color-amber-400);
+    --chart-4: var(--color-rose-400);
+    --chart-5: var(--color-violet-400);
+    --chart-6: var(--color-cyan-400);
+    --chart-7: var(--color-orange-400);
+    --chart-8: var(--color-teal-400);
+    --chart-9: var(--color-pink-300);
+    --chart-10: var(--color-indigo-300);
+    --spent: var(--color-blue-400);
+    --allocated: var(--color-blue-800);
+    --spent-prev: var(--color-blue-600);
+    --account-line: var(--color-zinc-50);
+    --cashflow-income: var(--color-emerald-400);
+    --cashflow-expense: var(--color-red-400);
+}
+
+/* Blue chart color scheme */
+[data-chart-color='blue'] {
+    --chart-1: var(--color-blue-900);
+    --chart-2: var(--color-blue-800);
+    --chart-3: var(--color-blue-700);
+    --chart-4: var(--color-blue-600);
+    --chart-5: var(--color-blue-500);
+    --chart-6: var(--color-blue-400);
+    --chart-7: var(--color-blue-300);
+    --chart-8: var(--color-blue-200);
+    --chart-9: var(--color-blue-100);
+    --chart-10: var(--color-blue-50);
+    --spent: var(--color-blue-800);
+    --allocated: var(--color-blue-200);
+    --spent-prev: var(--color-blue-400);
+}
+
+.dark[data-chart-color='blue'] {
+    --chart-1: var(--color-blue-200);
+    --chart-2: var(--color-blue-300);
+    --chart-3: var(--color-blue-400);
+    --chart-4: var(--color-blue-500);
+    --chart-5: var(--color-blue-600);
+    --chart-6: var(--color-blue-700);
+    --chart-7: var(--color-blue-800);
+    --chart-8: var(--color-blue-900);
+    --chart-9: var(--color-blue-50);
+    --chart-10: var(--color-blue-100);
+    --spent: var(--color-blue-200);
+    --allocated: var(--color-blue-700);
+    --spent-prev: var(--color-blue-500);
+}
+
+/* Pink chart color scheme */
+[data-chart-color='pink'] {
+    --chart-1: var(--color-pink-900);
+    --chart-2: var(--color-pink-800);
+    --chart-3: var(--color-pink-700);
+    --chart-4: var(--color-pink-600);
+    --chart-5: var(--color-pink-500);
+    --chart-6: var(--color-pink-400);
+    --chart-7: var(--color-pink-300);
+    --chart-8: var(--color-pink-200);
+    --chart-9: var(--color-pink-100);
+    --chart-10: var(--color-pink-50);
+    --spent: var(--color-pink-800);
+    --allocated: var(--color-pink-200);
+    --spent-prev: var(--color-pink-400);
+}
+
+.dark[data-chart-color='pink'] {
+    --chart-1: var(--color-pink-200);
+    --chart-2: var(--color-pink-300);
+    --chart-3: var(--color-pink-400);
+    --chart-4: var(--color-pink-500);
+    --chart-5: var(--color-pink-600);
+    --chart-6: var(--color-pink-700);
+    --chart-7: var(--color-pink-800);
+    --chart-8: var(--color-pink-900);
+    --chart-9: var(--color-pink-50);
+    --chart-10: var(--color-pink-100);
+    --spent: var(--color-pink-200);
+    --allocated: var(--color-pink-700);
+    --spent-prev: var(--color-pink-500);
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    .bg-radial {
+        background-image: radial-gradient(ellipse, var(--tw-gradient-stops));
+    }
+
+    .glass-3 {
+        background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.1),
+            rgba(255, 255, 255, 0.05)
+        );
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dark .glass-3 {
+        background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.05),
+            rgba(255, 255, 255, 0.02)
+        );
+    }
+
+    @keyframes marquee {
+        from {
+            transform: translateX(0);
+        }
+        to {
+            transform: translateX(calc(-100% - var(--gap)));
+        }
+    }
+
+    .font-heading {
+        font-family: 'IBM Plex Serif', ui-serif, Georgia, serif;
+        font-style: italic;
+    }
+
+    .animate-marquee {
+        animation: marquee var(--duration) linear infinite;
+    }
+
+    .bg-linear-to-r {
+        background: linear-gradient(to right, var(--tw-gradient-stops));
+    }
+
+    .bg-linear-to-l {
+        background: linear-gradient(to left, var(--tw-gradient-stops));
+    }
+
+    /* Charts */
+    .recharts-responsive-container:focus-visible,
+    svg:focus,
+    g:focus,
+    path:focus {
+        outline: none;
+    }
+
+    /* Unlock button attention animation */
+    @keyframes pulse-glow {
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    @keyframes pulse-scale {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    @keyframes icon-pulse {
+        0%,
+        100% {
+            color: currentColor;
+        }
+        50% {
+            color: rgb(59, 130, 246);
+        }
+    }
+
+    .unlock-button-pulse {
+        animation:
+            pulse-glow 2s ease-in-out infinite,
+            pulse-scale 2s ease-in-out infinite;
+    }
+
+    .unlock-icon-pulse {
+        animation: icon-pulse 2s ease-in-out infinite;
+    }
+
+    /*
+     * The visit streak pill.
+     *
+     * Two registers. The flame flickers and the halo breathes for as long as
+     * the pill is on screen, which is what makes a run look alive rather than
+     * counted. On top of that the `-flare` / `-burst` / `streak-pop` variants
+     * play once, the morning the run went up; they restate the resting
+     * animation after their own delay so the flame settles back into its
+     * flicker instead of freezing.
+     *
+     * Everything here is switched off wholesale for a reader who asked for
+     * less motion — see the media query at the end of the block. A pill that
+     * moves forever in the app chrome is exactly what that setting is for.
+     */
+    @keyframes streak-flicker {
+        0%,
+        100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 0.92;
+        }
+        42% {
+            transform: scale(1.16) rotate(-4deg);
+            opacity: 1;
+        }
+        68% {
+            transform: scale(1.04) rotate(3deg);
+            opacity: 0.96;
+        }
+    }
+
+    @keyframes streak-glow {
+        0%,
+        100% {
+            opacity: 0.28;
+            transform: scale(0.86);
+        }
+        50% {
+            opacity: 0.7;
+            transform: scale(1.18);
+        }
+    }
+
+    /* The ring drawing itself up to its percentage. `--streak-dash` is the
+       struck length the component already computes for `stroke-dasharray`. */
+    @keyframes streak-draw {
+        from {
+            stroke-dashoffset: var(--streak-dash);
+        }
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    @keyframes streak-flare {
+        0% {
+            transform: scale(1) rotate(0deg);
+        }
+        35% {
+            transform: scale(1.75) rotate(-8deg);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1) rotate(0deg);
+        }
+    }
+
+    @keyframes streak-burst {
+        0% {
+            opacity: 0.35;
+            transform: scale(0.8);
+        }
+        40% {
+            opacity: 0.95;
+            transform: scale(2.1);
+        }
+        100% {
+            opacity: 0.28;
+            transform: scale(0.86);
+        }
+    }
+
+    /* The new number arriving from below, the way a counter rolls over. */
+    @keyframes streak-pop {
+        0% {
+            transform: translateY(60%) scale(0.7);
+            opacity: 0;
+        }
+        55% {
+            transform: translateY(0) scale(1.4);
+            opacity: 1;
+        }
+        100% {
+            transform: none;
+        }
+    }
+
+    .streak-flame {
+        transform-origin: center;
+        animation: streak-flicker 1.9s ease-in-out infinite;
+    }
+
+    .streak-halo {
+        animation: streak-glow 2.6s ease-in-out infinite;
+    }
+
+    .streak-ring {
+        animation: streak-draw 0.9s cubic-bezier(0.22, 0.9, 0.3, 1);
+    }
+
+    /* The celebration variants replace the resting class rather than stacking
+       on it — two animations driving one transform fight — and hand the
+       element back to its resting loop once they are done. */
+    .streak-flame-flare {
+        animation:
+            streak-flare 0.9s cubic-bezier(0.22, 0.9, 0.3, 1),
+            streak-flicker 1.9s ease-in-out 0.9s infinite;
+    }
+
+    .streak-halo-burst {
+        animation:
+            streak-burst 0.9s cubic-bezier(0.22, 0.9, 0.3, 1),
+            streak-glow 2.6s ease-in-out 0.9s infinite;
+    }
+
+    .streak-count-pop {
+        display: inline-block;
+        animation: streak-pop 0.7s cubic-bezier(0.22, 0.9, 0.3, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .streak-chip,
+        .streak-chip * {
+            animation: none !important;
+        }
+    }
+
+    /*
+     * A medal being struck, for the toast that announces one.
+     *
+     * Visit medals land on the request that earns them rather than overnight,
+     * so there is a moment to mark: the medal turns into place, a sweep of
+     * light crosses it and the warmth behind it flares out once. It plays a
+     * single time and the toast is gone ten seconds later.
+     */
+    @keyframes medal-strike {
+        0% {
+            transform: perspective(400px) rotateY(-180deg) scale(0.4);
+            opacity: 0;
+        }
+        45% {
+            transform: perspective(400px) rotateY(0deg) scale(1.25);
+            opacity: 1;
+        }
+        70% {
+            transform: perspective(400px) rotateY(0deg) scale(0.94);
+        }
+        100% {
+            transform: none;
+        }
+    }
+
+    @keyframes medal-shine {
+        0%,
+        14% {
+            opacity: 0;
+            transform: translateX(-150%) skewX(-18deg);
+        }
+        45% {
+            opacity: 1;
+        }
+        78%,
+        100% {
+            opacity: 0;
+            transform: translateX(150%) skewX(-18deg);
+        }
+    }
+
+    @keyframes medal-burst {
+        0% {
+            opacity: 0;
+            transform: scale(0.4);
+        }
+        35% {
+            opacity: 0.8;
+            transform: scale(1.55);
+        }
+        100% {
+            opacity: 0;
+            transform: scale(2.2);
+        }
+    }
+
+    .medal-strike {
+        animation: medal-strike 0.85s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+    }
+
+    .medal-shine {
+        animation: medal-shine 1.4s ease-in-out 0.25s both;
+    }
+
+    .medal-burst {
+        animation: medal-burst 1.1s ease-out both;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        /* The medal still arrives, it just stops performing: `both` would
+           otherwise leave the burst frozen on its last frame, invisible, and
+           the medal frozen on its first, turned edge-on and gone. */
+        .medal-strike,
+        .medal-shine,
+        .medal-burst {
+            animation: none !important;
+        }
+
+        .medal-shine,
+        .medal-burst {
+            display: none;
+        }
+    }
+}
+
+/*
+ * Documentation diagrams.
+ *
+ * Each diagram is an inline SVG under resources/docs/diagrams, drawn against
+ * the tokens below rather than against baked-in hex values, so one file serves
+ * both themes: the label masks are painted with the same paper the page is
+ * painted with, and the strokes follow the theme the reader chose. The type and
+ * shape classes live here too, which keeps the SVG files down to geometry.
+ */
+.documentation-diagram {
+    --dg-paper: #fdfdfc;
+    --dg-fill: #ffffff;
+    --dg-fill-2: rgba(27, 27, 24, 0.04);
+    --dg-ink: #1b1b18;
+    --dg-muted: #706f6c;
+    --dg-soft: #8f8e8a;
+    --dg-rule: #e3e3e0;
+    --dg-accent: #5e7a9b;
+    --dg-accent-tint: rgba(94, 122, 155, 0.1);
+    --dg-band: rgba(112, 111, 108, 0.18);
+    --dg-band-accent: rgba(94, 122, 155, 0.28);
+    --dg-solid: #1b1b18;
+    --dg-mono: ui-monospace, sfmono-regular, menlo, monospace;
+
+    margin: 2rem 0;
+    overflow-x: auto;
+}
+
+.dark .documentation-diagram {
+    --dg-paper: #0a0a0a;
+    --dg-fill: #131312;
+    --dg-fill-2: rgba(237, 237, 236, 0.07);
+    --dg-ink: #ededec;
+    --dg-muted: #a1a09a;
+    --dg-soft: #7c7b77;
+    --dg-rule: #3e3e3a;
+    --dg-accent: #82a0c0;
+    --dg-accent-tint: rgba(130, 160, 192, 0.14);
+    --dg-band: rgba(161, 160, 154, 0.2);
+    --dg-band-accent: rgba(130, 160, 192, 0.32);
+    --dg-solid: #a1a09a;
+}
+
+/*
+ * Below the minimum width a 12px label stops being readable, so the container
+ * scrolls sideways rather than the diagram shrinking any further.
+ */
+.documentation-diagram svg {
+    display: block;
+    width: 100%;
+    min-width: 34rem;
+    height: auto;
+}
+
+.documentation-diagram text {
+    font-family: var(--font-sans);
+}
+
+.documentation-diagram .dg-name {
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--dg-ink);
+}
+
+.documentation-diagram .dg-sub {
+    font-family: var(--dg-mono);
+    font-size: 9px;
+    fill: var(--dg-muted);
+}
+
+.documentation-diagram .dg-eyebrow,
+.documentation-diagram .dg-edge-label {
+    font-family: var(--dg-mono);
+    font-size: 8px;
+    font-weight: 500;
+    fill: var(--dg-soft);
+    letter-spacing: 0.14em;
+}
+
+.documentation-diagram .dg-edge-label {
+    fill: var(--dg-muted);
+    letter-spacing: 0.06em;
+}
+
+.documentation-diagram .dg-aside {
+    font-family: 'IBM Plex Serif', ui-serif, Georgia, serif;
+    font-size: 12px;
+    font-style: italic;
+    fill: var(--dg-muted);
+}
+
+.documentation-diagram .dg-mask {
+    fill: var(--dg-paper);
+}
+
+.documentation-diagram .dg-node {
+    fill: var(--dg-fill);
+    stroke: var(--dg-ink);
+    stroke-width: 1;
+}
+
+.documentation-diagram .dg-node-soft {
+    fill: var(--dg-fill-2);
+    stroke: var(--dg-muted);
+    stroke-width: 1;
+}
+
+.documentation-diagram .dg-node-focal {
+    fill: var(--dg-accent-tint);
+    stroke: var(--dg-accent);
+    stroke-width: 1.2;
+}
+
+.documentation-diagram .dg-edge {
+    fill: none;
+    stroke: var(--dg-muted);
+    stroke-width: 1.2;
+}
+
+.documentation-diagram .dg-edge-dashed {
+    stroke-dasharray: 4 3;
+    stroke-width: 1;
+}
+
+.documentation-diagram .dg-edge-accent {
+    stroke: var(--dg-accent);
+}
+
+.documentation-diagram .dg-hairline {
+    fill: none;
+    stroke: var(--dg-rule);
+    stroke-width: 0.8;
+}
+
+.documentation-diagram .dg-arrowhead {
+    fill: var(--dg-muted);
+}
+
+.documentation-diagram .dg-arrowhead-accent {
+    fill: var(--dg-accent);
+}
+
+.documentation-diagram .dg-band {
+    fill: var(--dg-band);
+}
+
+.documentation-diagram .dg-band-accent {
+    fill: var(--dg-band-accent);
+}
+
+.documentation-diagram .dg-bar {
+    fill: var(--dg-solid);
+}
+
+.documentation-diagram .dg-bar-accent {
+    fill: var(--dg-accent);
+}
+
+.documentation-diagram .dg-track {
+    fill: var(--dg-fill-2);
+}
+
+.documentation-diagram .dg-station {
+    fill: var(--dg-fill);
+    stroke: var(--dg-muted);
+    stroke-width: 1;
+}
+
+.documentation-diagram .dg-station-focal {
+    fill: var(--dg-accent);
+    stroke: var(--dg-accent);
+    stroke-width: 1;
+}
+
+.documentation-diagram .dg-station-number {
+    font-family: var(--dg-mono);
+    font-size: 9px;
+    font-weight: 600;
+    fill: var(--dg-muted);
+}
+
+.documentation-diagram .dg-station-number-focal {
+    fill: var(--dg-paper);
+}

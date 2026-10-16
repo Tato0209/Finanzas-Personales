@@ -1,0 +1,204 @@
+<?php
+
+use App\Enums\AccountType;
+use App\Models\Account;
+use App\Models\AccountBalance;
+use App\Models\RealEstateDetail;
+use App\Models\User;
+use Carbon\Carbon;
+
+use function Pest\Laravel\actingAs;
+
+beforeEach(function () {
+    // The form opens on the currency the reader already keeps their money in,
+    // so there is no currency to pick here and no placeholder to click: it is
+    // set on the user instead, and every figure below is in it.
+    $this->user = User::factory()->onboarded()->create(['currency_code' => 'EUR']);
+    actingAs($this->user);
+});
+
+it('shows real estate fields when real estate type is selected', function () {
+    $page = visit('/settings/accounts');
+
+    $page->waitForText('Create Account')
+        ->click('Create Account')
+        ->waitForText('Manual', 5)
+        ->click('Manual')
+        ->click('Select account type')
+        ->click('[role="option"]:has-text("Real Estate")')
+        ->assertSee('Property Type')
+        ->assertSee('Purchase Price')
+        ->assertSee('Purchase Date')
+        ->assertSee('Annual Revaluation (%)')
+        ->assertNoJavascriptErrors();
+});
+
+it('auto-calculates revaluation percentage from purchase data and current value', function () {
+    $page = visit('/settings/accounts');
+
+    $page->waitForText('Create Account')
+        ->click('Create Account')
+        ->waitForText('Manual', 5)
+        ->click('Manual')
+        ->click('Select account type')
+        ->click('[role="option"]:has-text("Real Estate")');
+
+    // Fill current value (balance) — source input for CAGR calculation
+    $page->fill('#balance', '240000')
+        ->keys('#balance', ['Tab']);
+
+    // Fill purchase price
+    $page->fill('#purchase_price', '200000')
+        ->keys('#purchase_price', ['Tab']);
+
+    // Fill purchase date (2 years ago)
+    $page->fill('#purchase_date', date('Y-m-d', strtotime('-2 years')))
+        ->keys('#purchase_date', ['Tab']);
+
+    // Revaluation % should be auto-filled by the CAGR effect
+    $page->assertValueIsNot('#revaluation_percentage', '')
+        ->assertNoJavascriptErrors();
+});
+
+it('manual revaluation percentage is preserved when balance changes', function () {
+    $page = visit('/settings/accounts');
+
+    $page->waitForText('Create Account')
+        ->click('Create Account')
+        ->waitForText('Manual', 5)
+        ->click('Manual')
+        ->click('Select account type')
+        ->click('[role="option"]:has-text("Real Estate")');
+
+    // Set purchase data so auto-calc fires initially
+    $page->fill('#purchase_price', '200000')
+        ->keys('#purchase_price', ['Tab'])
+        ->fill('#purchase_date', date('Y-m-d', strtotime('-2 years')))
+        ->keys('#purchase_date', ['Tab'])
+        ->fill('#balance', '240000')
+        ->keys('#balance', ['Tab']);
+
+    $page->assertValueIsNot('#revaluation_percentage', '');
+
+    // Override revaluation % manually
+    $page->clear('#revaluation_percentage')
+        ->fill('#revaluation_percentage', '5.00');
+
+    // Change balance — manual override should survive
+    $page->fill('#balance', '250000')
+        ->keys('#balance', ['Tab'])
+        ->wait(1);
+
+    $page->assertValue('#revaluation_percentage', '5.00')
+        ->assertNoJavascriptErrors();
+});
+
+it('creates real estate account and generates historical balances', function () {
+    $purchaseDate = date('Y-m-d', strtotime('-14 months'));
+
+    $page = visit('/settings/accounts');
+
+    $page->waitForText('Create Account')
+        ->click('Create Account')
+        ->waitForText('Manual', 5)
+        ->click('Manual')
+        ->fill('#display_name', 'My Investment Property')
+        ->click('Select account type')
+        ->click('[role="option"]:has-text("Real Estate")')
+        ->click('Select property type')
+        ->click('[role="option"]:has-text("Residential")');
+
+    $page->fill('#balance', '240000')
+        ->keys('#balance', ['Tab'])
+        ->fill('#purchase_price', '200000')
+        ->keys('#purchase_price', ['Tab'])
+        ->fill('#purchase_date', $purchaseDate)
+        ->keys('#purchase_date', ['Tab']);
+
+    $page->click('Create')
+        ->waitForText('My Investment Property')
+        ->assertNoJavascriptErrors();
+
+    $account = Account::query()
+        ->where('user_id', $this->user->id)
+        ->where('type', AccountType::RealEstate->value)
+        ->first();
+
+    expect($account)->not->toBeNull();
+    // 14 months back → purchase date + ~14 month-starts + today = >2 balances
+    expect($account->balances()->count())->toBeGreaterThan(2);
+});
+
+it('balance chart shows historical data after account creation', function () {
+    $purchaseDate = Carbon::today()->subMonths(6)->toDateString();
+
+    $account = Account::factory()->realEstate()->create([
+        'user_id' => $this->user->id,
+        'currency_code' => 'EUR',
+    ]);
+
+    RealEstateDetail::factory()->create([
+        'account_id' => $account->id,
+        'purchase_price' => 20000000,
+        'purchase_date' => $purchaseDate,
+    ]);
+
+    // Seed historical balances so the chart has data
+    AccountBalance::factory()->create([
+        'account_id' => $account->id,
+        'balance_date' => $purchaseDate,
+        'balance' => 20000000,
+    ]);
+    AccountBalance::factory()->create([
+        'account_id' => $account->id,
+        'balance_date' => Carbon::today()->toDateString(),
+        'balance' => 24000000,
+    ]);
+
+    $page = visit('/accounts/'.$account->id);
+
+    $page->waitForText('Market value evolution')
+        ->assertDontSee('No market value data available')
+        ->assertNoJavascriptErrors();
+});
+
+it('edit dialog pre-fills purchase date in correct format', function () {
+    $purchaseDate = '2023-06-15';
+
+    $account = Account::factory()->realEstate()->create([
+        'user_id' => $this->user->id,
+        'currency_code' => 'EUR',
+    ]);
+
+    RealEstateDetail::factory()->create([
+        'account_id' => $account->id,
+        'purchase_date' => $purchaseDate,
+    ]);
+
+    $page = visit('/settings/accounts');
+
+    $page->waitForText($account->name)
+        ->click('[aria-label="Open menu"]')
+        ->click('Edit')
+        ->waitForText('Edit Account', 5)
+        ->assertValue('#purchase_date', $purchaseDate)
+        ->assertNoJavascriptErrors();
+});
+
+it('redirects back to settings after creating an account', function () {
+    $page = visit('/settings/accounts');
+
+    $page->waitForText('Create Account')
+        ->click('Create Account')
+        ->waitForText('Manual', 5)
+        ->click('Manual')
+        ->fill('#display_name', 'Test Redirect Account')
+        ->click('Select account type')
+        ->click('[role="option"]:has-text("Real Estate")')
+        ->click('Select property type')
+        ->click('[role="option"]:has-text("Residential")')
+        ->click('Create')
+        ->assertDontSee('Create a bank account, loan, or property to track it manually.')
+        ->assertPathIs('/settings/accounts')
+        ->assertNoJavascriptErrors();
+});

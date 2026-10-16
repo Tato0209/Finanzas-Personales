@@ -1,0 +1,1768 @@
+<?php
+
+use App\Enums\AccountType;
+use App\Enums\CategoryCashflowDirection;
+use App\Enums\CategorySource;
+use App\Enums\CategoryType;
+use App\Enums\StatementFrequency;
+use App\Jobs\ApplySingleAutomationRuleJob;
+use App\Jobs\GenerateHistoricalLoanBalancesJob;
+use App\Jobs\GenerateHistoricalRealEstateBalancesJob;
+use App\Mcp\Servers\WhisperMoneyServer;
+use App\Mcp\Tools\ApplyAutomationRule;
+use App\Mcp\Tools\CategorizeTransaction;
+use App\Mcp\Tools\CreateAccount;
+use App\Mcp\Tools\CreateAutomationRule;
+use App\Mcp\Tools\CreateBalance;
+use App\Mcp\Tools\CreateBudget;
+use App\Mcp\Tools\CreateCategory;
+use App\Mcp\Tools\CreateLabel;
+use App\Mcp\Tools\CreateTransaction;
+use App\Mcp\Tools\DeleteAutomationRule;
+use App\Mcp\Tools\DeleteBudget;
+use App\Mcp\Tools\DeleteCategory;
+use App\Mcp\Tools\DeleteLabel;
+use App\Mcp\Tools\DeleteTransaction;
+use App\Mcp\Tools\LabelTransaction;
+use App\Mcp\Tools\ListAutomationRules;
+use App\Mcp\Tools\MergeTransactionSplits;
+use App\Mcp\Tools\SplitTransaction;
+use App\Mcp\Tools\UpdateAccount;
+use App\Mcp\Tools\UpdateAutomationRule;
+use App\Mcp\Tools\UpdateBudget;
+use App\Mcp\Tools\UpdateCategory;
+use App\Mcp\Tools\UpdateLabel;
+use App\Mcp\Tools\UpdateTransaction;
+use App\Models\Account;
+use App\Models\AutomationRule;
+use App\Models\Bank;
+use App\Models\Budget;
+use App\Models\Category;
+use App\Models\CreditCardDetail;
+use App\Models\Label;
+use App\Models\Space;
+use App\Models\Transaction;
+use App\Models\User;
+use App\Services\AutomationRuleApplier;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
+use Laravel\Mcp\Server\Testing\TestResponse;
+
+/**
+ * Call a write tool as $user, giving them a real personal access token with the
+ * given abilities so the tool's tokenCan('mcp:write') gate is exercised exactly
+ * as it is over HTTP.
+ *
+ * @param  array<string, mixed>  $arguments
+ * @param  list<string>  $abilities
+ */
+function callWriteTool(User $user, string $tool, array $arguments = [], array $abilities = ['mcp:read', 'mcp:write']): TestResponse
+{
+    $user->withAccessToken($user->createToken('mcp', $abilities)->accessToken);
+
+    return WhisperMoneyServer::actingAs($user)->tool($tool, $arguments);
+}
+
+it('creates a manual transaction and defaults the currency to the account', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id, 'currency_code' => 'EUR']);
+
+    callWriteTool($user, CreateTransaction::class, [
+        'account_id' => $account->id,
+        'description' => 'Blue Bottle Coffee',
+        'amount' => -450,
+        'transaction_date' => '2026-01-15',
+    ])->assertOk()->assertSee('Blue Bottle Coffee');
+
+    $transaction = Transaction::query()->where('account_id', $account->id)->first();
+
+    expect($transaction)->not->toBeNull();
+    expect($transaction->description)->toBe('Blue Bottle Coffee');
+    expect($transaction->currency_code)->toBe('EUR');
+    expect($transaction->source->value)->toBe('manually_created');
+});
+
+it('creates a transaction on a connected account without touching its balances', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->connected()->create(['user_id' => $user->id]);
+    $account->balances()->create(['balance_date' => '2026-01-15', 'balance' => 10_000]);
+
+    callWriteTool($user, CreateTransaction::class, [
+        'account_id' => $account->id,
+        'description' => 'Cash withdrawal the bank missed',
+        'amount' => -100,
+        'transaction_date' => '2026-01-15',
+        'update_balance' => true,
+    ])->assertOk()->assertSee('Cash withdrawal the bank missed');
+
+    expect(Transaction::query()->where('account_id', $account->id)->count())->toBe(1);
+    expect($account->balances()->where('balance_date', '2026-01-15')->value('balance'))->toBe(10_000);
+});
+
+it('edits a manual transaction', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'description' => 'Old description',
+    ]);
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'description' => 'Fresh description',
+    ])->assertOk()->assertSee('Fresh description');
+
+    expect($transaction->fresh()->description)->toBe('Fresh description');
+});
+
+it('moves a transaction onto a connected account, unwinding only the manual side', function () {
+    $user = User::factory()->create();
+    $manualAccount = Account::factory()->create(['type' => AccountType::Checking, 'user_id' => $user->id, 'currency_code' => 'EUR']);
+    $connectedAccount = Account::factory()->connected()->create(['user_id' => $user->id, 'currency_code' => 'EUR']);
+
+    $manualAccount->balances()->create(['balance_date' => '2026-01-15', 'balance' => 9_000]);
+    $connectedAccount->balances()->create(['balance_date' => '2026-01-15', 'balance' => 50_000]);
+
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $manualAccount->id,
+        'transaction_date' => '2026-01-15',
+        'amount' => -1_000,
+        'currency_code' => 'EUR',
+    ]);
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'account_id' => $connectedAccount->id,
+        'update_balance' => true,
+    ])->assertOk();
+
+    expect($transaction->fresh()->account_id)->toBe($connectedAccount->id);
+    // The manual account gets the money back; the bank's balance is left alone.
+    expect($manualAccount->balances()->where('balance_date', '2026-01-15')->value('balance'))->toBe(10_000);
+    expect($connectedAccount->balances()->where('balance_date', '2026-01-15')->value('balance'))->toBe(50_000);
+});
+
+it('refuses to edit a core field of an imported transaction, naming the field', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->imported()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'description' => 'Untouched',
+    ]);
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'description' => 'Hacked',
+        'amount' => -1,
+    ])->assertHasErrors(['manually-created'])->assertSee('description, amount');
+
+    expect($transaction->fresh()->description)->toBe('Untouched');
+});
+
+it('writes notes on a bank-synced transaction and returns them', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->connected()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->enableBanking()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'notes' => null,
+    ]);
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'notes' => 'Migrated from the old spreadsheet',
+    ])->assertOk()->assertSee('Migrated from the old spreadsheet');
+
+    expect($transaction->fresh()->notes)->toBe('Migrated from the old spreadsheet');
+});
+
+it('writes notes on an imported transaction and clears them again', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->imported()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'notes' => null,
+    ]);
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'notes' => 'Reimbursed by work',
+    ])->assertOk();
+
+    expect($transaction->fresh()->notes)->toBe('Reimbursed by work');
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'notes' => null,
+    ])->assertOk();
+
+    expect($transaction->fresh()->notes)->toBeNull();
+});
+
+it('writes notes on one part of a split', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $original = Transaction::factory()->imported()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+    $part = Transaction::factory()->imported()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'split_parent_id' => $original->id,
+        'amount' => -3000,
+        'notes' => null,
+    ]);
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $part->id,
+        'notes' => 'The camera, not the lens',
+    ])->assertOk()->assertSee('The camera, not the lens');
+
+    expect($part->fresh()->notes)->toBe('The camera, not the lens');
+    expect($part->fresh()->amount)->toBe(-3000);
+});
+
+it('leaves the balance alone when only the notes change', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['type' => AccountType::Checking, 'user_id' => $user->id, 'currency_code' => 'EUR']);
+    $account->balances()->create(['balance_date' => '2026-01-15', 'balance' => 9_000]);
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'transaction_date' => '2026-01-15',
+        'amount' => -1_000,
+        'currency_code' => 'EUR',
+    ]);
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'notes' => 'Just an annotation',
+        'update_balance' => true,
+    ])->assertOk()->assertSee('"balance_updated":false');
+
+    expect($account->balances()->where('balance_date', '2026-01-15')->value('balance'))->toBe(9_000);
+});
+
+it('never moves a credit card balance', function () {
+    $user = User::factory()->create();
+    $card = Account::factory()->creditCard()->create(['user_id' => $user->id, 'currency_code' => 'EUR']);
+    $card->balances()->create(['balance_date' => '2026-01-15', 'balance' => 9_000]);
+
+    callWriteTool($user, CreateTransaction::class, [
+        'account_id' => $card->id,
+        'description' => 'Dinner',
+        'amount' => -1_000,
+        'transaction_date' => '2026-01-15',
+        'update_balance' => true,
+    ])->assertOk()->assertSee('"balance_updated":false');
+
+    $transaction = Transaction::query()->where('account_id', $card->id)->sole();
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'amount' => -2_000,
+        'update_balance' => true,
+    ])->assertOk()->assertSee('"balance_updated":false');
+
+    callWriteTool($user, DeleteTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'update_balance' => true,
+    ])->assertOk()->assertSee('"balance_updated":false');
+
+    expect($card->balances()->pluck('balance')->all())->toBe([9_000]);
+});
+
+it('deletes a manual transaction', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+    ]);
+
+    callWriteTool($user, DeleteTransaction::class, [
+        'transaction_id' => $transaction->id,
+    ])->assertOk();
+
+    expect(Transaction::query()->find($transaction->id))->toBeNull();
+});
+
+it('refuses to delete an imported transaction', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->imported()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+    ]);
+
+    callWriteTool($user, DeleteTransaction::class, [
+        'transaction_id' => $transaction->id,
+    ])->assertHasErrors(['manually-created']);
+
+    expect(Transaction::query()->find($transaction->id))->not->toBeNull();
+});
+
+it('splits a transaction into parts and keeps the original out of every list', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id, 'currency_code' => 'EUR']);
+    $category = Category::factory()->create(['user_id' => $user->id, 'name' => 'Groceries']);
+    $label = Label::factory()->create(['user_id' => $user->id, 'name' => 'Shared']);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => null,
+        'amount' => -5000,
+    ]);
+
+    callWriteTool($user, SplitTransaction::class, [
+        'transaction_id' => $original->id,
+        'splits' => [
+            ['amount' => -3000, 'category_id' => $category->id, 'label_ids' => [$label->id]],
+            ['amount' => -2000],
+        ],
+    ])->assertOk()->assertSee('Groceries');
+
+    $parts = Transaction::query()->where('split_parent_id', $original->id)->orderBy('amount')->get();
+
+    expect($parts)->toHaveCount(2)
+        ->and($parts->sum('amount'))->toBe(-5000)
+        ->and($parts->first()->amount)->toBe(-3000)
+        ->and($parts->first()->category_id)->toBe($category->id)
+        ->and($parts->first()->labels->pluck('id')->all())->toBe([$label->id])
+        ->and($parts->last()->category_id)->toBeNull()
+        ->and(Transaction::query()->find($original->id))->toBeNull()
+        ->and(Transaction::withTrashed()->find($original->id)->trashed())->toBeTrue();
+});
+
+it('refuses parts that do not add up to the original', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+
+    callWriteTool($user, SplitTransaction::class, [
+        'transaction_id' => $original->id,
+        'splits' => [['amount' => -3000], ['amount' => -1000]],
+    ])->assertHasErrors();
+
+    expect(Transaction::query()->where('split_parent_id', $original->id)->count())->toBe(0)
+        ->and(Transaction::query()->find($original->id))->not->toBeNull();
+});
+
+it('refuses a part that moves money the other way', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+
+    callWriteTool($user, SplitTransaction::class, [
+        'transaction_id' => $original->id,
+        'splits' => [['amount' => -6000], ['amount' => 1000]],
+    ])->assertHasErrors();
+});
+
+it('refuses a category from outside the space', function () {
+    $user = User::factory()->create();
+    $stranger = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $foreignCategory = Category::factory()->create(['user_id' => $stranger->id]);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+
+    callWriteTool($user, SplitTransaction::class, [
+        'transaction_id' => $original->id,
+        'splits' => [
+            ['amount' => -3000, 'category_id' => $foreignCategory->id],
+            ['amount' => -2000],
+        ],
+    ])->assertHasErrors();
+
+    expect(Transaction::query()->where('split_parent_id', $original->id)->count())->toBe(0);
+});
+
+it('merges a split back from any of its parts', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+
+    callWriteTool($user, SplitTransaction::class, [
+        'transaction_id' => $original->id,
+        'splits' => [['amount' => -3000], ['amount' => -2000]],
+    ])->assertOk();
+
+    $part = Transaction::query()->where('split_parent_id', $original->id)->first();
+
+    callWriteTool($user, MergeTransactionSplits::class, [
+        'transaction_id' => $part->id,
+    ])->assertOk();
+
+    expect(Transaction::query()->where('split_parent_id', $original->id)->count())->toBe(0)
+        ->and(Transaction::query()->find($original->id))->not->toBeNull()
+        ->and(Transaction::query()->find($original->id)->amount)->toBe(-5000);
+});
+
+it('refuses to merge a transaction that was never split', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+    ]);
+
+    callWriteTool($user, MergeTransactionSplits::class, [
+        'transaction_id' => $transaction->id,
+    ])->assertHasErrors();
+});
+
+it('refuses to split one part of a split again', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+
+    callWriteTool($user, SplitTransaction::class, [
+        'transaction_id' => $original->id,
+        'splits' => [['amount' => -3000], ['amount' => -2000]],
+    ])->assertOk();
+
+    $part = Transaction::query()->where('split_parent_id', $original->id)->first();
+
+    callWriteTool($user, SplitTransaction::class, [
+        'transaction_id' => $part->id,
+        'splits' => [['amount' => -1500], ['amount' => -1500]],
+    ])->assertHasErrors();
+});
+
+it('refuses to split for a read-only token', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+
+    callWriteTool($user, SplitTransaction::class, [
+        'transaction_id' => $original->id,
+        'splits' => [['amount' => -3000], ['amount' => -2000]],
+    ], ['mcp:read'])->assertHasErrors(['read-only']);
+
+    expect(Transaction::query()->where('split_parent_id', $original->id)->count())->toBe(0);
+});
+
+it('refuses to delete one part of a split', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+    $part = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'split_parent_id' => $original->id,
+        'amount' => -3000,
+    ]);
+
+    callWriteTool($user, DeleteTransaction::class, [
+        'transaction_id' => $part->id,
+    ])->assertHasErrors(['split']);
+
+    expect(Transaction::query()->find($part->id))->not->toBeNull();
+});
+
+it('refuses to edit one part of a split', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $original = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'amount' => -5000,
+    ]);
+    $part = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'split_parent_id' => $original->id,
+        'amount' => -3000,
+    ]);
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => $part->id,
+        'amount' => -1,
+    ])->assertHasErrors(['split']);
+
+    expect($part->fresh()->amount)->toBe(-3000);
+});
+
+it('categorizes an imported transaction', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->imported()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => null,
+    ]);
+    $category = Category::factory()->create(['user_id' => $user->id, 'name' => 'Dining']);
+
+    callWriteTool($user, CategorizeTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'category_id' => $category->id,
+    ])->assertOk();
+
+    $transaction->refresh();
+
+    expect($transaction->category_id)->toBe($category->id);
+    expect($transaction->category_source)->toBe(CategorySource::Manual);
+});
+
+it('adds a label to an imported transaction', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $transaction = Transaction::factory()->imported()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+    ]);
+    $label = Label::factory()->create(['user_id' => $user->id, 'name' => 'Reimbursable']);
+
+    callWriteTool($user, LabelTransaction::class, [
+        'transaction_id' => $transaction->id,
+        'add_label_ids' => [$label->id],
+    ])->assertOk()->assertSee('Reimbursable');
+
+    expect($transaction->fresh()->labels->pluck('id')->all())->toContain($label->id);
+});
+
+it('records a balance on a manual account', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->withBalance()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, CreateBalance::class, [
+        'account_id' => $account->id,
+        'balance' => 250000,
+        'balance_date' => '2026-01-31',
+    ])->assertOk();
+
+    expect($account->balances()->whereDate('balance_date', '2026-01-31')->value('balance'))->toBe(250000);
+});
+
+it('refuses to record a balance on a connected account', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->connected()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, CreateBalance::class, [
+        'account_id' => $account->id,
+        'balance' => 250000,
+    ])->assertHasErrors(['connected']);
+
+    expect($account->balances()->count())->toBe(0);
+});
+
+it('refuses to record a balance on a credit card', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->creditCard()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, CreateBalance::class, [
+        'account_id' => $account->id,
+        'balance' => 250000,
+    ])->assertHasErrors([AccountType::NO_BALANCE_MESSAGE]);
+
+    expect($account->balances()->count())->toBe(0);
+});
+
+it('creates, updates and deletes a category', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateCategory::class, [
+        'name' => 'Travel',
+        'icon' => 'Plane',
+        'color' => 'blue',
+        'type' => 'expense',
+    ])->assertOk()->assertSee('Travel');
+
+    $category = $user->categories()->where('name', 'Travel')->firstOrFail();
+
+    callWriteTool($user, UpdateCategory::class, [
+        'category_id' => $category->id,
+        'name' => 'Holidays',
+    ])->assertOk()->assertSee('Holidays');
+
+    expect($category->fresh()->name)->toBe('Holidays');
+
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => Account::factory()->create(['user_id' => $user->id])->id,
+        'category_id' => $category->id,
+    ]);
+
+    callWriteTool($user, DeleteCategory::class, [
+        'category_id' => $category->id,
+    ])->assertOk();
+
+    expect(Category::query()->find($category->id))->toBeNull()
+        ->and($transaction->fresh()->category_id)->toBeNull();
+});
+
+it('creates, updates and deletes a label', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateLabel::class, [
+        'name' => 'Business',
+        'color' => 'green',
+    ])->assertOk()->assertSee('Business');
+
+    $label = $user->labels()->where('name', 'Business')->firstOrFail();
+
+    callWriteTool($user, UpdateLabel::class, [
+        'label_id' => $label->id,
+        'name' => 'Work',
+    ])->assertOk()->assertSee('Work');
+
+    expect($label->fresh()->name)->toBe('Work');
+
+    callWriteTool($user, DeleteLabel::class, [
+        'label_id' => $label->id,
+    ])->assertOk();
+
+    expect(Label::query()->find($label->id))->toBeNull();
+});
+
+it('creates, updates and deletes an automation rule', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['user_id' => $user->id, 'name' => 'Groceries']);
+
+    callWriteTool($user, CreateAutomationRule::class, [
+        'title' => 'Grocery rule',
+        'priority' => 0,
+        'rules_json' => ['in' => ['grocery', ['var' => 'description']]],
+        'action_category_id' => $category->id,
+    ])->assertOk()->assertSee('Grocery rule');
+
+    $rule = $user->automationRules()->where('title', 'Grocery rule')->firstOrFail();
+
+    expect($rule->action_category_id)->toBe($category->id);
+
+    callWriteTool($user, UpdateAutomationRule::class, [
+        'automation_rule_id' => $rule->id,
+        'title' => 'Supermarket rule',
+    ])->assertOk()->assertSee('Supermarket rule');
+
+    expect($rule->fresh()->title)->toBe('Supermarket rule');
+
+    callWriteTool($user, DeleteAutomationRule::class, [
+        'automation_rule_id' => $rule->id,
+    ])->assertOk();
+
+    expect(AutomationRule::query()->find($rule->id))->toBeNull();
+});
+
+it('accepts an exception rule built from and, or and a negation', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['user_id' => $user->id, 'name' => 'Shopping']);
+
+    callWriteTool($user, CreateAutomationRule::class, [
+        'title' => 'Amazon except Prime',
+        'priority' => 0,
+        'rules_json' => ['and' => [
+            ['or' => [
+                ['in' => ['amazon', ['var' => 'description']]],
+                ['in' => ['amazon', ['var' => 'creditor_name']]],
+            ]],
+            ['!' => ['in' => ['amazon prime', ['var' => 'description']]]],
+            ['<' => [['var' => 'amount'], 0]],
+        ]],
+        'action_category_id' => $category->id,
+    ])->assertOk()->assertSee('Amazon except Prime');
+
+    expect($user->automationRules()->where('title', 'Amazon except Prime')->exists())->toBeTrue();
+});
+
+it('accepts an amount exception and keeps the amount a number', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['user_id' => $user->id, 'name' => 'AI usage']);
+
+    callWriteTool($user, CreateAutomationRule::class, [
+        'title' => 'GitHub except the subscription',
+        'priority' => 0,
+        'rules_json' => ['and' => [
+            ['in' => ['github', ['var' => 'description']]],
+            ['!=' => [['var' => 'amount'], -14]],
+        ]],
+        'action_category_id' => $category->id,
+    ])->assertOk()->assertSee('GitHub except the subscription');
+
+    expect($user->automationRules()->sole()->rules_json['and'][1])
+        ->toBe(['!=' => [['var' => 'amount'], -14]]);
+});
+
+// A rule that never matches anything saves happily and then fails silently, so
+// the write tools name what they accept instead of letting the agent guess.
+it('rejects a rule whose variable or operator the engine cannot evaluate', function (array $rulesJson, string $expected) {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, CreateAutomationRule::class, [
+        'title' => 'Broken rule',
+        'priority' => 0,
+        'rules_json' => $rulesJson,
+        'action_category_id' => $category->id,
+    ])->assertHasErrors([$expected]);
+
+    expect($user->automationRules()->count())->toBe(0);
+})->with([
+    'unknown variable' => [['in' => ['netflix', ['var' => 'merchant']]], 'merchant'],
+    'unknown operator' => [['contains' => [['var' => 'description'], 'netflix']], 'contains'],
+    'nested unknown variable' => [['and' => [['!' => ['in' => ['netflix', ['var' => 'payee']]]]]], 'payee'],
+]);
+
+it('rejects a bare list of conditions that is missing its and/or wrapper', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, CreateAutomationRule::class, [
+        'title' => 'Listed rule',
+        'priority' => 0,
+        'rules_json' => [['in' => ['netflix', ['var' => 'description']]]],
+        'action_category_id' => $category->id,
+    ])->assertHasErrors(['non-empty JsonLogic object']);
+
+    expect($user->automationRules()->count())->toBe(0);
+});
+
+it('requires an automation rule to have at least one action', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAutomationRule::class, [
+        'title' => 'No action',
+        'priority' => 0,
+        'rules_json' => ['==' => [1, 1]],
+    ])->assertHasErrors(['action']);
+
+    expect($user->automationRules()->count())->toBe(0);
+});
+
+it('creates a budget with its periods and backfills the transactions already in range', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $category = Category::factory()->create(['user_id' => $user->id, 'name' => 'Groceries']);
+
+    Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => $category->id,
+        'transaction_date' => today(),
+        'amount' => -7_500,
+    ]);
+
+    callWriteTool($user, CreateBudget::class, [
+        'name' => 'Food Budget',
+        'allocated_amount' => 50_000,
+        'period_type' => 'monthly',
+        'rollover_type' => 'reset',
+        'period_start_day' => 1,
+        'category_ids' => [$category->id],
+    ])->assertOk()->assertSee('Food Budget');
+
+    $budget = $user->budgets()->first();
+
+    expect($budget)->not->toBeNull();
+    expect($budget->categories->pluck('id')->all())->toBe([$category->id]);
+    // The current period and the previous one, for period-over-period comparison.
+    expect($budget->periods()->count())->toBe(2);
+    expect($budget->getCurrentPeriod()->allocated_amount)->toBe(50_000);
+    expect($budget->getCurrentPeriod()->spentAmount())->toBe(7_500);
+});
+
+it('creates a catch-all budget without categories, but only one', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateBudget::class, [
+        'name' => 'Everything Else',
+        'allocated_amount' => 100_000,
+        'period_type' => 'monthly',
+        'rollover_type' => 'carry_over',
+        'is_catch_all' => true,
+    ])->assertOk();
+
+    callWriteTool($user, CreateBudget::class, [
+        'name' => 'Everything Else Again',
+        'allocated_amount' => 100_000,
+        'period_type' => 'monthly',
+        'rollover_type' => 'carry_over',
+        'is_catch_all' => true,
+    ])->assertHasErrors(['catch-all']);
+
+    expect($user->budgets()->count())->toBe(1);
+});
+
+it('refuses a budget that tracks nothing', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateBudget::class, [
+        'name' => 'Tracks nothing',
+        'allocated_amount' => 10_000,
+        'period_type' => 'monthly',
+        'rollover_type' => 'reset',
+    ])->assertHasErrors(['at least one category or label']);
+
+    expect($user->budgets()->count())->toBe(0);
+});
+
+it('refuses a budget tracking another user\'s category', function () {
+    $user = User::factory()->create();
+    $foreignCategory = Category::factory()->create(['user_id' => User::factory()->create()->id]);
+
+    callWriteTool($user, CreateBudget::class, [
+        'name' => 'Sneaky',
+        'allocated_amount' => 10_000,
+        'period_type' => 'monthly',
+        'rollover_type' => 'reset',
+        'category_ids' => [$foreignCategory->id],
+    ])->assertHasErrors(['not categories you own']);
+
+    expect($user->budgets()->count())->toBe(0);
+});
+
+it('rejects a period start day that cannot mean anything for the period type', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['user_id' => $user->id]);
+
+    // 15 is a valid day of the month but not a day of the week, and the period
+    // generator would otherwise walk backwards forever looking for it.
+    callWriteTool($user, CreateBudget::class, [
+        'name' => 'Weekly',
+        'allocated_amount' => 10_000,
+        'period_type' => 'weekly',
+        'period_start_day' => 15,
+        'category_ids' => [$category->id],
+        'rollover_type' => 'reset',
+    ])->assertHasErrors(['period start day']);
+
+    expect($user->budgets()->count())->toBe(0);
+});
+
+it('edits a budget and moves the new amount onto the period in progress', function () {
+    $user = User::factory()->create();
+    $budget = Budget::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Food Budget',
+        'period_type' => 'monthly',
+        'period_start_day' => 1,
+    ]);
+
+    $current = $budget->periods()->create([
+        'start_date' => today()->startOfMonth(),
+        'end_date' => today()->endOfMonth(),
+        'allocated_amount' => 50_000,
+        'carried_over_amount' => 0,
+    ]);
+
+    $past = $budget->periods()->create([
+        'start_date' => today()->subMonthNoOverflow()->startOfMonth(),
+        'end_date' => today()->subMonthNoOverflow()->endOfMonth(),
+        'allocated_amount' => 50_000,
+        'carried_over_amount' => 0,
+    ]);
+
+    $future = $budget->periods()->create([
+        'start_date' => today()->addMonthNoOverflow()->startOfMonth(),
+        'end_date' => today()->addMonthNoOverflow()->endOfMonth(),
+        'allocated_amount' => 50_000,
+        'carried_over_amount' => 0,
+    ]);
+
+    callWriteTool($user, UpdateBudget::class, [
+        'budget_id' => $budget->id,
+        'name' => 'Groceries Budget',
+        'allocated_amount' => 60_000,
+    ])->assertOk()->assertSee('Groceries Budget');
+
+    expect($budget->fresh()->name)->toBe('Groceries Budget');
+    expect($current->fresh()->allocated_amount)->toBe(60_000);
+    expect($future->fresh()->allocated_amount)->toBe(60_000);
+    // A period that is already over keeps the amount it was judged against.
+    expect($past->fresh()->allocated_amount)->toBe(50_000);
+});
+
+it('leaves the fields the agent did not pass alone', function () {
+    $user = User::factory()->create();
+    $budget = Budget::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Food Budget',
+        'period_type' => 'monthly',
+        'period_start_day' => 4,
+        'rollover_type' => 'reset',
+    ]);
+
+    $period = $budget->periods()->create([
+        'start_date' => today()->startOfMonth(),
+        'end_date' => today()->endOfMonth(),
+        'allocated_amount' => 50_000,
+        'carried_over_amount' => 0,
+    ]);
+
+    callWriteTool($user, UpdateBudget::class, [
+        'budget_id' => $budget->id,
+        'name' => 'Renamed',
+    ])->assertOk();
+
+    $budget->refresh();
+
+    expect($budget->name)->toBe('Renamed');
+    expect($budget->period_start_day)->toBe(4);
+    expect($budget->rollover_type->value)->toBe('reset');
+    expect($period->fresh()->allocated_amount)->toBe(50_000);
+});
+
+it('will not reshape the periods of an existing budget', function () {
+    $user = User::factory()->create();
+    $budget = Budget::factory()->create([
+        'user_id' => $user->id,
+        'period_type' => 'monthly',
+        'period_start_day' => 1,
+    ]);
+
+    // Period settings are fixed once a budget exists — changing them would let
+    // the next generated period overlap the current one and count the same
+    // transaction twice, so the tool does not accept them at all.
+    callWriteTool($user, UpdateBudget::class, [
+        'budget_id' => $budget->id,
+        'period_type' => 'weekly',
+        'period_start_day' => 15,
+    ])->assertOk();
+
+    $budget->refresh();
+
+    expect($budget->period_type->value)->toBe('monthly');
+    expect($budget->period_start_day)->toBe(1);
+});
+
+it('refuses to edit another user\'s budget', function () {
+    $user = User::factory()->create();
+    $foreignBudget = Budget::factory()->create(['user_id' => User::factory()->create()->id, 'name' => 'Not Yours']);
+
+    callWriteTool($user, UpdateBudget::class, [
+        'budget_id' => $foreignBudget->id,
+        'name' => 'Hijacked',
+    ])->assertHasErrors(['list_budgets']);
+
+    expect($foreignBudget->fresh()->name)->toBe('Not Yours');
+});
+
+it('deletes a budget and leaves its transactions alone', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $category = Category::factory()->create(['user_id' => $user->id]);
+
+    $transaction = Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => $category->id,
+        'transaction_date' => today(),
+        'amount' => -3_000,
+    ]);
+
+    callWriteTool($user, CreateBudget::class, [
+        'name' => 'Food Budget',
+        'allocated_amount' => 50_000,
+        'period_type' => 'monthly',
+        'rollover_type' => 'reset',
+        'category_ids' => [$category->id],
+    ])->assertOk();
+
+    $budget = $user->budgets()->firstOrFail();
+
+    callWriteTool($user, DeleteBudget::class, ['budget_id' => $budget->id])->assertOk();
+
+    expect($user->budgets()->count())->toBe(0);
+    expect(Transaction::query()->find($transaction->id))->not->toBeNull();
+});
+
+it('refuses to delete another user\'s budget', function () {
+    $user = User::factory()->create();
+    $foreignBudget = Budget::factory()->create(['user_id' => User::factory()->create()->id]);
+
+    callWriteTool($user, DeleteBudget::class, [
+        'budget_id' => $foreignBudget->id,
+    ])->assertHasErrors(['list_budgets']);
+
+    expect(Budget::query()->find($foreignBudget->id))->not->toBeNull();
+});
+
+it('rejects a write tool called with a read-only token', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateLabel::class, [
+        'name' => 'Should not exist',
+        'color' => 'blue',
+    ], ['mcp:read'])->assertHasErrors(['read-only']);
+
+    expect($user->labels()->count())->toBe(0);
+});
+
+it('still enforces the Pro-plan gate on write tools', function () {
+    config(['subscriptions.enabled' => true]);
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateLabel::class, [
+        'name' => 'Gated',
+        'color' => 'blue',
+    ])->assertHasErrors(['Pro']);
+
+    expect($user->labels()->count())->toBe(0);
+});
+
+it('never lets a write tool touch another user\'s data', function () {
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+    $otherAccount = Account::factory()->create(['user_id' => $other->id]);
+    $otherTransaction = Transaction::factory()->create([
+        'user_id' => $other->id,
+        'account_id' => $otherAccount->id,
+    ]);
+
+    callWriteTool($user, DeleteTransaction::class, [
+        'transaction_id' => $otherTransaction->id,
+    ])->assertHasErrors();
+
+    expect(Transaction::query()->find($otherTransaction->id))->not->toBeNull();
+});
+
+it('tells the agent which id was missing and where to find valid ones', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, UpdateTransaction::class, [
+        'transaction_id' => 'no-such-transaction',
+        'description' => 'Nope',
+    ])->assertHasErrors([
+        'No transaction with id no-such-transaction in space '.$user->personalSpace->id.'. Call search_transactions to find ids.',
+    ]);
+
+    callWriteTool($user, DeleteAutomationRule::class, [
+        'automation_rule_id' => 'no-such-rule',
+    ])->assertHasErrors([
+        'No automation rule with id no-such-rule in space '.$user->personalSpace->id.'. Call list_automation_rules to see valid ids.',
+    ]);
+});
+
+/**
+ * A rule that catches history it never ran on: the matching transactions are
+ * created first on purpose, because the TransactionCreated listener only
+ * applies rules that already exist — which is exactly the gap
+ * apply_automation_rule fills.
+ *
+ * @return array{0: AutomationRule, 1: Category, 2: Label}
+ */
+function groceryRuleOverHistory(User $user, int $matchingCount = 2): array
+{
+    $account = Account::factory()->create(['user_id' => $user->id]);
+    $category = Category::factory()->create(['user_id' => $user->id, 'name' => 'Groceries']);
+    $label = Label::factory()->create(['user_id' => $user->id, 'name' => 'Essentials']);
+
+    Transaction::factory()->count($matchingCount)->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => null,
+        'description' => 'Grocery Store',
+        'amount' => -1_000,
+    ]);
+
+    Transaction::factory()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'category_id' => null,
+        'description' => 'Coffee Shop',
+        'amount' => -500,
+    ]);
+
+    $rule = AutomationRule::factory()->create([
+        'user_id' => $user->id,
+        'priority' => 1,
+        'rules_json' => ['in' => ['grocery', ['var' => 'description']]],
+        'action_category_id' => $category->id,
+    ]);
+    $rule->labels()->attach($label->id);
+
+    return [$rule, $category, $label];
+}
+
+it('previews an automation rule against existing transactions and changes nothing', function () {
+    $user = User::factory()->create();
+    [$rule] = groceryRuleOverHistory($user);
+
+    callWriteTool($user, ApplyAutomationRule::class, [
+        'automation_rule_id' => $rule->id,
+    ])->assertOk()
+        ->assertSee(['"dry_run":true', '"total_matches":2', 'Grocery Store'])
+        ->assertDontSee('Coffee Shop');
+
+    expect(Transaction::query()->where('user_id', $user->id)->whereNotNull('category_id')->count())->toBe(0)
+        ->and(Transaction::query()->where('user_id', $user->id)->has('labels')->count())->toBe(0);
+});
+
+it('applies an automation rule to existing transactions once the dry run is turned off', function () {
+    $user = User::factory()->create();
+    [$rule, $category, $label] = groceryRuleOverHistory($user);
+
+    callWriteTool($user, ApplyAutomationRule::class, [
+        'automation_rule_id' => $rule->id,
+        'dry_run' => false,
+    ])->assertOk()->assertSee(['"status":"done"', '"applied":2', '"updated":2']);
+
+    $matched = Transaction::query()->where('description', 'Grocery Store')->with('labels')->get();
+
+    expect($matched)->toHaveCount(2)
+        ->and($matched->pluck('category_id')->unique()->all())->toBe([$category->id])
+        ->and($matched->filter(fn (Transaction $t): bool => $t->labels->contains($label)))->toHaveCount(2);
+
+    // The transaction the rule does not match is left exactly as it was.
+    expect(Transaction::query()->where('description', 'Coffee Shop')->value('category_id'))->toBeNull();
+});
+
+it('hands a large apply to the queue instead of running it inline', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    [$rule] = groceryRuleOverHistory($user, AutomationRuleApplier::SYNC_THRESHOLD + 1);
+
+    callWriteTool($user, ApplyAutomationRule::class, [
+        'automation_rule_id' => $rule->id,
+        'dry_run' => false,
+    ])->assertOk()->assertSee(['"status":"queued"', '"total":101']);
+
+    Queue::assertPushed(ApplySingleAutomationRuleJob::class);
+
+    expect(Transaction::query()->where('user_id', $user->id)->whereNotNull('category_id')->count())->toBe(0);
+});
+
+it('lets a read-only token list automation rules but never apply one', function () {
+    $user = User::factory()->create();
+    [$rule] = groceryRuleOverHistory($user);
+
+    callWriteTool($user, ApplyAutomationRule::class, [
+        'automation_rule_id' => $rule->id,
+        'dry_run' => false,
+    ], ['mcp:read'])->assertHasErrors(['read-only']);
+
+    // The same read-only token still reaches the listing tool.
+    WhisperMoneyServer::actingAs($user)
+        ->tool(ListAutomationRules::class)
+        ->assertOk()
+        ->assertSee($rule->title);
+
+    expect(Transaction::query()->where('user_id', $user->id)->whereNotNull('category_id')->count())->toBe(0);
+});
+
+it('still enforces the Pro-plan gate on apply_automation_rule', function () {
+    config(['subscriptions.enabled' => true]);
+
+    $user = User::factory()->create();
+    [$rule] = groceryRuleOverHistory($user);
+
+    callWriteTool($user, ApplyAutomationRule::class, [
+        'automation_rule_id' => $rule->id,
+        'dry_run' => false,
+    ])->assertHasErrors(['Pro']);
+
+    expect(Transaction::query()->where('user_id', $user->id)->whereNotNull('category_id')->count())->toBe(0);
+});
+
+it('moves a subcategory under a different parent and cascades the type down its subtree', function () {
+    $user = User::factory()->create();
+
+    $expenses = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Home',
+        'type' => CategoryType::Expense,
+        'cashflow_direction' => CategoryCashflowDirection::Hidden,
+    ]);
+    $savings = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Savings',
+        'type' => CategoryType::Savings,
+        'cashflow_direction' => CategoryCashflowDirection::Outflow,
+    ]);
+
+    $child = Category::factory()->childOf($expenses)->create(['user_id' => $user->id, 'name' => 'Rainy day']);
+    $grandchild = Category::factory()->childOf($child)->create(['user_id' => $user->id, 'name' => 'Emergency fund']);
+
+    callWriteTool($user, UpdateCategory::class, [
+        'category_id' => $child->id,
+        'parent_id' => $savings->id,
+    ])->assertOk()->assertSee('"type":"savings"');
+
+    expect($child->fresh()->parent_id)->toBe($savings->id)
+        ->and($child->fresh()->type)->toBe(CategoryType::Savings)
+        ->and($child->fresh()->cashflow_direction)->toBe(CategoryCashflowDirection::Outflow)
+        // The whole subtree follows the new parent, not just the moved category.
+        ->and($grandchild->fresh()->type)->toBe(CategoryType::Savings)
+        ->and($grandchild->fresh()->cashflow_direction)->toBe(CategoryCashflowDirection::Outflow);
+});
+
+it('refuses to edit an archived budget', function () {
+    $user = User::factory()->create();
+    $budget = Budget::factory()->archived()->create([
+        'user_id' => $user->id,
+        'name' => 'Food Budget',
+    ]);
+
+    callWriteTool($user, UpdateBudget::class, [
+        'budget_id' => $budget->id,
+        'name' => 'Groceries Budget',
+    ])->assertHasErrors();
+
+    expect($budget->fresh()->name)->toBe('Food Budget');
+});
+
+it('still deletes an archived budget', function () {
+    $user = User::factory()->create();
+    $budget = Budget::factory()->archived()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, DeleteBudget::class, ['budget_id' => $budget->id])->assertOk();
+
+    expect($user->budgets()->count())->toBe(0);
+});
+
+it('lets an archived catch-all budget be replaced', function () {
+    $user = User::factory()->create();
+    Budget::factory()->archived()->catchAll()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, CreateBudget::class, [
+        'name' => 'Everything else',
+        'period_type' => 'monthly',
+        'rollover_type' => 'reset',
+        'allocated_amount' => 50_000,
+        'is_catch_all' => true,
+    ])->assertOk();
+
+    expect($user->budgets()->notArchived()->where('is_catch_all', true)->count())->toBe(1);
+});
+
+it('creates a manual account with a balance for today', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Rainy day savings',
+        'type' => 'savings',
+        'currency_code' => 'EUR',
+        'balance' => 250_000,
+    ])->assertOk()->assertSee('Rainy day savings');
+
+    $account = $user->accounts()->sole();
+
+    expect($account->type)->toBe(AccountType::Savings)
+        ->and($account->currency_code)->toBe('EUR')
+        ->and($account->isConnected())->toBeFalse()
+        ->and($account->space_id)->toBe($user->personalSpace->id)
+        ->and($account->balances()->where('balance_date', now()->toDateString())->value('balance'))->toBe(250_000);
+
+    // The first account is also what the user's own currency is read from.
+    expect($user->fresh()->currency_code)->toBe('EUR');
+});
+
+it('creates a loan with its details and backfills the balance history', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    Account::factory()->create(['user_id' => $user->id, 'type' => 'checking']);
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Mortgage',
+        'type' => 'loan',
+        'currency_code' => 'EUR',
+        'balance' => 15_000_000,
+        'annual_interest_rate' => 2.5,
+        'loan_term_months' => 360,
+        'original_amount' => 20_000_000,
+        'loan_start_date' => now()->subYears(3)->toDateString(),
+    ])->assertOk()->assertSee('Mortgage');
+
+    $loan = $user->accounts()->where('type', 'loan')->sole();
+
+    expect($loan->loanDetail)->not->toBeNull()
+        ->and((int) $loan->loanDetail->loan_term_months)->toBe(360)
+        ->and((int) $loan->loanDetail->original_amount)->toBe(20_000_000);
+
+    // The last twelve months are generated inline so the chart is populated on
+    // the next render, and the three years behind them go on the queue.
+    expect($loan->balances()->where('balance_date', '>=', now()->subMonths(12)->startOfMonth()->toDateString())->count())
+        ->toBeGreaterThan(1);
+    Queue::assertPushed(GenerateHistoricalLoanBalancesJob::class);
+});
+
+it('creates a property with its details and backfills the value history', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    Account::factory()->create(['user_id' => $user->id, 'type' => 'checking']);
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'The flat',
+        'type' => 'real_estate',
+        'currency_code' => 'EUR',
+        'balance' => 30_000_000,
+        'property_type' => 'residential',
+        'purchase_price' => 24_000_000,
+        'purchase_date' => now()->subYears(4)->toDateString(),
+        'area_value' => 85.5,
+        'area_unit' => 'sqm',
+    ])->assertOk()->assertSee('The flat');
+
+    $property = $user->accounts()->where('type', 'real_estate')->sole();
+
+    expect($property->realEstateDetail)->not->toBeNull()
+        ->and($property->realEstateDetail->property_type->value)->toBe('residential')
+        ->and((int) $property->realEstateDetail->purchase_price)->toBe(24_000_000);
+
+    expect($property->balances()->count())->toBeGreaterThan(1);
+    Queue::assertPushed(GenerateHistoricalRealEstateBalancesJob::class);
+});
+
+it('links a new loan to the property it is the mortgage of', function () {
+    $user = User::factory()->create();
+    $property = Account::factory()->create(['user_id' => $user->id, 'type' => 'real_estate']);
+    $property->realEstateDetail()->create(['property_type' => 'residential']);
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Mortgage on the flat',
+        'type' => 'loan',
+        'currency_code' => 'EUR',
+        'annual_interest_rate' => 3.1,
+        'loan_term_months' => 240,
+        'original_amount' => 18_000_000,
+        'linked_real_estate_account_id' => $property->id,
+    ])->assertOk();
+
+    $loan = $user->accounts()->where('type', 'loan')->sole();
+
+    expect($property->realEstateDetail->fresh()->linked_loan_account_id)->toBe($loan->id);
+});
+
+it('refuses to link a property that is already answering to another loan', function () {
+    $user = User::factory()->create();
+    $firstLoan = Account::factory()->create(['user_id' => $user->id, 'type' => 'loan']);
+    $property = Account::factory()->create(['user_id' => $user->id, 'type' => 'real_estate']);
+    $property->realEstateDetail()->create([
+        'property_type' => 'residential',
+        'linked_loan_account_id' => $firstLoan->id,
+    ]);
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Second mortgage',
+        'type' => 'loan',
+        'currency_code' => 'EUR',
+        'annual_interest_rate' => 3.1,
+        'loan_term_months' => 240,
+        'original_amount' => 18_000_000,
+        'linked_real_estate_account_id' => $property->id,
+    ])->assertHasErrors();
+
+    expect($user->accounts()->where('name', 'Second mortgage')->exists())->toBeFalse();
+});
+
+it('never creates a bank-connected account, pointing at the app instead', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Looks like a bank account',
+        'type' => 'checking',
+        'currency_code' => 'EUR',
+        'banking_connection_id' => 'whatever-the-agent-made-up',
+    ])->assertHasErrors(['Whisper Money app']);
+
+    expect($user->accounts()->count())->toBe(0);
+});
+
+it('restricts the very first account to a primary currency', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Cold wallet',
+        'type' => 'investment',
+        'currency_code' => 'BTC',
+        'balance' => 100_000_000,
+    ])->assertHasErrors();
+
+    expect($user->accounts()->count())->toBe(0);
+});
+
+it('rejects create_account for a read-only token', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Should not exist',
+        'type' => 'checking',
+        'currency_code' => 'EUR',
+    ], ['mcp:read'])->assertHasErrors(['read-only']);
+
+    expect($user->accounts()->count())->toBe(0);
+});
+
+it('changes only the fields update_account is passed', function () {
+    $user = User::factory()->create();
+    $bank = Bank::factory()->create();
+    $account = Account::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Old name',
+        'type' => 'checking',
+        'currency_code' => 'EUR',
+        'bank_id' => $bank->id,
+        'ownership_percentage' => 100,
+    ]);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $account->id,
+        'name' => 'Joint current account',
+        'ownership_percentage' => 50,
+    ])->assertOk()->assertSee('Joint current account');
+
+    $account->refresh();
+
+    expect($account->name)->toBe('Joint current account')
+        ->and($account->ownership_percentage)->toBe(50)
+        // Untouched by the call.
+        ->and($account->type)->toBe(AccountType::Checking)
+        ->and($account->currency_code)->toBe('EUR')
+        ->and($account->bank_id)->toBe($bank->id);
+});
+
+it('renames a bank-connected account, which the sync never rewrites', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->connected()->create([
+        'user_id' => $user->id,
+        'name' => 'ES91 **** 1234',
+        'type' => 'checking',
+    ]);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $account->id,
+        'name' => 'Everyday account',
+        'ownership_percentage' => 50,
+        'ownership_applies_to_balance' => true,
+    ])->assertOk()->assertSee('Everyday account');
+
+    $account->refresh();
+
+    expect($account->name)->toBe('Everyday account')
+        ->and($account->ownership_percentage)->toBe(50)
+        ->and($account->ownership_applies_to_balance)->toBeTrue()
+        ->and($account->isConnected())->toBeTrue();
+});
+
+it('refuses to change what the bank sync owns on a connected account', function (string $field, mixed $value, string $reason) {
+    $user = User::factory()->create();
+    $account = Account::factory()->connected()->create([
+        'user_id' => $user->id,
+        'name' => 'Untouched',
+        'type' => 'checking',
+        'currency_code' => 'EUR',
+    ]);
+
+    $bankBefore = $account->bank_id;
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $account->id,
+        $field => is_callable($value) ? $value() : $value,
+    ])->assertHasErrors([$reason]);
+
+    $account->refresh();
+
+    expect($account->currency_code)->toBe('EUR')
+        ->and($account->type)->toBe(AccountType::Checking)
+        ->and($account->bank_id)->toBe($bankBefore);
+})->with([
+    'currency comes from the bank' => ['currency_code', 'USD', 'reinterpret the whole history'],
+    'bank comes from the connection' => ['bank_id', fn (): string => Bank::factory()->create()->id, 'its bank comes from the connection'],
+    'a type with no ledger breaks the sync' => ['type', 'investment', 'nowhere to write'],
+]);
+
+it('lets a connected account move between the types the sync can write into', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->connected()->create(['user_id' => $user->id, 'type' => 'checking']);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $account->id,
+        'type' => 'savings',
+    ])->assertOk();
+
+    expect($account->fresh()->type)->toBe(AccountType::Savings);
+});
+
+it('refuses to edit an account owned by another member of the space', function () {
+    $owner = User::factory()->create();
+    $housemate = User::factory()->create();
+
+    $shared = Space::factory()->create(['owner_id' => $owner->id, 'name' => 'Household']);
+    $shared->members()->attach($housemate->id, ['id' => (string) Str::uuid(), 'role' => 'member']);
+
+    $account = Account::factory()->create([
+        'user_id' => $owner->id,
+        'space_id' => $shared->id,
+        'name' => 'Their account',
+    ]);
+
+    callWriteTool($housemate, UpdateAccount::class, [
+        'account_id' => $account->id,
+        'space' => $shared->id,
+        'name' => 'Mine now',
+    ])->assertHasErrors(['another member of the space']);
+
+    expect($account->fresh()->name)->toBe('Their account');
+});
+
+it('edits the loan details of an account that already has them', function () {
+    $user = User::factory()->create();
+    $loan = Account::factory()->create(['user_id' => $user->id, 'type' => 'loan']);
+    $loan->loanDetail()->create([
+        'annual_interest_rate' => 3.0,
+        'loan_term_months' => 240,
+        'original_amount' => 18_000_000,
+        'start_date' => now()->subYear()->toDateString(),
+    ]);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $loan->id,
+        'annual_interest_rate' => 1.75,
+    ])->assertOk();
+
+    expect((float) $loan->loanDetail->fresh()->annual_interest_rate)->toBe(1.75)
+        // The rest of the detail is left alone.
+        ->and((int) $loan->loanDetail->fresh()->loan_term_months)->toBe(240);
+});
+
+it('names every loan field it needs rather than half-creating a loan detail', function () {
+    $user = User::factory()->create();
+    $loan = Account::factory()->create(['user_id' => $user->id, 'type' => 'loan']);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $loan->id,
+        'annual_interest_rate' => 2.25,
+    ])->assertHasErrors(['loan_term_months', 'original_amount']);
+
+    expect($loan->loanDetail)->toBeNull();
+});
+
+it('edits one field of a property without being asked for its type again', function () {
+    $user = User::factory()->create();
+    $property = Account::factory()->create(['user_id' => $user->id, 'type' => 'real_estate']);
+    $property->realEstateDetail()->create([
+        'property_type' => 'residential',
+        'purchase_price' => 24_000_000,
+    ]);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $property->id,
+        'purchase_price' => 26_000_000,
+    ])->assertOk();
+
+    $detail = $property->realEstateDetail->fresh();
+
+    expect((int) $detail->purchase_price)->toBe(26_000_000)
+        ->and($detail->property_type->value)->toBe('residential');
+});
+
+it('demands a property type only while the property is being created', function () {
+    $user = User::factory()->create();
+    Account::factory()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'A flat with no type',
+        'type' => 'real_estate',
+        'currency_code' => 'EUR',
+    ])->assertHasErrors();
+
+    expect($user->accounts()->where('name', 'A flat with no type')->exists())->toBeFalse();
+});
+
+it('rejects update_account for a read-only token', function () {
+    $user = User::factory()->create();
+    $account = Account::factory()->create(['user_id' => $user->id, 'name' => 'Untouched']);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $account->id,
+        'name' => 'Should not stick',
+    ], ['mcp:read'])->assertHasErrors(['read-only']);
+
+    expect($account->fresh()->name)->toBe('Untouched');
+});
+
+it('creates a credit card with its statement dates', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Visa',
+        'type' => 'credit_card',
+        'currency_code' => 'EUR',
+        'statement_closing_date' => '2026-03-05',
+        'payment_due_date' => '2026-03-20',
+    ])->assertOk()->assertSee('credit_card_statement')->assertSee('2026-03-20');
+
+    $detail = $user->accounts()->sole()->creditCardDetail;
+
+    expect($detail->statement_closing_date->toDateString())->toBe('2026-03-05')
+        ->and($detail->payment_due_date->toDateString())->toBe('2026-03-20');
+});
+
+it('sets and clears the statement dates of a credit card through update_account', function () {
+    $user = User::factory()->create();
+    $card = Account::factory()->creditCard()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $card->id,
+        'statement_closing_date' => '2026-04-25',
+        'payment_due_date' => '2026-05-10',
+    ])->assertOk()->assertSee('2026-05-10');
+
+    expect($card->creditCardDetail()->sole()->statement_closing_date->toDateString())->toBe('2026-04-25');
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $card->id,
+        'statement_closing_date' => null,
+        'payment_due_date' => null,
+    ])->assertOk();
+
+    expect($card->creditCardDetail()->exists())->toBeFalse();
+});
+
+it('creates a weekly credit card and switches it back to monthly through update_account', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Visa',
+        'type' => 'credit_card',
+        'currency_code' => 'EUR',
+        'statement_closing_date' => '2026-10-01',
+        'payment_due_date' => '2026-10-05',
+        'statement_frequency' => 'weekly',
+    ])->assertOk()->assertSee('"statement_frequency":"weekly"', false);
+
+    $card = $user->accounts()->sole();
+
+    expect($card->creditCardDetail->statement_frequency)->toBe(StatementFrequency::Weekly);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $card->id,
+        'statement_frequency' => 'monthly',
+    ])->assertOk()->assertSee('"statement_frequency":"monthly"', false);
+
+    expect($card->creditCardDetail()->sole()->statement_frequency)->toBe(StatementFrequency::Monthly);
+});
+
+it('rejects a weekly credit card charged more than a week after closing', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Visa',
+        'type' => 'credit_card',
+        'currency_code' => 'EUR',
+        'statement_closing_date' => '2026-10-01',
+        'payment_due_date' => '2026-10-09',
+        'statement_frequency' => 'weekly',
+    ])->assertHasErrors(['7 days']);
+
+    expect($user->accounts()->exists())->toBeFalse();
+});
+
+it('creates a credit card with its credit limit', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Visa',
+        'type' => 'credit_card',
+        'currency_code' => 'EUR',
+        'credit_limit' => 300000,
+    ])->assertOk()->assertSee('"credit_limit":300000', false)->assertSee('"available":300000', false);
+
+    expect($user->accounts()->sole()->creditCardDetail)
+        ->credit_limit->toBe(300000)
+        ->statement_closing_date->toBeNull();
+});
+
+it('refuses a balance on a credit card that takes a credit limit', function () {
+    $user = User::factory()->create();
+
+    callWriteTool($user, CreateAccount::class, [
+        'name' => 'Visa',
+        'type' => 'credit_card',
+        'currency_code' => 'EUR',
+        'balance' => -50000,
+    ])->assertHasErrors(['A credit card has no balance']);
+
+    expect($user->accounts()->exists())->toBeFalse();
+});
+
+it('sets and clears the credit limit through update_account, keeping the dates', function () {
+    $user = User::factory()->create();
+    $card = Account::factory()->creditCard()->create(['user_id' => $user->id]);
+    CreditCardDetail::factory()->create(['account_id' => $card->id, 'statement_closing_date' => '2026-04-25', 'payment_due_date' => '2026-05-10']);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $card->id,
+        'credit_limit' => 150000,
+    ])->assertOk()->assertSee('"credit_limit":150000', false);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $card->id,
+        'statement_closing_date' => null,
+        'payment_due_date' => null,
+    ])->assertOk();
+
+    expect($card->creditCardDetail()->sole())
+        ->credit_limit->toBe(150000)
+        ->statement_closing_date->toBeNull();
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $card->id,
+        'credit_limit' => null,
+    ])->assertOk();
+
+    expect($card->creditCardDetail()->exists())->toBeFalse();
+});
+
+it('leaves the statement dates alone when update_account is not passed them', function () {
+    $user = User::factory()->create();
+    $card = Account::factory()->creditCard()->create(['user_id' => $user->id]);
+    CreditCardDetail::factory()->create(['account_id' => $card->id]);
+
+    callWriteTool($user, UpdateAccount::class, [
+        'account_id' => $card->id,
+        'name' => 'Renamed card',
+    ])->assertOk();
+
+    expect($card->creditCardDetail()->exists())->toBeTrue();
+});
+
+it('rejects statement dates that do not make sense through update_account', function (array $dates) {
+    $user = User::factory()->create();
+    $card = Account::factory()->creditCard()->create(['user_id' => $user->id]);
+
+    callWriteTool($user, UpdateAccount::class, ['account_id' => $card->id, ...$dates])->assertHasErrors();
+
+    expect($card->creditCardDetail()->exists())->toBeFalse();
+})->with([
+    'due before closing' => [['statement_closing_date' => '2026-04-25', 'payment_due_date' => '2026-04-20']],
+    'due too long after closing' => [['statement_closing_date' => '2026-04-01', 'payment_due_date' => '2026-05-17']],
+    'only one of the two' => [['statement_closing_date' => '2026-04-25']],
+]);

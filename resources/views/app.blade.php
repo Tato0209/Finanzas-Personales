@@ -1,0 +1,96 @@
+@php
+    // The status bar colour follows the app's own appearance preference, not the
+    // OS one: a user on a dark phone with the app set to light gets a light bar.
+    // An installed Android PWA paints its status bar from this meta because the
+    // manifest asks for standalone; fullscreen would hide the bar altogether. The
+    // manifest has no theme_color on purpose: from Chrome 156 it would also paint
+    // the bottom navigation bar, in one fixed colour whatever the theme.
+    // Hex mirrors of --background in resources/css/app.css.
+    $appearance = $appearance ?? 'system';
+    $lightBackground = '#ffffff';
+    $darkBackground = '#1c1c1c';
+
+    // Declared for the theme the app renders, not the one the phone is on, so the
+    // form controls, scrollbars and default canvas colour match it from first
+    // paint. It does not reach the bottom navigation bar of an installed Android
+    // PWA: Chrome paints that bar itself, from the phone's theme.
+    $colorScheme = in_array($appearance, ['light', 'dark'], true) ? $appearance : 'light dark';
+@endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" translate="no" @class(['notranslate', 'dark' => $appearance === 'dark'])>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        {{-- Before any stylesheet, so the page and the status bar are already right at first paint. --}}
+        <meta name="color-scheme" content="{{ $colorScheme }}">
+        @if ($appearance === 'system')
+            <meta name="theme-color" content="{{ $lightBackground }}" media="(prefers-color-scheme: light)">
+            <meta name="theme-color" content="{{ $darkBackground }}" media="(prefers-color-scheme: dark)">
+        @else
+            <meta name="theme-color" content="{{ $appearance === 'dark' ? $darkBackground : $lightBackground }}">
+        @endif
+        <meta name="google" content="notranslate">
+
+        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        <script>
+            (function() {
+                const appearance = @json($appearance);
+
+                if (appearance === 'system') {
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                    if (prefersDark) {
+                        document.documentElement.classList.add('dark');
+                    }
+                }
+
+                var chartScheme = @json($chartColorScheme ?? 'colorful');
+
+                try {
+                    chartScheme = localStorage.getItem('chart-color-scheme') || chartScheme;
+                } catch (error) {}
+
+                if (chartScheme && chartScheme !== 'neutral') {
+                    document.documentElement.setAttribute('data-chart-color', chartScheme);
+                }
+            })();
+        </script>
+
+        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+        <style>
+            html {
+                background-color: {{ $lightBackground }};
+            }
+
+            html.dark {
+                background-color: {{ $darkBackground }};
+            }
+        </style>
+
+        <title data-inertia>{{ config('app.name', 'Laravel') }}</title>
+
+        <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon/favicon.ico" />
+        <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="Finanzas Personales" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="manifest" href="/favicon/site.webmanifest" />
+
+        @viteReactRefresh
+        @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+        @inertiaHead
+    </head>
+    <body class="font-sans antialiased">
+        @inertia
+
+        <script>
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
+            }
+        </script>
+    </body>
+</html>

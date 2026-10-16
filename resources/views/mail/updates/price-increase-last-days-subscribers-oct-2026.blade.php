@@ -15,7 +15,7 @@
 
 {{ __('Hi :name,', ['name' => $user->name]) }}
 
-{{ __('On 1 October Finanzas Personales goes to €8.99 a month, or €53.94 a year. From that day on, nobody who subscribes can get the price you pay now.') }}
+{{ __('On 1 October Whisper Money goes to €8.99 a month, or €53.94 a year. From that day on, nobody who subscribes can get the price you pay now.') }}
 
 **{{ __('Your subscription keeps the price you signed up at, for as long as you keep it.') }}**
 
@@ -23,10 +23,10 @@
 
 {{ __('So if you ever think about cancelling, reply to this email first. If something is not working for you, I would rather fix it.') }}
 
-{{ __('Thank you for supporting us. Subscriptions like yours are what keep Finanzas Personales going.') }}
+{{ __('Thank you for supporting us. Subscriptions like yours are what keep Whisper Money going.') }}
 
 Víctor Falcón Ruíz<br>
-{{ __('Co-founder and solo developer, Finanzas Personales') }}
+{{ __('Co-founder and solo developer, Whisper Money') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

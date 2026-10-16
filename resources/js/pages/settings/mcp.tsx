@@ -155,8 +155,8 @@ function CopyableCode({
  * in .claude-plugin/marketplace.json, then the plugin it lists.
  */
 const CLAUDE_CODE_PLUGIN_COMMANDS = [
-    '/plugin marketplace add finanzas-personales/finanzas-personales',
-    '/plugin install finanzas-personales@finanzas-personales',
+    '/plugin marketplace add whisper-money/whisper-money',
+    '/plugin install whisper-money@whisper-money',
 ];
 
 type ConnectorApp = 'claude' | 'chatgpt';
@@ -203,7 +203,7 @@ export default function Mcp() {
                     {oauthUrlBlock}
                 </>,
                 __(
-                    'Approve the connection on the Finanzas Personales screen that opens.',
+                    'Approve the connection on the Whisper Money screen that opens.',
                 ),
             ],
         },
@@ -219,7 +219,7 @@ export default function Mcp() {
                     {oauthUrlBlock}
                 </>,
                 __(
-                    'Approve the connection on the Finanzas Personales screen that opens.',
+                    'Approve the connection on the Whisper Money screen that opens.',
                 ),
             ],
         },
@@ -235,7 +235,7 @@ export default function Mcp() {
                         <HeadingSmall
                             title={__('AI Connector')}
                             description={__(
-                                'Connect Finanzas Personales to your AI assistant (Claude, ChatGPT) to analyse your finances.',
+                                'Connect Whisper Money to your AI assistant (Claude, ChatGPT) to analyse your finances.',
                             )}
                         />
                         <ProBadge className="mt-1 shrink-0" />
@@ -263,7 +263,7 @@ export default function Mcp() {
                     <Alert>
                         <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                         <AlertTitle>
-                            {__('Your data leaves Finanzas Personales')}
+                            {__('Your data leaves Whisper Money')}
                         </AlertTitle>
                         <AlertDescription>
                             {__(
@@ -305,7 +305,7 @@ export default function Mcp() {
                                 title={__('Set this up on a computer')}
                             >
                                 {__(
-                                    "Signing in and approving works fine in a desktop browser, but usually breaks in a phone's in-app browser. Once it's connected, you can chat with Finanzas Personales from Claude or ChatGPT on your phone as usual.",
+                                    "Signing in and approving works fine in a desktop browser, but usually breaks in a phone's in-app browser. Once it's connected, you can chat with Whisper Money from Claude or ChatGPT on your phone as usual.",
                                 )}
                             </CardNote>
 
@@ -335,7 +335,7 @@ export default function Mcp() {
                                 <CardNote
                                     icon={Store}
                                     title={__(
-                                        "Finanzas Personales is in ChatGPT's app directory",
+                                        "Whisper Money is in ChatGPT's app directory",
                                     )}
                                 >
                                     {__(
@@ -399,7 +399,7 @@ export default function Mcp() {
                                             </h3>
                                             <p className="text-sm text-muted-foreground">
                                                 {__(
-                                                    'Run these inside Claude Code to install the Finanzas Personales plugin.',
+                                                    'Run these inside Claude Code to install the Whisper Money plugin.',
                                                 )}
                                             </p>
                                         </div>
@@ -413,7 +413,7 @@ export default function Mcp() {
                                         )}
                                         <p className="text-sm text-muted-foreground">
                                             {__(
-                                                'Then run /mcp, pick Finanzas Personales and sign in through the browser. No token needed, and it can read and change your data.',
+                                                'Then run /mcp, pick Whisper Money and sign in through the browser. No token needed, and it can read and change your data.',
                                             )}
                                         </p>
                                     </div>
@@ -431,7 +431,7 @@ export default function Mcp() {
                                             </p>
                                         </div>
                                         <CopyableCode
-                                            value={`claude mcp add --transport http finanzas-personales ${serverUrl} --header "Authorization: Bearer <token>"`}
+                                            value={`claude mcp add --transport http whisper-money ${serverUrl} --header "Authorization: Bearer <token>"`}
                                         />
                                     </div>
 

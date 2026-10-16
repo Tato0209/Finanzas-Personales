@@ -105,7 +105,7 @@ const en: Copy = {
         formula: '=SUM(D2:D7',
         formulaError: '#REF!',
     },
-    turn: { line: 'There’s a better way.', brand: 'Finanzas Personales' },
+    turn: { line: 'There’s a better way.', brand: 'Whisper Money' },
     sync: {
         title: 'Connect your banks.',
         subtitle: 'Every transaction syncs and sorts itself.',
@@ -152,7 +152,7 @@ const en: Copy = {
     },
     comparison: {
         title: 'Stop guessing. Stop typing.',
-        columns: ['Not tracking', 'Spreadsheet', 'Finanzas Personales'],
+        columns: ['Not tracking', 'Spreadsheet', 'Whisper Money'],
         rows: [
             { label: 'Know where your money goes', values: ['no', 'partial', 'yes'] },
             { label: 'Time per month', values: ['—', 'Hours', 'Minutes'] },
@@ -165,7 +165,7 @@ const en: Copy = {
         title: 'All your money in one place.',
         button: 'Get started for free',
         footnote: 'Free forever. Upgrade anytime.',
-        url: 'finanzaspersonales.local',
+        url: 'whisper.money',
     },
 };
 
@@ -212,7 +212,7 @@ const es: Copy = {
         formula: '=SUMA(D2:D7',
         formulaError: '#¡REF!',
     },
-    turn: { line: 'Hay una forma mejor.', brand: 'Finanzas Personales' },
+    turn: { line: 'Hay una forma mejor.', brand: 'Whisper Money' },
     sync: {
         title: 'Conecta tus bancos.',
         subtitle: 'Cada movimiento se sincroniza y se ordena solo.',
@@ -259,7 +259,7 @@ const es: Copy = {
     },
     comparison: {
         title: 'Ni adivinar. Ni teclear.',
-        columns: ['Sin control', 'Excel', 'Finanzas Personales'],
+        columns: ['Sin control', 'Excel', 'Whisper Money'],
         rows: [
             { label: 'Saber en qué se va tu dinero', values: ['no', 'partial', 'yes'] },
             { label: 'Tiempo al mes', values: ['—', 'Horas', 'Minutos'] },
@@ -272,7 +272,7 @@ const es: Copy = {
         title: 'Todo tu dinero en un solo sitio.',
         button: 'Empieza gratis',
         footnote: 'Gratis para siempre. Mejora cuando quieras.',
-        url: 'finanzaspersonales.local',
+        url: 'whisper.money',
     },
 };
 

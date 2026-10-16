@@ -10,23 +10,23 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Repository URL
-REPO_URL="https://github.com/finanzas-personales/finanzas-personales.git"
-REPO_DIR="finanzas-personales"
+REPO_URL="https://github.com/whisper-money/whisper-money.git"
+REPO_DIR="whisper-money"
 
 # Check if we're in a git repository or if the repo directory exists
 check_and_setup_repo() {
-    # Check if we're already in the finanzas-personales git repo
-    if [ -d ".git" ] && git remote get-url origin 2>/dev/null | grep -q "finanzas-personales"; then
+    # Check if we're already in the whisper-money git repo
+    if [ -d ".git" ] && git remote get-url origin 2>/dev/null | grep -q "whisper-money"; then
         return 0
     fi
 
-    # Check if finanzas-personales directory exists in current directory
+    # Check if whisper-money directory exists in current directory
     if [ -d "$REPO_DIR" ] && [ -d "$REPO_DIR/.git" ]; then
         echo -e "${GREEN}✓ Repository found in ${REPO_DIR}${NC}"
         echo -e "${YELLOW}Changing to ${REPO_DIR} directory...${NC}"
         cd "$REPO_DIR"
         # Re-execute the script from the new directory with original arguments
-        exec "./finanzaspersonales" "$@"
+        exec "./whispermoney" "$@"
     fi
 
     # Not in repo and repo directory doesn't exist - prompt to clone
@@ -34,7 +34,7 @@ check_and_setup_repo() {
     echo -e "${YELLOW}Repository Setup${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo -e "${BLUE}Finanzas Personales repository not found in the current directory.${NC}"
+    echo -e "${BLUE}Whisper Money repository not found in the current directory.${NC}"
     echo ""
     echo -e "${YELLOW}We need to clone the repository to continue.${NC}"
     echo ""
@@ -64,12 +64,12 @@ check_and_setup_repo() {
         echo -e "${BLUE}You can clone it manually and run this script from the repository directory:${NC}"
         echo -e "  ${GREEN}git clone ${REPO_URL}${NC}"
         echo -e "  ${GREEN}cd ${REPO_DIR}${NC}"
-        echo -e "  ${GREEN}finanzaspersonales${NC}"
+        echo -e "  ${GREEN}whispermoney${NC}"
         exit 0
     fi
 
     # Clone the repository
-    echo -e "${YELLOW}Cloning Finanzas Personales repository...${NC}"
+    echo -e "${YELLOW}Cloning Whisper Money repository...${NC}"
     if git clone "$REPO_URL" "$REPO_DIR" 2>&1; then
         echo -e "${GREEN}✓ Repository cloned successfully${NC}"
         echo ""
@@ -82,15 +82,15 @@ check_and_setup_repo() {
         fi
 
         # Make sure the script is executable
-        if [ -f "finanzaspersonales" ]; then
-            chmod +x finanzaspersonales
+        if [ -f "whispermoney" ]; then
+            chmod +x whispermoney
         fi
 
         echo -e "${GREEN}✓ Ready to continue with installation${NC}"
         echo ""
 
         # Re-execute the script from the new directory
-        exec "./finanzaspersonales" "$@"
+        exec "./whispermoney" "$@"
     else
         echo -e "${RED}✗ Failed to clone repository${NC}"
         echo -e "${YELLOW}Please check your internet connection and try again.${NC}"
@@ -103,7 +103,7 @@ print_sponsor_message() {
     local sponsor_url="https://github.com/sponsors/victor-falcon"
 
     echo ""
-    echo -e "${YELLOW}☕ Psst!${NC} If Finanzas Personales saves you from spreadsheet hell,"
+    echo -e "${YELLOW}☕ Psst!${NC} If Whisper Money saves you from spreadsheet hell,"
     echo -e "   consider buying the developer a coffee. No pressure!"
     echo ""
     read -p "   Open sponsor page? (y/n) " -n 1 -r
@@ -137,7 +137,7 @@ print_header() {
  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝╚══════╝╚═╝     ╚══════╝╚═╝  ╚═╝  ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝
 EOF
     echo -e "${NC}"
-    echo -e "${GREEN}Finanzas Personales - Privacy-First Personal Finance App${NC}"
+    echo -e "${GREEN}Whisper Money - Privacy-First Personal Finance App${NC}"
     echo -e "${BLUE}Privacy-first financial management—your data, your ownership${NC}"
     echo ""
 }
@@ -205,7 +205,7 @@ check_project_version() {
             echo -e "${BLUE}Your local project is ${behind_count} commit(s) behind the remote repository.${NC}"
             echo ""
             echo -e "${YELLOW}To update, run:${NC}"
-            echo -e "  ${GREEN}finanzaspersonales upgrade${NC}"
+            echo -e "  ${GREEN}whispermoney upgrade${NC}"
             echo ""
             echo -e "${BLUE}Or manually:${NC}"
             echo -e "  ${GREEN}git pull${NC}"
@@ -572,13 +572,13 @@ setup_portless() {
         echo -e "${YELLOW}  It may already be running, or you can start it with 'npx portless proxy start'.${NC}"
     fi
 
-    # Register the fixed alias for finanzaspersonales.local
+    # Register the fixed alias for whisper.money
     echo -e "${YELLOW}Registering HTTPS route...${NC}"
-    if npx portless alias finanzaspersonales.local 8000 --force 2>/dev/null; then
-        echo -e "${GREEN}✓ https://finanzaspersonales.local.localhost → localhost:8000${NC}"
+    if npx portless alias whisper.money 8000 --force 2>/dev/null; then
+        echo -e "${GREEN}✓ https://whisper.money.localhost → localhost:8000${NC}"
     else
         echo -e "${YELLOW}⚠ Could not register portless alias.${NC}"
-        echo -e "${YELLOW}  You can run 'npx portless alias finanzaspersonales.local 8000' manually.${NC}"
+        echo -e "${YELLOW}  You can run 'npx portless alias whisper.money 8000' manually.${NC}"
     fi
 
     echo ""
@@ -605,9 +605,9 @@ start_services() {
     # Register portless alias for HTTPS access
     if command_exists npx; then
         npx portless proxy start 2>/dev/null || true
-        npx portless alias finanzaspersonales.local 8000 --force 2>/dev/null || true
+        npx portless alias whisper.money 8000 --force 2>/dev/null || true
         echo -e "${GREEN}All services are running!${NC}"
-        echo -e "  ${GREEN}Visit: https://finanzaspersonales.local.localhost${NC}"
+        echo -e "  ${GREEN}Visit: https://whisper.money.localhost${NC}"
     else
         echo -e "${GREEN}All services are running!${NC}"
         echo -e "  ${GREEN}Visit: http://localhost:8000${NC}"
@@ -618,7 +618,7 @@ start_services() {
 stop_services() {
     # Remove portless alias
     if command_exists npx; then
-        npx portless alias --remove finanzaspersonales.local 2>/dev/null || true
+        npx portless alias --remove whisper.money 2>/dev/null || true
     fi
 
     echo -e "${BLUE}Stopping Docker services...${NC}"
@@ -637,7 +637,7 @@ show_logs() {
 
 # Install function
 install() {
-    echo -e "${BLUE}Starting Finanzas Personales installation...${NC}"
+    echo -e "${BLUE}Starting Whisper Money installation...${NC}"
     echo ""
 
     # Check dependencies
@@ -654,12 +654,12 @@ install() {
     fi
 
     # Update APP_URL if needed
-    if grep -q "APP_URL=https://finanzaspersonales.test" .env 2>/dev/null || grep -q "APP_URL=$" .env 2>/dev/null; then
-        echo -e "${YELLOW}Updating APP_URL to https://finanzaspersonales.local.localhost...${NC}"
+    if grep -q "APP_URL=https://whispermoney.test" .env 2>/dev/null || grep -q "APP_URL=$" .env 2>/dev/null; then
+        echo -e "${YELLOW}Updating APP_URL to https://whisper.money.localhost...${NC}"
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' 's|APP_URL=.*|APP_URL=https://finanzaspersonales.local.localhost|g' .env
+            sed -i '' 's|APP_URL=.*|APP_URL=https://whisper.money.localhost|g' .env
         else
-            sed -i 's|APP_URL=.*|APP_URL=https://finanzaspersonales.local.localhost|g' .env
+            sed -i 's|APP_URL=.*|APP_URL=https://whisper.money.localhost|g' .env
         fi
         echo -e "${GREEN}APP_URL updated.${NC}"
     else
@@ -873,12 +873,12 @@ install() {
     # Success message
     echo ""
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}  ✓ Finanzas Personales has been installed successfully!${NC}"
+    echo -e "${GREEN}  ✓ Whisper Money has been installed successfully!${NC}"
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     echo -e "${BLUE}Your application is now running!${NC}"
     echo ""
-    echo -e "  ${GREEN}Visit: https://finanzaspersonales.local.localhost${NC}"
+    echo -e "  ${GREEN}Visit: https://whisper.money.localhost${NC}"
     echo ""
     echo -e "${GREEN}✓ Using portless for HTTPS (auto-trusted certificates)${NC}"
     echo ""
@@ -890,10 +890,10 @@ install() {
     echo -e "  • MailHog (email testing)"
     echo ""
     echo -e "${YELLOW}To stop all services:${NC}"
-    echo -e "  ${YELLOW}finanzaspersonales stop${NC}"
+    echo -e "  ${YELLOW}whispermoney stop${NC}"
     echo ""
     echo -e "${YELLOW}To start services again:${NC}"
-    echo -e "  ${YELLOW}finanzaspersonales start${NC}"
+    echo -e "  ${YELLOW}whispermoney start${NC}"
     echo ""
 
     # Show sponsor message on first install
@@ -902,7 +902,7 @@ install() {
 
 # Upgrade function
 upgrade() {
-    echo -e "${BLUE}Upgrading Finanzas Personales...${NC}"
+    echo -e "${BLUE}Upgrading Whisper Money...${NC}"
     echo ""
 
     # Git pull
@@ -1018,7 +1018,7 @@ upgrade() {
     echo ""
 
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}  ✓ Finanzas Personales has been upgraded successfully!${NC}"
+    echo -e "${GREEN}  ✓ Whisper Money has been upgraded successfully!${NC}"
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 }
@@ -1099,15 +1099,15 @@ main() {
         echo "Usage: $0 [install|start|stop|upgrade|logs]"
         echo ""
         echo "Commands:"
-        echo "  install         - Install Finanzas Personales"
+        echo "  install         - Install Whisper Money"
         echo "  start           - Start Docker services"
         echo "  stop            - Stop Docker services"
-        echo "  upgrade         - Upgrade Finanzas Personales"
+        echo "  upgrade         - Upgrade Whisper Money"
         echo "  logs [service]  - Show logs (default: php)"
         echo ""
         echo "Examples:"
-        echo "  finanzaspersonales logs php    - Show PHP logs"
-        echo "  finanzaspersonales logs mysql  - Show MySQL logs"
+        echo "  whispermoney logs php    - Show PHP logs"
+        echo "  whispermoney logs mysql  - Show MySQL logs"
         echo ""
         echo "If no command is provided, an interactive menu will be shown."
         exit 1

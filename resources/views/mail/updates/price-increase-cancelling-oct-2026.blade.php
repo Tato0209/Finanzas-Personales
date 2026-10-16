@@ -10,7 +10,7 @@
 
 {{ __('Hi :name,', ['name' => $user->name]) }}
 
-{{ __('You cancelled your Finanzas Personales subscription. It stays active until the end of the current period, and then it stops. That is your call, and I am not here to argue with it.') }}
+{{ __('You cancelled your Whisper Money subscription. It stays active until the end of the current period, and then it stops. That is your call, and I am not here to argue with it.') }}
 
 {{ __('I am here because something changes on 1 October that I will not be able to undo for you later.') }}
 
@@ -44,7 +44,7 @@
 {{ __('And if something here is what made you cancel, hit reply and tell me. That is worth more to me than the cancellation.') }}
 
 Víctor Falcón Ruíz<br>
-{{ __('Co-founder and solo developer, Finanzas Personales') }}
+{{ __('Co-founder and solo developer, Whisper Money') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

@@ -1247,7 +1247,7 @@ test('interactive brokers sync stores NAV balances through the real factory', fu
     ]);
 
     $sendXml = '<FlexStatementResponse><Status>Success</Status><ReferenceCode>999</ReferenceCode></FlexStatementResponse>';
-    $statementXml = '<FlexQueryResponse queryName="FinanzasPersonales" type="AF"><FlexStatements count="1">'
+    $statementXml = '<FlexQueryResponse queryName="Whisper" type="AF"><FlexStatements count="1">'
         .'<FlexStatement accountId="U1234567"><AccountInformation accountId="U1234567" currency="USD" />'
         .'<EquitySummaryInBase><EquitySummaryByReportDateInBase reportDate="20250115" cash="0" total="12345.67" /></EquitySummaryInBase>'
         .'</FlexStatement></FlexStatements></FlexQueryResponse>';

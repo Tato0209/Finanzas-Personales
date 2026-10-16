@@ -13,7 +13,7 @@ import { usePage } from '@inertiajs/react';
 import { Mail } from 'lucide-react';
 
 const DISCORD_URL = 'https://discord.gg/m8hUhx6D9D';
-const SUPPORT_EMAIL = 'support@finanzaspersonales.local';
+const SUPPORT_EMAIL = 'support@whisper.money';
 
 function buildSupportMailto(user: User, version: string): string {
     const userAgent =

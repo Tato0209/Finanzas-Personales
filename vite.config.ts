@@ -37,7 +37,7 @@ export default defineConfig({
                   sentryVitePlugin({
                       url: 'https://de.sentry.io/',
                       authToken: sentryAuthToken,
-                      org: 'finanzas-personales',
+                      org: 'whisper-money',
                       // Frontend JS errors are captured into the php-laravel
                       // project (see app.tsx Sentry.init using SENTRY_LARAVEL_DSN),
                       // so maps must be uploaded there to symbolicate them.

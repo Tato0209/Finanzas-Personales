@@ -28,7 +28,7 @@
 
 {{ __('Hi :name,', ['name' => $user->name]) }}
 
-{{ __('Yesterday and today, Finanzas Personales showed the wrong price.') }}
+{{ __('Yesterday and today, Whisper Money showed the wrong price.') }}
 
 {{ __('It said €8.99 a month, while the old €3.99 was still valid until tonight.') }}
 
@@ -55,7 +55,7 @@
 {{ __('If the bug caused you any trouble, reply to this email and I will sort it out.') }}
 
 Víctor Falcón Ruíz<br>
-{{ __('Co-founder and solo developer, Finanzas Personales') }}
+{{ __('Co-founder and solo developer, Whisper Money') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

@@ -6,10 +6,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>{{ __('A month with Finanzas Personales') }}</title>
+    <title>{{ __('A month with Whisper Money') }}</title>
 
     <meta property="og:type" content="website">
-    <meta property="og:title" content="{{ __('A month with Finanzas Personales') }}">
+    <meta property="og:title" content="{{ __('A month with Whisper Money') }}">
     <meta property="og:description" content="{{ __('Percentages and streaks. No amounts.') }}">
     <meta property="og:image" content="{{ $imageUrl }}">
     <meta property="og:image:width" content="1080">
@@ -38,8 +38,8 @@
     </style>
 </head>
 <body>
-    <img src="{{ $imageUrl }}" alt="{{ __('A month with Finanzas Personales') }}">
+    <img src="{{ $imageUrl }}" alt="{{ __('A month with Whisper Money') }}">
     <a href="{{ url('/') }}">{{ __('Track your own money') }}</a>
-    <p>finanzaspersonales.local</p>
+    <p>whisper.money</p>
 </body>
 </html>

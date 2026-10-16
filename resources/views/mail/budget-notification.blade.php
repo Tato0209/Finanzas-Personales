@@ -42,7 +42,7 @@
 
 {{ __('Best,') }}<br>
 {{ __('Álvaro & Víctor') }}<br>
-{{ __('Founders of Finanzas Personales') }}
+{{ __('Founders of Whisper Money') }}
 
 <x-slot:subcopy>
 {{ __('Don\'t want these emails? Manage notifications in [notification settings](:url).', ['url' => route('notifications.index')]) }}

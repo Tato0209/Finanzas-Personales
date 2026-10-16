@@ -55,7 +55,7 @@ function expectedRoadmapItem(string $status, string $mappedStatus): array
         'status' => $mappedStatus,
         // The latest status change wins over the creation date.
         'date' => '2026-07-01T10:00:00.000Z',
-        'url' => 'https://feedback.finanzaspersonales.local/board/p/'.mb_strtolower($status).'-item',
+        'url' => 'https://whispermoney.userjot.com/board/p/'.mb_strtolower($status).'-item',
     ];
 }
 

@@ -111,7 +111,7 @@ You can filter by:
 - Account
 - Label
 - Creditor or debtor name
-- How the category was set: by you, by a rule, by Finanzas Personales, or by your bank
+- How the category was set: by you, by a rule, by Whisper Money, or by your bank
 - Search text
 
 A good search often starts with the merchant name or a word from the bank

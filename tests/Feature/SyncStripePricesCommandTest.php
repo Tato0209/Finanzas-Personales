@@ -55,14 +55,14 @@ beforeEach(function () {
                 'name' => 'Monthly',
                 'price' => 3.99,
                 'billing_period' => 'month',
-                'stripe_lookup_key' => 'finanzas_pro_monthly',
+                'stripe_lookup_key' => 'whisper_pro_monthly',
                 'features' => [],
             ],
             'yearly' => [
                 'name' => 'Yearly',
                 'price' => 23.88,
                 'billing_period' => 'year',
-                'stripe_lookup_key' => 'finanzas_pro_yearly',
+                'stripe_lookup_key' => 'whisper_pro_yearly',
                 'features' => [],
             ],
         ],
@@ -99,8 +99,8 @@ test('skips plans without stripe_lookup_key', function () {
 
 test('reports correct counts when all prices are already in sync', function () {
     bindMockStripeClientForSync([
-        'finanzas_pro_monthly' => makeStripePrice('price_monthly', 399, 'eur', 'month'),
-        'finanzas_pro_yearly' => makeStripePrice('price_yearly', 2388, 'eur', 'year'),
+        'whisper_pro_monthly' => makeStripePrice('price_monthly', 399, 'eur', 'month'),
+        'whisper_pro_yearly' => makeStripePrice('price_yearly', 2388, 'eur', 'year'),
     ]);
 
     $this->artisan('stripe:sync-prices')
@@ -118,8 +118,8 @@ test('creates prices that do not yet exist in stripe', function () {
 
 test('transfers lookup key when price amount has changed', function () {
     bindMockStripeClientForSync([
-        'finanzas_pro_monthly' => makeStripePrice('price_monthly_old', 999, 'eur', 'month'),
-        'finanzas_pro_yearly' => makeStripePrice('price_yearly_old', 9900, 'eur', 'year'),
+        'whisper_pro_monthly' => makeStripePrice('price_monthly_old', 999, 'eur', 'month'),
+        'whisper_pro_yearly' => makeStripePrice('price_yearly_old', 9900, 'eur', 'year'),
     ]);
 
     $this->artisan('stripe:sync-prices')

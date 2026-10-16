@@ -121,9 +121,9 @@ test('a served page renders every testimonial it has', function (string $locale,
 
 test('a testimonial quote is served in the language of the page', function () {
     expect(ComparisonPages::find('en', 'fintonic-alternative')['testimonials'][0]['text'])
-        ->toContain('Thank you for developing Finanzas Personales')
+        ->toContain('Thank you for developing Whisper Money')
         ->and(ComparisonPages::find('es', 'alternativa-a-fintonic')['testimonials'][0]['text'])
-        ->toContain('Gracias por desarrollar Finanzas Personales');
+        ->toContain('Gracias por desarrollar Whisper Money');
 });
 
 test('the landing markdown summary is served for every language', function (string $locale) {
@@ -131,7 +131,7 @@ test('the landing markdown summary is served for every language', function (stri
     $response = $this->get($path)->assertSuccessful();
 
     expect($response->headers->get('Content-Type'))->toContain('text/markdown')
-        ->and($response->content())->toContain('# Finanzas Personales')
+        ->and($response->content())->toContain('# Whisper Money')
         ->and($response->content())->toContain(ComparisonPages::url($locale, ComparisonPages::slugs($locale)[0]));
 })->with(MarketingContent::LOCALES);
 
@@ -179,26 +179,26 @@ test('the banktrack page is published in english and in spanish', function (stri
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('comparison')
             ->where('pageLocale', $locale)
-            ->where('page.slug', 'banktrack-vs-finanzas-personales')
+            ->where('page.slug', 'banktrack-vs-whisper-money')
             ->where('page.rival', 'Banktrack')
             ->has('page.migration_steps', 5)
         );
 
     $this->get($path.'.md')
         ->assertSuccessful()
-        ->assertSee('# Banktrack vs Finanzas Personales', false);
+        ->assertSee('# Banktrack vs Whisper Money', false);
 })->with([
-    ['/compare/banktrack-vs-finanzas-personales', 'en'],
-    ['/comparativa/banktrack-vs-finanzas-personales', 'es'],
+    ['/compare/banktrack-vs-whisper-money', 'en'],
+    ['/comparativa/banktrack-vs-whisper-money', 'es'],
 ]);
 
 test('the banktrack page is in the sitemap with its spanish alternate', function () {
     $content = $this->get('/sitemap.xml')->assertSuccessful()->content();
-    $english = ComparisonPages::url('en', 'banktrack-vs-finanzas-personales');
-    $spanish = ComparisonPages::url('es', 'banktrack-vs-finanzas-personales');
+    $english = ComparisonPages::url('en', 'banktrack-vs-whisper-money');
+    $spanish = ComparisonPages::url('es', 'banktrack-vs-whisper-money');
 
-    expect($english)->toEndWith('/compare/banktrack-vs-finanzas-personales')
-        ->and($spanish)->toEndWith('/comparativa/banktrack-vs-finanzas-personales')
+    expect($english)->toEndWith('/compare/banktrack-vs-whisper-money')
+        ->and($spanish)->toEndWith('/comparativa/banktrack-vs-whisper-money')
         ->and($content)->toContain("<loc>{$english}</loc>")
         ->and($content)->toContain("<loc>{$spanish}</loc>")
         ->and($content)->toContain('hreflang="es" href="'.$spanish.'"');
@@ -211,15 +211,15 @@ test('the landing links to the banktrack page in every language', function () {
             ->component('welcome')
             ->where('comparisonLinks', fn ($links): bool => collect($links)->contains(
                 fn (array $link): bool => $link['key'] === 'banktrack'
-                    && $link['path'] === '/compare/banktrack-vs-finanzas-personales'
-                    && $link['heading'] === 'Banktrack vs Finanzas Personales'
+                    && $link['path'] === '/compare/banktrack-vs-whisper-money'
+                    && $link['heading'] === 'Banktrack vs Whisper Money'
             ))
         );
 
     expect(collect(ComparisonPages::index('es'))->firstWhere('key', 'banktrack'))
         ->toMatchArray([
-            'path' => '/comparativa/banktrack-vs-finanzas-personales',
-            'heading' => 'Banktrack vs Finanzas Personales',
+            'path' => '/comparativa/banktrack-vs-whisper-money',
+            'heading' => 'Banktrack vs Whisper Money',
         ]);
 });
 

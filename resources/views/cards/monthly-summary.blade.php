@@ -187,7 +187,7 @@
 
             <span class="lockup">
                 @include('cards.partials.icon-bird', ['size' => round(42 * $s), 'colour' => $ink])
-                <span class="mono">finanzaspersonales.local</span>
+                <span class="mono">whisper.money</span>
             </span>
         </div>
     </div>

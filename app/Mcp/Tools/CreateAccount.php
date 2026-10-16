@@ -107,7 +107,7 @@ class CreateAccount extends WriteTool
             }
 
             throw ValidationException::withMessages([
-                $field => 'A bank-connected account cannot be created from here: it is born from the bank\'s consent flow, which only the user can go through in the Finanzas Personales app. Create a manual account instead, or ask the user to connect the bank themselves.',
+                $field => 'A bank-connected account cannot be created from here: it is born from the bank\'s consent flow, which only the user can go through in the Whisper Money app. Create a manual account instead, or ask the user to connect the bank themselves.',
             ]);
         }
     }

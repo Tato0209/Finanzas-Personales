@@ -147,13 +147,13 @@ it('counts trial starts within 14 days and active paid conversions within 30 day
 });
 
 it('derives the release anchor from the first consent and splits cohorts pre/post', function () {
-    config(['ai_suggestions.report.excluded_emails' => ['staff@finanzaspersonales.test']]);
+    config(['ai_suggestions.report.excluded_emails' => ['staff@whisper.test']]);
 
     $release = referenceNow()->subWeeks(4);
 
     // Staff account plants the release-anchor consent; excluded from cohort metrics.
     cohortUser($release, [
-        'email' => 'staff@finanzaspersonales.test',
+        'email' => 'staff@whisper.test',
         'transactions' => 3,
         'consentAt' => $release,
     ]);

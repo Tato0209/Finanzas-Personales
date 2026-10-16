@@ -124,8 +124,8 @@ interface EditTransactionDialogProps {
 }
 
 const STORAGE_KEY_UPDATE_BALANCE =
-    'finanzas_personales_update_balance_on_transaction';
-const STORAGE_KEY_LAST_ACCOUNT = 'finanzas_personales_last_transaction_account';
+    'whisper_money_update_balance_on_transaction';
+const STORAGE_KEY_LAST_ACCOUNT = 'whisper_money_last_transaction_account';
 
 /**
  * The chips that stand in for the account, date and balance fields while the

@@ -1,7 +1,7 @@
 import { interpolate, useCurrentFrame } from 'remotion';
 import { useVideo } from '../context';
 
-/** The Finanzas Personales bird (favicon paths), optionally drawn stroke by stroke. */
+/** The Whisper Money bird (favicon paths), optionally drawn stroke by stroke. */
 const PATHS = [
     'M16 7h.01',
     'M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20',

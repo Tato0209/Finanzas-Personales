@@ -145,7 +145,7 @@ Cada transacción categorizada registra cómo obtuvo su categoría:
 
 - **Tú**, al elegirla.
 - **Una regla de automatización** que coincidió con ella.
-- **Finanzas Personales**, si has activado la categorización con IA.
+- **Whisper Money**, si has activado la categorización con IA.
 - **Tu banco**, si la conexión la proporcionó.
 
 Los filtros de transacciones pueden acotar la lista por cualquiera de estas
@@ -154,7 +154,7 @@ antes de fiarte de los informes del mes.
 
 ## Categorización con IA
 
-Finanzas Personales puede sugerir categorías para las transacciones que aún no has
+Whisper Money puede sugerir categorías para las transacciones que aún no has
 categorizado. Está desactivada hasta que tú la actives, porque implica enviar la
 descripción de la transacción a un proveedor de IA.
 
@@ -162,7 +162,7 @@ Lo que conviene saber:
 
 - Tú decides si la activas, y puedes desactivarla en cualquier momento.
 - Solo rellena categorías vacías. Nunca sobrescribe una que hayas elegido.
-- Lo que asigna queda marcado como puesto por Finanzas Personales, así que puedes
+- Lo que asigna queda marcado como puesto por Whisper Money, así que puedes
   encontrarlo y revisarlo después.
 - Corregir una de sus categorías se puede convertir en una regla de
   automatización, para que el mismo comercio se resuelva sin IA la próxima vez.

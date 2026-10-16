@@ -33,7 +33,7 @@ Workflow:
    - Pick best impact score: high event count, high user count, recent lastSeen, production environment, clear actionable stack.
    - Record chosen short issue id and Sentry URL in notes.
 2. Branch:
-   - Derive branch name from Sentry short issue id only, e.g. `FINANZAS-PERSONALES-123`.
+   - Derive branch name from Sentry short issue id only, e.g. `WHISPER-MONEY-123`.
    - Run `git switch -c <issue-id>`; if branch exists, `git switch <issue-id>`.
 3. Investigate:
    - Fetch latest issue details and spans with `sentry issue view <issue> --spans all --json`.

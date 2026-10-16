@@ -5,8 +5,8 @@ single entry in `config/currencies.php` plus one translation string. Everything
 else — validation, the Inertia props that feed the dropdowns, and conversion —
 derives from that entry automatically.
 
-Reference PRs: [#642 (NGN)](https://github.com/finanzas-personales/finanzas-personales/pull/642),
-[#644 (GHS)](https://github.com/finanzas-personales/finanzas-personales/pull/644).
+Reference PRs: [#642 (NGN)](https://github.com/whisper-money/whisper-money/pull/642),
+[#644 (GHS)](https://github.com/whisper-money/whisper-money/pull/644).
 
 ---
 

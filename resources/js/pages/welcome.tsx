@@ -1392,7 +1392,7 @@ function CashflowChartPreview() {
 
 /**
  * Tools the MCP server exposes, split by what they do. A test keeps these in
- * step with App\Mcp\Servers\FinanzasPersonalesServer, so the landing cannot claim a
+ * step with App\Mcp\Servers\WhisperMoneyServer, so the landing cannot claim a
  * number the server stopped serving.
  */
 const MCP_READ_TOOL_COUNT = 11;
@@ -1532,7 +1532,7 @@ function AiConnectorPreview({
             <div className="flex flex-wrap items-center gap-2 border-b border-[#e3e3e0]/85 px-4 py-3 dark:border-[#3E3E3A]/80">
                 <span className="inline-flex items-center gap-1.5 rounded-md border border-[#e3e3e0] bg-[#FDFDFC] px-2 py-0.5 text-[0.7rem] font-medium text-[#706f6c] dark:border-[#3E3E3A] dark:bg-[#1C1C1A] dark:text-[#A1A09A]">
                     <SparklesIcon className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    {__('Finanzas Personales connected')}
+                    {__('Whisper Money connected')}
                 </span>
                 <span className="text-[0.7rem] text-[#A1A09A] dark:text-[#706f6c]">
                     {__('Sample conversation')}
@@ -2513,7 +2513,7 @@ export default function Welcome({
         {
             name: 'Joel Molina',
             text: __(
-                "I really like Finanzas Personales and I think it's a very interesting app. I'm delighted to hear the Kuwaiti dinar is now available in production. That's great news!",
+                "I really like Whisper Money and I think it's a very interesting app. I'm delighted to hear the Kuwaiti dinar is now available in production. That's great news!",
             ),
         },
         {
@@ -2527,7 +2527,7 @@ export default function Welcome({
             name: 'Marcus Oliveira',
             gravatar: '3c4342baddf0beb8b0bd9fe89168e282',
             text: __(
-                'Thank you for developing Finanzas Personales. The focus on privacy and centralizing finances is an excellent proposition.',
+                'Thank you for developing Whisper Money. The focus on privacy and centralizing finances is an excellent proposition.',
             ),
         },
         {
@@ -2540,7 +2540,7 @@ export default function Welcome({
             name: 'Carla Álvarez',
             gravatar: '9901ee5e849cf9a0caea00e897cb8123',
             text: __(
-                'I found Finanzas Personales and instantly knew I needed it. I was stuck doing everything in a spreadsheet — a chore I kept putting off. This makes it effortless.',
+                'I found Whisper Money and instantly knew I needed it. I was stuck doing everything in a spreadsheet — a chore I kept putting off. This makes it effortless.',
             ),
         },
         {
@@ -2605,7 +2605,7 @@ export default function Welcome({
         {
             name: 'Geraldine Herraz',
             text: __(
-                'Overall I really liked the experience, and I think Finanzas Personales has enormous potential. Every success with Finanzas Personales.',
+                'Overall I really liked the experience, and I think Whisper Money has enormous potential. Every success with Whisper Money.',
             ),
         },
         {
@@ -2673,7 +2673,7 @@ export default function Welcome({
             name: 'Miguel Ángel SB',
             gravatar: 'e5da1753042eee6b08a3db0df0b5f807',
             text: __(
-                'I love the style, the intuitive interface, how easy it is to use. If it keeps growing like this, Finanzas Personales will be my finance app of choice. You can tell it is built with passion — and things made with passion can only end up a success.',
+                'I love the style, the intuitive interface, how easy it is to use. If it keeps growing like this, Whisper Money will be my finance app of choice. You can tell it is built with passion — and things made with passion can only end up a success.',
             ),
         },
         {
@@ -2752,10 +2752,10 @@ export default function Welcome({
 
         if (langParam && supportedLocales.includes(langParam)) {
             // Store the preference in localStorage
-            writeStoredValue('finanzas_landing_locale', langParam);
+            writeStoredValue('whisper_landing_locale', langParam);
         } else {
             // No query param - check if we have a stored preference
-            const storedLocale = readStoredValue('finanzas_landing_locale');
+            const storedLocale = readStoredValue('whisper_landing_locale');
 
             if (
                 storedLocale &&
@@ -2767,7 +2767,7 @@ export default function Welcome({
                 return;
             } else if (!storedLocale && locale) {
                 // First visit - store the detected locale from session/header
-                writeStoredValue('finanzas_landing_locale', locale);
+                writeStoredValue('whisper_landing_locale', locale);
             }
         }
     }, [locale]);
@@ -2809,7 +2809,7 @@ export default function Welcome({
         <>
             <Head
                 title={__(
-                    'Finanzas Personales - The Most Secure Personal Finance App',
+                    'Whisper Money - The Most Secure Personal Finance App',
                 )}
             >
                 <meta
@@ -2828,11 +2828,11 @@ export default function Welcome({
 
                 <link rel="canonical" href={appUrl} />
 
-                <meta property="og:site_name" content="Finanzas Personales" />
+                <meta property="og:site_name" content="Whisper Money" />
                 <meta
                     property="og:title"
                     content={__(
-                        'Finanzas Personales - The Most Secure Personal Finance App',
+                        'Whisper Money - The Most Secure Personal Finance App',
                     )}
                 />
 
@@ -2847,14 +2847,14 @@ export default function Welcome({
                 <meta property="og:url" content={appUrl} />
                 <meta
                     property="og:image"
-                    content={`${appUrl}/images/og_finanzas_personales.png`}
+                    content={`${appUrl}/images/og_whisper_money.png`}
                 />
 
                 <meta property="og:image:width" content="1200" />
                 <meta property="og:image:height" content="630" />
                 <meta
                     property="og:image:alt"
-                    content={__('Finanzas Personales - Secure Personal Finance App')}
+                    content={__('Whisper Money - Secure Personal Finance App')}
                 />
 
                 <meta property="og:locale" content={__('en_US')} />
@@ -2863,7 +2863,7 @@ export default function Welcome({
                 <meta
                     name="twitter:title"
                     content={__(
-                        'Finanzas Personales - The Most Secure Personal Finance App',
+                        'Whisper Money - The Most Secure Personal Finance App',
                     )}
                 />
 
@@ -2876,19 +2876,19 @@ export default function Welcome({
 
                 <meta
                     name="twitter:image"
-                    content={`${appUrl}/images/og_finanzas_personales.png`}
+                    content={`${appUrl}/images/og_whisper_money.png`}
                 />
 
                 <meta
                     name="twitter:image:alt"
-                    content={__('Finanzas Personales - Secure Personal Finance App')}
+                    content={__('Whisper Money - Secure Personal Finance App')}
                 />
 
                 <script type="application/ld+json">
                     {JSON.stringify({
                         '@context': 'https://schema.org',
                         '@type': 'WebApplication',
-                        name: 'Finanzas Personales',
+                        name: 'Whisper Money',
                         description:
                             'The most secure privacy-first personal finance app. Track expenses, create budgets, and manage your money privately.',
                         url: appUrl,
@@ -3185,7 +3185,7 @@ export default function Welcome({
                                 </h2>
                                 <p className="text-md max-w-[640px] font-medium text-[#706f6c] sm:text-lg dark:text-[#A1A09A]">
                                     {__(
-                                        'Connect Finanzas Personales to your assistant and ask about your money in your own words. It reads your transactions to answer you and, if you ask it to, puts them in order too: recategorising, creating rules, adjusting budgets.',
+                                        'Connect Whisper Money to your assistant and ask about your money in your own words. It reads your transactions to answer you and, if you ask it to, puts them in order too: recategorising, creating rules, adjusting budgets.',
                                     )}
                                 </p>
                                 <p className="text-sm text-[#706f6c] dark:text-[#A1A09A]">
@@ -3264,7 +3264,7 @@ export default function Welcome({
                                         </h3>
                                         <p className="mt-3 text-sm leading-relaxed text-[#706f6c] dark:text-[#A1A09A]">
                                             {__(
-                                                'While it is connected, the assistant reads your data to answer you, and those conversations live in your own account with that assistant, under their rules and not ours. Remove Finanzas Personales from its connected apps and it stops answering.',
+                                                'While it is connected, the assistant reads your data to answer you, and those conversations live in your own account with that assistant, under their rules and not ours. Remove Whisper Money from its connected apps and it stops answering.',
                                             )}
                                         </p>
                                     </FeatureCard>
@@ -3577,7 +3577,7 @@ export default function Welcome({
                                         'Do you use AI, and is my data safe?',
                                     )}
                                     answer={__(
-                                        'Yes. Finanzas Personales uses AI to automatically categorize transactions and suggest budgets, so you spend less time on data entry. It works only to serve you: your data is never used to train models, sold, or shared with third parties.',
+                                        'Yes. Whisper Money uses AI to automatically categorize transactions and suggest budgets, so you spend less time on data entry. It works only to serve you: your data is never used to train models, sold, or shared with third parties.',
                                     )}
                                 />
                                 <FaqItem
@@ -3606,10 +3606,10 @@ export default function Welcome({
                                 />
                                 <FaqItem
                                     question={__(
-                                        'Is Finanzas Personales open source?',
+                                        'Is Whisper Money open source?',
                                     )}
                                     answer={__(
-                                        'Yes! Finanzas Personales is fully open source. You can review the code, suggest improvements, or even self-host it. Transparency is a core part of our privacy commitment.',
+                                        'Yes! Whisper Money is fully open source. You can review the code, suggest improvements, or even self-host it. Transparency is a core part of our privacy commitment.',
                                     )}
                                 />
                             </div>
@@ -3734,7 +3734,7 @@ export default function Welcome({
                     <div className="mx-auto mt-10 flex max-w-5xl flex-col gap-3 px-6 text-sm text-[#706f6c] sm:flex-row sm:items-center sm:justify-between lg:px-8 dark:text-[#A1A09A]">
                         <p>
                             © {new Date().getFullYear()}{' '}
-                            {__('Finanzas Personales. All rights reserved.')}
+                            {__('Whisper Money. All rights reserved.')}
                         </p>
                         <div className="flex items-center gap-6">
                             <Link

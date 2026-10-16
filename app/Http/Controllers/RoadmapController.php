@@ -19,7 +19,7 @@ class RoadmapController extends Controller
 {
     private const CACHE_KEY = 'roadmap-items';
 
-    private const HOST = 'feedback.finanzaspersonales.local';
+    private const HOST = 'whispermoney.userjot.com';
 
     private const ROADMAP_ENDPOINT = 'https://api.userjot.com/trpc/x1.roadmap.getPage';
 

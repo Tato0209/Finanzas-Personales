@@ -14,19 +14,19 @@ use Illuminate\Support\Facades\Bus;
  */
 beforeEach(function () {
     config([
-        'app.demo.email' => 'demo@finanzaspersonales.local',
-        'app.press.email' => 'prensa@finanzaspersonales.local',
+        'app.demo.email' => 'demo@whisper.money',
+        'app.press.email' => 'prensa@whisper.money',
     ]);
 });
 
 it('lists the shared accounts', function () {
     expect(User::sharedAccountEmails())
-        ->toBe(['demo@finanzaspersonales.local', 'prensa@finanzaspersonales.local']);
+        ->toBe(['demo@whisper.money', 'prensa@whisper.money']);
 });
 
 it('keeps shared-account calls out of the MCP usage report', function () {
-    $press = User::factory()->create(['email' => 'prensa@finanzaspersonales.local']);
-    $demo = User::factory()->create(['email' => 'demo@finanzaspersonales.local']);
+    $press = User::factory()->create(['email' => 'prensa@whisper.money']);
+    $demo = User::factory()->create(['email' => 'demo@whisper.money']);
     $real = User::factory()->create(['email' => 'real@example.com']);
 
     McpToolCall::factory()->count(5)->create(['user_id' => $press->id, 'tool' => 'search_transactions']);
@@ -39,7 +39,7 @@ it('keeps shared-account calls out of the MCP usage report', function () {
 });
 
 it('reports no usage at all when only the shared accounts called the MCP', function () {
-    $press = User::factory()->create(['email' => 'prensa@finanzaspersonales.local']);
+    $press = User::factory()->create(['email' => 'prensa@whisper.money']);
     McpToolCall::factory()->count(4)->create(['user_id' => $press->id, 'tool' => 'list_budgets']);
 
     $this->artisan('stats:mcp-usage')
@@ -50,7 +50,7 @@ it('reports no usage at all when only the shared accounts called the MCP', funct
 it('keeps the seeded subscriptions out of the subscription funnel', function () {
     config(['subscriptions.enabled' => true, 'ai_suggestions.report.excluded_emails' => []]);
 
-    foreach (['prensa@finanzaspersonales.local', 'demo@finanzaspersonales.local'] as $email) {
+    foreach (['prensa@whisper.money', 'demo@whisper.money'] as $email) {
         $user = User::factory()->create(['email' => $email, 'created_at' => now()->subDays(2)]);
         $user->subscriptions()->create([
             'type' => 'default',
@@ -71,7 +71,7 @@ it('does not send drip emails to a shared account', function () {
     $this->freezeTime();
 
     User::factory()->onboarded()->create([
-        'email' => 'prensa@finanzaspersonales.local',
+        'email' => 'prensa@whisper.money',
         'last_active_at' => now()->subDays(7),
     ]);
 

@@ -1,13 +1,13 @@
 # Importar desde Banktrack
 
-Banktrack exporta todas tus transacciones en un solo archivo, y Finanzas Personales conoce su formato: las columnas, las cuentas y las categorías se rellenan solas, así que mudarte es sobre todo cuestión de revisar.
+Banktrack exporta todas tus transacciones en un solo archivo, y Whisper Money conoce su formato: las columnas, las cuentas y las categorías se rellenan solas, así que mudarte es sobre todo cuestión de revisar.
 
 {{TOC}}
 
 ## Inicio rápido
 
 1. En Banktrack, descarga tus transacciones en CSV o Excel, sin ningún filtro puesto.
-2. En Finanzas Personales, abre **Configuración → Importar desde otra app** y pulsa **Empezar importación**.
+2. En Whisper Money, abre **Configuración → Importar desde otra app** y pulsa **Empezar importación**.
 3. Elige **Banktrack** y sube el archivo tal cual.
 4. Revisa las cuentas y las categorías.
 5. Importa.
@@ -46,7 +46,7 @@ flowchart LR
     ignorada[Ignorada] --> transfer[Categoría de transferencia]
 ```
 
-| Columna de Banktrack | En Finanzas Personales                                                                                           |
+| Columna de Banktrack | En Whisper Money                                                                                           |
 | -------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Fecha                | La fecha, normalmente día/mes/año; el formato se detecta y se puede cambiar.                               |
 | Concepto             | La descripción.                                                                                            |
@@ -78,7 +78,7 @@ Banktrack no siempre lo rellena, así que la misma cuenta puede venir con él y 
 «Producto - Nombre»** solo si tienes varias cuentas en un mismo banco.
 
 Cada cuenta recibe un banco de nuestra lista cuando su nombre coincide con uno. Si
-no coincide, Finanzas Personales crea un banco propio con ese nombre, que puedes
+no coincide, Whisper Money crea un banco propio con ese nombre, que puedes
 cambiar. Las cuentas de efectivo no llevan banco. Una cuenta que se llame igual
 que una de tus cuentas manuales va a ella salvo que elijas otra cosa, y una cuenta
 que tengas conectada no se toca nunca: su histórico de Banktrack va a una cuenta
@@ -101,7 +101,7 @@ manual aparte.
 
 ## Importar una exportación más reciente
 
-Banktrack da a cada transacción su propio identificador, y Finanzas Personales lo
+Banktrack da a cada transacción su propio identificador, y Whisper Money lo
 guarda. Si sigues usando Banktrack unos días más y vuelves a exportar, al importar
 el archivo nuevo solo entran las transacciones que todavía no estaban, siempre que
 sigas teniendo abierta la importación completa.

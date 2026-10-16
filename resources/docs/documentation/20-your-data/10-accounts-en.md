@@ -1,6 +1,6 @@
 # Accounts
 
-Accounts are the foundation of Finanzas Personales. They hold balances, transactions, and account history.
+Accounts are the foundation of Whisper Money. They hold balances, transactions, and account history.
 
 {{TOC}}
 
@@ -141,7 +141,7 @@ Use balances for:
 
 ## Balances, market values, and owed amounts
 
-Finanzas Personales uses different words depending on the account type.
+Whisper Money uses different words depending on the account type.
 
 - Normal accounts use **balance**.
 - Loan accounts use **owed amount**.
@@ -227,11 +227,11 @@ the new share on their own.
 
 ### Why is my loan reducing net worth?
 
-A loan is money owed. Finanzas Personales subtracts it from assets when calculating net worth.
+A loan is money owed. Whisper Money subtracts it from assets when calculating net worth.
 
 ### Why is my credit card not reducing net worth?
 
-A credit card is a spending account, not wealth. Finanzas Personales tracks what you
+A credit card is a spending account, not wealth. Whisper Money tracks what you
 owe on the card itself and leaves it out of the net worth total, so paying the
 card off does not move that number.
 

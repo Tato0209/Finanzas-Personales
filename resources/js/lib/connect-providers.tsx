@@ -97,7 +97,7 @@ export const CONNECT_PROVIDERS: ConnectProvider[] = [
         institution: {
             name: 'Coinbase',
             country: 'ALL',
-            logo: 'https://finanzaspersonales.local/storage/banks/logos/coinbase.png',
+            logo: 'https://whisper.money/storage/banks/logos/coinbase.png',
             maximum_consent_validity: null,
         },
         endpoint: '/open-banking/coinbase/connect',
@@ -135,7 +135,7 @@ export const CONNECT_PROVIDERS: ConnectProvider[] = [
         institution: {
             name: 'Binance',
             country: 'ALL',
-            logo: 'https://finanzaspersonales.local/storage/banks/logos/t1h5rqi19dJTPl6ZadziPjNwm0lrcdTFBRzB3iCy.png',
+            logo: 'https://whisper.money/storage/banks/logos/t1h5rqi19dJTPl6ZadziPjNwm0lrcdTFBRzB3iCy.png',
             maximum_consent_validity: null,
         },
         endpoint: '/open-banking/binance/connect',
@@ -169,7 +169,7 @@ export const CONNECT_PROVIDERS: ConnectProvider[] = [
         institution: {
             name: 'Bitpanda',
             country: 'ALL',
-            logo: 'https://finanzaspersonales.local/storage/banks/logos/7Y6gl0gaFH1mStJMcUQ9VpgzX1kduyumm0dDhGlf.png',
+            logo: 'https://whisper.money/storage/banks/logos/7Y6gl0gaFH1mStJMcUQ9VpgzX1kduyumm0dDhGlf.png',
             maximum_consent_validity: null,
         },
         endpoint: '/open-banking/bitpanda/connect',

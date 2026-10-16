@@ -1,6 +1,6 @@
 <?php
 
-use App\Mcp\Servers\FinanzasPersonalesServer;
+use App\Mcp\Servers\WhisperMoneyServer;
 use App\Mcp\Tools\ListSpaces;
 use App\Models\User;
 
@@ -38,7 +38,7 @@ it('rejects the demo account, whose credentials are public and data is shared', 
     $user = User::factory()->create(['email' => 'demo@example.test']);
     $user->withAccessToken($user->createToken('mcp', ['mcp:read'])->accessToken);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListSpaces::class)
         ->assertHasErrors();
 });

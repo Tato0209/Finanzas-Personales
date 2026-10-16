@@ -110,7 +110,7 @@ class UpdateAccount extends WriteTool
 
         if ($request->has('bank_id')) {
             throw ValidationException::withMessages([
-                'bank_id' => 'That account is connected to a bank, so its bank comes from the connection. To move it to another bank the user connects that bank in the Finanzas Personales app.',
+                'bank_id' => 'That account is connected to a bank, so its bank comes from the connection. To move it to another bank the user connects that bank in the Whisper Money app.',
             ]);
         }
 

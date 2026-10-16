@@ -104,6 +104,6 @@ class AchievementController extends Controller
 
     private function filename(string $medal, CardFormat $format, CardTheme $theme): string
     {
-        return 'finanzas-personales-'.str_replace('.', '-', $medal)."-{$format->value}-{$theme->value}.png";
+        return 'whisper-money-'.str_replace('.', '-', $medal)."-{$format->value}-{$theme->value}.png";
     }
 }

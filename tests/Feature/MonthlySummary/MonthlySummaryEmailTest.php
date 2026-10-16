@@ -40,7 +40,7 @@ beforeEach(function (): void {
     $this->mock(CardRenderer::class, function ($mock): void {
         $mock->shouldReceive('warm')->andReturnNull();
         $mock->shouldReceive('forgetBefore')->andReturnNull();
-        $mock->shouldReceive('url')->andReturn('https://finanzaspersonales.local/storage/card.png');
+        $mock->shouldReceive('url')->andReturn('https://whisper.money/storage/card.png');
         $mock->shouldReceive('path')->andReturn('monthly-summaries/x/card.png');
         $mock->shouldReceive('forget')->andReturnNull();
     });
@@ -231,7 +231,7 @@ it('never carries an absolute amount', function (array $state): void {
     foreach ([true, false] as $subscriptions) {
         config(['subscriptions.enabled' => $subscriptions]);
 
-        $rendered = (new MonthlySummaryEmail($summary->user, $summary, $state['analysis'], 'https://finanzaspersonales.local/storage/card.png', $state['pro']))->render();
+        $rendered = (new MonthlySummaryEmail($summary->user, $summary, $state['analysis'], 'https://whisper.money/storage/card.png', $state['pro']))->render();
 
         expect($rendered)->not->toMatch('/[€$£¥]|EUR/u');
 
@@ -434,7 +434,7 @@ it('draws the email\'s card in the reader\'s language, not the worker\'s', funct
     $renderer->shouldReceive('url')->andReturnUsing(function () use (&$drawnIn): string {
         $drawnIn = app()->getLocale();
 
-        return 'https://finanzaspersonales.local/storage/card.png';
+        return 'https://whisper.money/storage/card.png';
     });
     app()->instance(CardRenderer::class, $renderer);
 

@@ -82,7 +82,7 @@ bank sends.
 
 ### Columns
 
-Each piece of a transaction comes from one column of your file. Finanzas Personales
+Each piece of a transaction comes from one column of your file. Whisper Money
 guesses what it can, you correct the rest, and the choice is remembered for the
 next file from the same app.
 

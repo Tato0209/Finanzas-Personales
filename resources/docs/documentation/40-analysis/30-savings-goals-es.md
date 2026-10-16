@@ -203,7 +203,7 @@ Archívalo cuando lo compres.
 
 ### ¿Un objetivo de ahorro mueve dinero entre mis cuentas?
 
-No. Nada en Finanzas Personales mueve dinero. Un objetivo lee las transacciones que
+No. Nada en Whisper Money mueve dinero. Un objetivo lee las transacciones que
 etiquetas y las suma.
 
 ### ¿Por qué mi objetivo está a cero si tengo transacciones vinculadas?

@@ -13,7 +13,7 @@ it('keeps a signed-in visitor on the landing page', function () {
     // asserting the path immediately would pass even with one in place.
     $page->wait(4)
         ->assertPathIs('/')
-        ->assertSee('Finanzas Personales')
+        ->assertSee('Whisper Money')
         ->assertNoJavascriptErrors();
 });
 

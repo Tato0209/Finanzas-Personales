@@ -9,7 +9,7 @@ describe('isChunkLoadError', () => {
         expect(
             isChunkLoadError(
                 new TypeError(
-                    'Failed to fetch dynamically imported module: https://finanzaspersonales.local/build/assets/accounts-BO3xxENF.js',
+                    'Failed to fetch dynamically imported module: https://whisper.money/build/assets/accounts-BO3xxENF.js',
                 ),
             ),
         ).toBe(true);
@@ -37,7 +37,7 @@ describe('reloadOnChunkLoadError', () => {
         storage.clear();
 
         const reason = new TypeError(
-            'Failed to fetch dynamically imported module: https://finanzaspersonales.local/build/assets/accounts-BO3xxENF.js',
+            'Failed to fetch dynamically imported module: https://whisper.money/build/assets/accounts-BO3xxENF.js',
         );
 
         expect(

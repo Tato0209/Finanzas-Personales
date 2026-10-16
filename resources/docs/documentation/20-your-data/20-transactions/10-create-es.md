@@ -35,7 +35,7 @@ Una transacción creada a mano se compara con tus reglas de automatización como
 
 ### ¿Por qué el importe se guarda como número negativo?
 
-Porque el dinero que sale es un importe negativo en todo Finanzas Personales. Informes, presupuestos y flujo de caja dependen del signo. Nunca lo escribes tú: el selector **Gasto / Ingresos** del diálogo lo pone por ti.
+Porque el dinero que sale es un importe negativo en todo Whisper Money. Informes, presupuestos y flujo de caja dependen del signo. Nunca lo escribes tú: el selector **Gasto / Ingresos** del diálogo lo pone por ti.
 
 ### ¿Puedo crear una transacción en otra divisa?
 

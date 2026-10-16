@@ -75,7 +75,7 @@ it('deletes the account once the password confirms it', function () {
 
     $page->fill('password', AuthBrowserFlow::PASSWORD)
         ->click('@confirm-delete-user-button')
-        ->assertSee('Finanzas Personales')
+        ->assertSee('Whisper Money')
         ->assertPathIs('/')
         ->assertNoJavascriptErrors();
 

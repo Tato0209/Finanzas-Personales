@@ -248,7 +248,7 @@ function SubscribedSection({
             <HeadingSmall
                 title={__('Your Pro Plan')}
                 description={__(
-                    "You're enjoying all the benefits of Finanzas Personales Pro",
+                    "You're enjoying all the benefits of Whisper Money Pro",
                 )}
             />
 

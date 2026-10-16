@@ -55,8 +55,8 @@ class BankNoticeEmail extends Mailable implements ShouldQueue
         return new Envelope(
             subject: (string) self::subjectOf($this->body()),
             replyTo: [new Address(
-                config('mail.drip_from.address', 'hi@finanzaspersonales.local'),
-                config('mail.drip_from.name', 'Finanzas Personales'),
+                config('mail.drip_from.address', 'hi@whisper.money'),
+                config('mail.drip_from.name', 'Whisper Money'),
             )],
         );
     }

@@ -1,6 +1,6 @@
 # Import transactions
 
-Importing brings a bank file into Finanzas Personales when automatic syncing is not available for that bank, or when you would rather do it yourself.
+Importing brings a bank file into Whisper Money when automatic syncing is not available for that bank, or when you would rather do it yourself.
 
 This imports one file into one account. To bring over a whole export from
 another app, with many accounts and its categories, use
@@ -35,7 +35,7 @@ The drawer asks which account the file belongs to, then for the file itself.
 
 ## Required columns
 
-Finanzas Personales reads the header row and guesses which column is which. The guesses are yours to correct, and the mapping is remembered per account for next time.
+Whisper Money reads the header row and guesses which column is which. The guesses are yours to correct, and the mapping is remembered per account for next time.
 
 ![The column mapping step, with each column of the file matched to a transaction field](/docs/documentation/import-transactions-mapping.png)
 
@@ -46,7 +46,7 @@ Finanzas Personales reads the header row and guesses which column is which. The 
 
 The transaction date.
 
-Finanzas Personales can detect common date formats, but you can adjust it if needed.
+Whisper Money can detect common date formats, but you can adjust it if needed.
 
 </div>
 
@@ -127,7 +127,7 @@ Some banks export expenses as positive numbers. Check the preview before importi
 
 ### Can I import the same file twice?
 
-Yes. Before the preview, Finanzas Personales checks each row against the transactions
+Yes. Before the preview, Whisper Money checks each row against the transactions
 the account already has and flags the ones that match on the same day, amount,
 and description. Flagged rows are unticked for you, so importing the file again
 brings in only what is new. The count is shown above the preview, and you can

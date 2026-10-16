@@ -151,7 +151,7 @@ it('shares a medal, with and without the amount on it', function (): void {
         // carry files, so it is always offered.
         ->assertPresent('[role="dialog"] a[download]')
         ->assertAttributeContains('[role="dialog"] a[download]', 'href', 'amount=1')
-        ->assertAttributeContains('[role="dialog"] a[download]', 'download', 'finanzas-personales-net_worth-1-feed-light.png')
+        ->assertAttributeContains('[role="dialog"] a[download]', 'download', 'whisper-money-net_worth-1-feed-light.png')
         // Off, the medal still says what it is; the figure stops being a
         // statement about how much money somebody has.
         ->assertSee('Leave the amount off')

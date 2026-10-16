@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Testing\TestResponse;
 
-const SES_FEEDBACK_TOPIC_ARN = 'arn:aws:sns:eu-west-1:123456789012:finanzas-ses-feedback';
+const SES_FEEDBACK_TOPIC_ARN = 'arn:aws:sns:eu-west-1:123456789012:whisper-ses-feedback';
 
 beforeEach(function () {
     config(['services.ses.topic_arn' => SES_FEEDBACK_TOPIC_ARN]);

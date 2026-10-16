@@ -24,7 +24,7 @@ test('new users can register', function () {
     $this->assertAuthenticated();
     $response
         ->assertRedirect(route('onboarding', absolute: false))
-        ->assertCookie('finanzas_personales_returning_user');
+        ->assertCookie('whisper_money_returning_user');
 });
 
 test('new users store their detected timezone on registration', function () {

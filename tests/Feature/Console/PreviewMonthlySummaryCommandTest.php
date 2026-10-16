@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Mail;
 
 beforeEach(function (): void {
     $this->mock(CardRenderer::class, function ($mock): void {
-        $mock->shouldReceive('url')->andReturn('https://finanzaspersonales.local/card.png');
+        $mock->shouldReceive('url')->andReturn('https://whisper.money/card.png');
         $mock->shouldReceive('warm');
     });
 });
@@ -50,7 +50,7 @@ it('sends every state of the report in one go', function (): void {
     Mail::fake();
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
     ])->assertSuccessful();
 
@@ -65,13 +65,13 @@ it('draws every card the report screen shows, and keeps the earlier months', fun
     Mail::fake();
 
     $this->mock(CardRenderer::class, function ($mock): void {
-        $mock->shouldReceive('url')->andReturn('https://finanzaspersonales.local/card.png');
+        $mock->shouldReceive('url')->andReturn('https://whisper.money/card.png');
         $mock->shouldReceive('warm')->once();
         $mock->shouldNotReceive('forgetBefore');
     });
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
         '--type' => 'pro',
     ])->assertSuccessful();
@@ -83,7 +83,7 @@ it('sends now rather than queueing, so the cases do not collapse into one', func
     Mail::fake();
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
     ])->assertSuccessful();
 
@@ -102,7 +102,7 @@ it('previews in the reader\'s language, not the console\'s', function (): void {
     $source = previewSource();
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => $source->email,
     ])->assertSuccessful();
 
@@ -121,7 +121,7 @@ it('sends one case only when asked for one', function (string $type, string $mai
     Mail::fake();
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
         '--type' => $type,
     ])->assertSuccessful();
@@ -143,7 +143,7 @@ it('refuses a case it does not have', function (): void {
     Mail::fake();
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
         '--type' => 'pro-with-sprinkles',
     ])->expectsOutputToContain('short-closed-month')->assertFailed();
@@ -158,7 +158,7 @@ it('writes the analysis with the model on --ai, once, and stores none of it', fu
     $this->mock(AnalysisWriter::class, fn ($mock) => $mock->shouldReceive('draft')->once()->andReturn('El modelo ha escrito esto.'));
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
         '--ai' => true,
     ])->assertSuccessful();
@@ -172,7 +172,7 @@ it('never asks the model for a case that carries no analysis', function (): void
     $this->mock(AnalysisWriter::class, fn ($mock) => $mock->shouldNotReceive('draft'));
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
         '--type' => 'free',
         '--ai' => true,
@@ -191,7 +191,7 @@ it('falls back to the sample text when the model cannot be reached', function ()
     ));
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
         '--type' => 'pro',
         '--ai' => true,
@@ -207,7 +207,7 @@ it('falls back to the sample text when the model gives up', function (): void {
     $this->mock(AnalysisWriter::class, fn ($mock) => $mock->shouldReceive('draft')->andReturnNull());
 
     $this->artisan('email:monthly-summary-preview', [
-        'email' => 'look@finanzaspersonales.test',
+        'email' => 'look@whisper.test',
         '--source' => previewSource()->email,
         '--type' => 'pro',
         '--ai' => true,

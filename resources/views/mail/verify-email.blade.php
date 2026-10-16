@@ -9,11 +9,11 @@
 {{ __('Verify Email Address') }}
 </x-mail::button>
 
-{{ __("If you didn't create a Finanzas Personales account, you can safely ignore this email.") }}
+{{ __("If you didn't create a Whisper Money account, you can safely ignore this email.") }}
 
 {{ __('Best,') }}<br>
 {{ __('Álvaro & Víctor') }}<br>
-{{ __('Founders of Finanzas Personales') }}
+{{ __('Founders of Whisper Money') }}
 
 <x-mail::subcopy>
 {{ __('If you\'re having trouble clicking the "Verify Email Address" button, copy and paste the URL below into your web browser:') }} <span class="break-all">[{{ $verificationUrl }}]({{ $verificationUrl }})</span>

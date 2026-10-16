@@ -1,13 +1,13 @@
 # Import from Banktrack
 
-Banktrack exports all your transactions in one file, and Finanzas Personales knows its layout: the columns, the accounts and the categories are filled in for you, so moving over is mostly a matter of checking.
+Banktrack exports all your transactions in one file, and Whisper Money knows its layout: the columns, the accounts and the categories are filled in for you, so moving over is mostly a matter of checking.
 
 {{TOC}}
 
 ## Quick start
 
 1. In Banktrack, download your transactions as CSV or Excel, with no filters on.
-2. In Finanzas Personales, open **Settings → Import from another app** and **Start import**.
+2. In Whisper Money, open **Settings → Import from another app** and **Start import**.
 3. Choose **Banktrack** and upload the file as it is.
 4. Check the accounts and the categories.
 5. Import.
@@ -46,7 +46,7 @@ flowchart LR
     ignorada[Ignorada] --> transfer[Transfer category]
 ```
 
-| Banktrack column  | In Finanzas Personales                                                                                               |
+| Banktrack column  | In Whisper Money                                                                                               |
 | ----------------- | -------------------------------------------------------------------------------------------------------------- |
 | Fecha             | The date, usually day/month/year; the format is detected and can be changed.                                   |
 | Concepto          | The description.                                                                                               |
@@ -78,7 +78,7 @@ without it. That is why splitting by it is off. Turn on **Also split by
 «Producto - Nombre»** only if you have several accounts at one bank.
 
 Each account gets a bank from our list when its name matches one. When it does
-not, Finanzas Personales creates a bank of your own with that name, which you can
+not, Whisper Money creates a bank of your own with that name, which you can
 change. Cash accounts get no bank. Accounts named like one of your manual
 accounts go into it unless you choose otherwise, and an account you have
 connected is never touched: its Banktrack history goes into a separate manual
@@ -101,7 +101,7 @@ account.
 
 ## Importing a newer export
 
-Banktrack gives every transaction its own ID, and Finanzas Personales keeps it. If you
+Banktrack gives every transaction its own ID, and Whisper Money keeps it. If you
 keep using Banktrack for a few more days and export again, importing the new file
 brings in only the transactions that were not there yet, as long as the full
 import is still open to you.

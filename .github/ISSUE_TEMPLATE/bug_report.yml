@@ -16,7 +16,7 @@ body:
         OS: macOS 15.2 / Ubuntu 24.04 / Windows 11
         Docker version: 28.5.2
         Docker Compose version: v2.40.3
-        Finanzas Personales version: (commit hash or release tag)
+        Whisper Money version: (commit hash or release tag)
         Setup method: docker-compose / local
     validations:
       required: true

@@ -370,7 +370,7 @@ it('renders the extension email in English', function () {
     $mail->assertSeeInHtml('One more day at the old price');
 
     // The bug, the apology and the new deadline, which is all this email says.
-    $mail->assertSeeInHtml('Yesterday and today, Finanzas Personales showed the wrong price.');
+    $mail->assertSeeInHtml('Yesterday and today, Whisper Money showed the wrong price.');
     $mail->assertSeeInHtml('It said €8.99 a month');
     $mail->assertSeeInHtml('That was a bug, and it was mine. I am sorry.');
     $mail->assertSeeInHtml('To make up for it, the old price gets one more day');
@@ -389,7 +389,7 @@ it('renders the extension email in Spanish', function () {
     $mail->assertSeeInHtml('Hola Ada,');
     $mail->assertSeeInHtml('Un día más con el precio de siempre');
 
-    $mail->assertSeeInHtml('Ayer y hoy, Finanzas Personales ha estado mostrando un precio equivocado.');
+    $mail->assertSeeInHtml('Ayer y hoy, Whisper Money ha estado mostrando un precio equivocado.');
     $mail->assertSeeInHtml('Ponía 8,99 € al mes');
     $mail->assertSeeInHtml('Fue un fallo, y el fallo es mío. Lo siento.');
     $mail->assertSeeInHtml('Para compensarlo, el precio de siempre dura un día más');

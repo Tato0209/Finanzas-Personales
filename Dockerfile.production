@@ -1,0 +1,105 @@
+# Use the official PHP 8.4 FPM image
+FROM php:8.4-fpm
+
+ARG SENTRY_RELEASE
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libicu-dev \
+    zip \
+    unzip \
+    nginx \
+    supervisor \
+    libmemcached-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
+RUN pecl install memcached redis \
+    && docker-php-ext-enable memcached redis
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# Install Bun in a non-root path so supervisor workers running as www-data can execute it
+ENV BUN_INSTALL="/usr/local/bun"
+RUN curl -fsSL https://bun.com/install | bash \
+    && ln -sf /usr/local/bun/bin/bun /usr/local/bin/bun \
+    && chmod -R a+rx /usr/local/bun
+ENV PATH="/usr/local/bun/bin:${PATH}"
+
+# Install memcached and redis servers
+RUN apt-get update && apt-get install -y memcached redis-server && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+
+# Copy dependency manifests first so Docker can reuse install layers across code changes
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --optimize-autoloader
+
+COPY package.json bun.lock ./
+COPY scripts ./scripts
+RUN bun install --frozen-lockfile
+
+# Chromium for the shareable monthly-summary cards. They are a Blade view
+# photographed by headless Chromium, because the alternative was redrawing five
+# designs in three formats with GD and watching them drift from the design on the
+# first change. Playwright is already a dependency of the Pest browser suite, so
+# this is the browser the tests run on rather than a second stack.
+#
+# The binary lands in a shared path so the queue workers, which run as www-data,
+# can execute it.
+ENV PLAYWRIGHT_BROWSERS_PATH="/usr/local/playwright"
+RUN bunx playwright install --with-deps chromium \
+    && chmod -R a+rx /usr/local/playwright
+
+# Copy application files
+COPY . /app/.
+RUN composer dump-autoload --no-dev --optimize
+
+# Create necessary directories
+RUN mkdir -p /var/log/nginx && mkdir -p /var/cache/nginx
+
+# Build assets with HIDE_AUTH_BUTTONS=false so Wayfinder generates all routes
+# (HIDE_AUTH_BUTTONS will be set to true at runtime via .env)
+RUN HIDE_AUTH_BUTTONS=false bun run build:ssr
+
+# Copy supervisor configuration
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy nginx configuration
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx/fastcgi_params /etc/nginx/fastcgi_params
+
+# Set permissions
+RUN chown -R www-data:www-data /app \
+    && chmod -R 755 /app/storage \
+    && chmod -R 755 /app/bootstrap/cache
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost/up || exit 1
+
+# Copy entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Run entrypoint script (handles migrations, caching, then starts supervisor)
+CMD ["/entrypoint.sh"]

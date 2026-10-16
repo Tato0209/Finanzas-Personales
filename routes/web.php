@@ -17,6 +17,7 @@ use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\EmailUnsubscribeController;
 use App\Http\Controllers\IntegrationRequestController;
 use App\Http\Controllers\IntegrationsController;
+use App\Http\Controllers\InvestmentContributionController;
 use App\Http\Controllers\LoanDetailController;
 use App\Http\Controllers\MonthlySummaryController;
 use App\Http\Controllers\MonthlySummaryShareController;
@@ -54,38 +55,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    $popularBanks = Cache::remember('popular-banks', now()->addDay(), function () {
-        return Bank::query()
-            ->whereNull('user_id')
-            ->whereNotNull('logo')
-            ->where('logo', '!=', '')
-            ->withCount('accounts')
-            ->withExists([
-                'accounts as has_spanish_accounts' => fn ($query) => $query->whereHas(
-                    'bankingConnection',
-                    fn ($bankingConnectionQuery) => $bankingConnectionQuery->where('aspsp_country', 'ES')
-                ),
-            ])
-            ->orderByDesc('accounts_count')
-            ->orderByDesc('has_spanish_accounts')
-            ->orderBy('name')
-            ->limit(300)
-            ->get(['name', 'logo'])
-            ->map(fn (Bank $bank): array => [
-                'name' => $bank->name,
-                'logo' => $bank->logo,
-            ])
-            ->values()
-            ->toArray();
-    });
-
-    return Inertia::render('welcome', [
-        'canRegister' => config('auth.registration_enabled'),
-        'popularBanks' => $popularBanks,
-        'comparisonLinks' => ComparisonPages::index(app()->getLocale()),
-        'integrationsLink' => IntegrationsPage::link(app()->getLocale()),
-        'language' => app()->getLocale(),
-    ]);
+    return redirect()->route('dashboard');
 })->name('home');
 
 Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
@@ -268,6 +238,9 @@ Route::middleware(['auth', 'verified', 'onboarded', 'subscribed'])->group(functi
     Route::patch('accounts/{account}/credit-card-detail', [CreditCardDetailController::class, 'update'])->name('accounts.credit-card-detail.update');
     Route::delete('accounts/{account}/credit-card-detail', [CreditCardDetailController::class, 'destroy'])->name('accounts.credit-card-detail.destroy');
     Route::post('accounts/{account}/salary', [SalaryAccountController::class, 'store'])->name('accounts.salary.store');
+    Route::post('accounts/{account}/contributions', [InvestmentContributionController::class, 'store'])->name('accounts.contributions.store');
+    Route::put('accounts/{account}/contributions/{contribution}', [InvestmentContributionController::class, 'update'])->name('accounts.contributions.update');
+    Route::delete('accounts/{account}/contributions/{contribution}', [InvestmentContributionController::class, 'destroy'])->name('accounts.contributions.destroy');
 
     Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('transactions/categorize', [TransactionController::class, 'categorize'])->name('transactions.categorize');

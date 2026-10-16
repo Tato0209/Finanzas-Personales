@@ -42,7 +42,7 @@ beforeEach(function (): void {
     // The share card the summary screens ask for is drawn by a headless browser
     // in production; the URL is all these assertions need.
     $this->mock(CardRenderer::class, function ($mock): void {
-        $mock->shouldReceive('url')->andReturn('https://finanzaspersonales.local/storage/card.png');
+        $mock->shouldReceive('url')->andReturn('https://whisper.money/storage/card.png');
         $mock->shouldReceive('forget')->andReturnNull();
     });
 

@@ -9,7 +9,7 @@
 
 {{ __('A few Sundays ago I sat down to work out what I had spent eating out in July. One number. That was the whole plan.') }}
 
-{{ __('I opened Finanzas Personales, went into the transactions, filtered by category, fixed the dates and added it all up. By the time I had the number I had forgotten why I wanted it.') }}
+{{ __('I opened Whisper Money, went into the transactions, filtered by category, fixed the dates and added it all up. By the time I had the number I had forgotten why I wanted it.') }}
 
 **{{ __('The data was never the problem. Getting an answer out of it was.') }}**
 
@@ -17,7 +17,7 @@
 
 {{ __('So I went and built it.') }}
 
-{{ __('You can now connect Finanzas Personales to ChatGPT and just ask:') }}
+{{ __('You can now connect Whisper Money to ChatGPT and just ask:') }}
 
 {{ __('"How much did I spend on restaurants this month?"') }}
 
@@ -36,7 +36,7 @@
 {{ __('It works with Claude too, if that is the assistant you use.') }}
 
 <x-mail::panel>
-{{ __('One thing we want to be precise about, because this is a privacy first app. Nothing gets connected until you connect it yourself, from your settings, under AI Connector. While it is connected, the assistant reads your data in order to answer you, and those conversations live in your own account with that assistant, under their rules and not ours. When you want out, you remove Finanzas Personales from the connected apps inside ChatGPT and it stops answering. If you never connect it, nothing changes for you.') }}
+{{ __('One thing we want to be precise about, because this is a privacy first app. Nothing gets connected until you connect it yourself, from your settings, under AI Connector. While it is connected, the assistant reads your data in order to answer you, and those conversations live in your own account with that assistant, under their rules and not ours. When you want out, you remove Whisper Money from the connected apps inside ChatGPT and it stops answering. If you never connect it, nothing changes for you.') }}
 </x-mail::panel>
 
 {{ __('Connecting it is a handful of clicks, and it is a lot easier to watch than to read. So I recorded myself doing the whole thing, from connecting it to asking the first question.') }}
@@ -56,7 +56,7 @@
 {{ __('If you try it, hit reply and tell us what you asked it first. We read every email.') }}
 
 Víctor Falcón Ruíz<br>
-{{ __('Co-founder and solo developer, Finanzas Personales') }}
+{{ __('Co-founder and solo developer, Whisper Money') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

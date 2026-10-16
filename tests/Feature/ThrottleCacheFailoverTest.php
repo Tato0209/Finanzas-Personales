@@ -17,7 +17,7 @@ function deadlockOnRateLimiterInsert(): QueryException
     return new QueryException(
         'mysql',
         'insert ignore into `cache` (`key`, `value`, `expiration`) values (?, ?, ?)',
-        ['finanzas-personales-cache-c651a105:timer', 'i:1789047427;', 1789047427],
+        ['whisper-money-cache-c651a105:timer', 'i:1789047427;', 1789047427],
         new PDOException('SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction'),
     );
 }

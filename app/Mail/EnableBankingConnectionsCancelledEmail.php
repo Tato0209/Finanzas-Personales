@@ -33,8 +33,8 @@ class EnableBankingConnectionsCancelledEmail extends Mailable implements ShouldQ
     {
         return new Envelope(
             from: new Address(
-                config('mail.from.address', 'no-reply@finanzaspersonales.local'),
-                config('mail.from.name', 'Finanzas Personales'),
+                config('mail.from.address', 'no-reply@whisper.money'),
+                config('mail.from.name', 'Whisper Money'),
             ),
             subject: __('Your bank connections were disconnected'),
         );

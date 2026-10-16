@@ -57,7 +57,7 @@ class VerifyRefundFlowCommand extends Command
         }
 
         $user = User::factory()->create([
-            'email' => 'refund-sandbox-'.uniqid().'@finanzaspersonales.test',
+            'email' => 'refund-sandbox-'.uniqid().'@whisper.test',
             'created_at' => now(),
         ]);
 

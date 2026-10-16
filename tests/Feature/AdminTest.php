@@ -5,7 +5,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-const ADMIN_EMAIL = 'admin@finanzaspersonales.test';
+const ADMIN_EMAIL = 'admin@whisper.test';
 
 beforeEach(function () {
     config(['app.admin_email' => ADMIN_EMAIL]);
@@ -103,9 +103,9 @@ test('the arguments the curated commands actually need are accepted', function (
     ['banking:notify-users', '"Trade Republic" resources/notices/my-notice --dry-run'],
     // A feature is a class name and needs its backslashes; a rollout is a percentage.
     ['feature:enable', 'App\\Features\\CalculateBalancesOnImport 25%'],
-    ['user:delete', 'someone@finanzaspersonales.local'],
+    ['user:delete', 'someone@whisper.money'],
     // The admin page always runs with --no-interaction, so deleting a user needs --force.
-    ['user:delete', 'someone@finanzaspersonales.local --force'],
+    ['user:delete', 'someone@whisper.money --force'],
     ['stats:mcp-usage', '--days=7 --top=5'],
 ]);
 
@@ -115,7 +115,7 @@ test('a command that takes no arguments refuses them, so demo:reset cannot be ai
     $this->actingAs(admin())
         ->post('/admin/run', [
             'command' => 'demo:reset',
-            'arguments' => '--email=victim@finanzaspersonales.test',
+            'arguments' => '--email=victim@whisper.test',
         ])
         ->assertInvalid('arguments');
 });

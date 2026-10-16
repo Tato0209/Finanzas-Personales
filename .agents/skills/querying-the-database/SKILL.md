@@ -2,7 +2,7 @@
 name: querying-the-database
 description: "Query the local or production database from the CLI via the `agent:db` artisan command. Activates when the user asks to inspect, count, look up, or run a query against the database; asks 'how many X', 'what's in prod', 'check the prod DB', 'query the database'; or mentions production data, the prod database, or running SQL."
 metadata:
-  author: finanzas-personales
+  author: whisper-money
 ---
 
 # Querying the Database

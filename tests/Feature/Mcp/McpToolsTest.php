@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\CategoryType;
-use App\Mcp\Servers\FinanzasPersonalesServer;
+use App\Mcp\Servers\WhisperMoneyServer;
 use App\Mcp\Tools\GetCashflow;
 use App\Mcp\Tools\GetNetWorth;
 use App\Mcp\Tools\ListAccounts;
@@ -28,7 +28,7 @@ it('blocks read tools when subscriptions are enabled and the user has no paid pl
     config(['subscriptions.enabled' => true]);
     $user = User::factory()->create();
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListSpaces::class)
         ->assertHasErrors()
         ->assertSee('Pro');
@@ -38,7 +38,7 @@ it('allows read tools for a user on a paid plan', function () {
     // subscriptions disabled => everyone is treated as Pro (hasProPlan()).
     $user = User::factory()->create();
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListSpaces::class)
         ->assertOk()
         ->assertSee('Personal');
@@ -53,7 +53,7 @@ it('searches transactions scoped to the user\'s space', function () {
         'description' => 'Blue Bottle Coffee',
     ]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(SearchTransactions::class, ['query' => 'Blue Bottle'])
         ->assertOk()
         ->assertSee('Blue Bottle Coffee');
@@ -69,7 +69,7 @@ it('returns the notes of a transaction so they can be read back', function () {
         'notes' => 'Shelves for the office',
     ]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(SearchTransactions::class, ['query' => 'Hardware store'])
         ->assertOk()
         ->assertSee('Shelves for the office');
@@ -93,7 +93,7 @@ it('filters transactions by label id', function () {
         'description' => 'Unlabelled Dinner',
     ]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(SearchTransactions::class, ['label_ids' => [$label->id]])
         ->assertOk()
         ->assertSee('Labelled Lunch')
@@ -105,7 +105,7 @@ it('rejects a label id the user cannot access', function () {
     $other = User::factory()->create();
     $foreignLabel = Label::factory()->create(['user_id' => $other->id]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(SearchTransactions::class, ['label_ids' => [$foreignLabel->id]])
         ->assertHasErrors();
 });
@@ -127,7 +127,7 @@ it('never exposes another user\'s transactions', function () {
         'description' => 'Secret Steakhouse',
     ]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(SearchTransactions::class, [])
         ->assertOk()
         ->assertSee('My Own Groceries')
@@ -138,7 +138,7 @@ it('rejects a space id the user cannot access', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListAccounts::class, ['space' => $other->personalSpace->id])
         ->assertHasErrors();
 });
@@ -147,7 +147,7 @@ it('lists the user\'s accounts for the space', function () {
     $user = User::factory()->create();
     Account::factory()->create(['user_id' => $user->id, 'name' => 'Everyday Checking']);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListAccounts::class, [])
         ->assertOk()
         ->assertSee('Everyday Checking');
@@ -174,7 +174,7 @@ it('presents the next credit card payment', function () {
 
     DB::enableQueryLog();
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListAccounts::class, [])
         ->assertOk()
         ->assertSee('credit_card_statement')
@@ -208,7 +208,7 @@ it('presents the credit limit and what is left of it', function () {
         'transaction_date' => '2026-03-02',
     ]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListAccounts::class, [])
         ->assertOk()
         ->assertSee('"credit_card_detail":{"statement_closing_date":null,"payment_due_date":null,"statement_frequency":"monthly","credit_limit":100000}', false)
@@ -220,7 +220,7 @@ it('lists the user\'s categories for the space', function () {
     $user = User::factory()->create();
     Category::factory()->create(['user_id' => $user->id, 'name' => 'Groceries']);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListCategories::class, [])
         ->assertOk()
         ->assertSee('Groceries');
@@ -254,7 +254,7 @@ it('lists budgets with what the current period has spent and has left', function
         'amount' => -12_000,
     ]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListBudgets::class)
         ->assertOk()
         ->assertSee('Food Budget')
@@ -269,7 +269,7 @@ it('says which currency the rolled-up figures are in', function (string $tool) {
     // agent answered a euro account's spending with a dollar sign.
     $user = User::factory()->create(['currency_code' => 'EUR']);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool($tool, ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->toDateString()])
         ->assertOk()
         ->assertSee('"currency":"EUR"');
@@ -294,7 +294,7 @@ it('formats the spending amounts in the user\'s currency', function () {
         'transaction_date' => now()->toDateString(),
     ]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(SpendingByCategory::class, ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->toDateString()])
         ->assertOk()
         ->assertSee('"amount":219888')
@@ -337,7 +337,7 @@ it('reports the remaining amount the app shows, ignoring carry-over', function (
 
     // The budget cards, the spending chart and the limit emails all measure
     // against the allocated amount alone, so the agent must not add carry-over.
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListBudgets::class)
         ->assertOk()
         ->assertSee('"carried_over_amount":10000')
@@ -349,7 +349,7 @@ it('leaves archived budgets out of the list', function () {
     Budget::factory()->create(['user_id' => $user->id, 'name' => 'Running Budget']);
     Budget::factory()->archived()->create(['user_id' => $user->id, 'name' => 'Archived Budget']);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListBudgets::class)
         ->assertOk()
         ->assertSee('Running Budget')
@@ -360,7 +360,7 @@ it('never exposes another user\'s budgets', function () {
     $user = User::factory()->create();
     Budget::factory()->create(['user_id' => User::factory()->create()->id, 'name' => 'Secret Budget']);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListBudgets::class)
         ->assertOk()
         ->assertDontSee('Secret Budget');
@@ -379,7 +379,7 @@ it('lists the user\'s automation rules with their actions', function () {
     ]);
     $rule->labels()->attach($label->id);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListAutomationRules::class)
         ->assertOk()
         ->assertSee(['Supermarket rule', '"priority":3', $category->id, 'Essentials']);
@@ -392,7 +392,7 @@ it('never exposes another user\'s automation rules', function () {
         'title' => 'Secret Rule',
     ]);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(ListAutomationRules::class)
         ->assertOk()
         ->assertDontSee('Secret Rule');
@@ -418,14 +418,14 @@ function medalist(string ...$keys): User
 }
 
 it('lists the medals a reader has earned alongside the ones still to come', function () {
-    FinanzasPersonalesServer::actingAs(medalist('transactions.1', 'net_worth.1'))
+    WhisperMoneyServer::actingAs(medalist('transactions.1', 'net_worth.1'))
         ->tool(ListAchievements::class)
         ->assertOk()
         ->assertSee(['First transaction', '"unlocked":2', '"total":59']);
 });
 
 it('names the next rung of a track and keeps the ones past it to itself', function () {
-    FinanzasPersonalesServer::actingAs(medalist('transactions.1'))
+    WhisperMoneyServer::actingAs(medalist('transactions.1'))
         ->tool(ListAchievements::class)
         ->assertOk()
         // transactions.2 is the rung to aim at, so it arrives named and with a
@@ -438,7 +438,7 @@ it('names the next rung of a track and keeps the ones past it to itself', functi
 it('never exposes another user\'s medals', function () {
     medalist('transactions.1');
 
-    FinanzasPersonalesServer::actingAs(User::factory()->create())
+    WhisperMoneyServer::actingAs(User::factory()->create())
         ->tool(ListAchievements::class)
         ->assertOk()
         // Not a name: the first rung of every track is revealed to everybody,

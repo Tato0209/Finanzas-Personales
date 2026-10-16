@@ -39,7 +39,7 @@ export function ShareSummaryCardDialog({
                 `${card({ summary: summaryId, card: cardType, format, theme }).url}${preview ? '?preview=1' : ''}`
             }
             filename={({ format, theme }) =>
-                `finanzas-personales-${period}-${cardType}-${format}-${theme}.png`
+                `whisper-money-${period}-${cardType}-${format}-${theme}.png`
             }
         >
             {children}

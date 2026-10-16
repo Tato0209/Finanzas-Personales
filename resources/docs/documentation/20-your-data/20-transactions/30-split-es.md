@@ -72,7 +72,7 @@ entera, para que no se pierda nada sin avisar; quítalas una a una donde no
 correspondan.
 
 Lo que se queda atrás es la referencia del propio banco. Una división es una fila
-que crea Finanzas Personales, no algo que enviara tu banco, y nunca finge lo contrario.
+que crea Whisper Money, no algo que enviara tu banco, y nunca finge lo contrario.
 
 ## Dónde va la original
 
@@ -115,7 +115,7 @@ Unificar funciona siempre, incluso con una transacción que dividiste hace mucho
 
 ## Dividir desde tu asistente
 
-Si has conectado Finanzas Personales a un asistente de IA, dividir y unificar también
+Si has conectado Whisper Money a un asistente de IA, dividir y unificar también
 están disponibles allí, con las mismas reglas: las divisiones tienen que sumar la
 original y todas tienen que mover el dinero en el mismo sentido.
 

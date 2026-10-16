@@ -4,7 +4,7 @@ import { __ } from '@/utils/i18n';
 import { TriangleAlert } from 'lucide-react';
 
 const DISCORD_URL = 'https://discord.gg/m8hUhx6D9D';
-const SUPPORT_MAILTO = 'mailto:support@finanzaspersonales.local';
+const SUPPORT_MAILTO = 'mailto:support@whisper.money';
 
 interface ReplaceConnectionWarningProps {
     acknowledged: boolean;

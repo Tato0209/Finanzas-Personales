@@ -177,7 +177,7 @@ it('ends the session from the user menu', function () {
 
     AuthBrowserFlow::signOut($page);
 
-    $page->assertSee('Finanzas Personales')
+    $page->assertSee('Whisper Money')
         ->assertPathIs('/');
 
     // Navigated rather than visited: `visit()` opens a fresh browser context,

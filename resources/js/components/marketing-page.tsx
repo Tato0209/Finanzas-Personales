@@ -56,7 +56,7 @@ export function MarketingHead({
                 href={`${canonical}.md`}
             />
 
-            <meta property="og:site_name" content="Finanzas Personales" />
+            <meta property="og:site_name" content="Whisper Money" />
             <meta property="og:title" content={title} />
             <meta property="og:description" content={description} />
             <meta property="og:type" content="article" />

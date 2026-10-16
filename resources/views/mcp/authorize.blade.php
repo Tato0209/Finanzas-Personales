@@ -29,7 +29,7 @@
         }
     </style>
 
-    <title>{{ __('Connect to :app', ['app' => config('app.name', 'Finanzas Personales')]) }}</title>
+    <title>{{ __('Connect to :app', ['app' => config('app.name', 'Whisper Money')]) }}</title>
 
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
@@ -60,7 +60,7 @@
                 </div>
 
                 <h3 class="text-2xl font-semibold leading-none tracking-tight text-center">
-                    {{ __('Connect :client to :app', ['client' => $client->name, 'app' => config('app.name', 'Finanzas Personales')]) }}
+                    {{ __('Connect :client to :app', ['client' => $client->name, 'app' => config('app.name', 'Whisper Money')]) }}
                 </h3>
 
                 <p class="text-sm text-muted-foreground text-center">

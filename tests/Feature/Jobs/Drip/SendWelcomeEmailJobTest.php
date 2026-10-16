@@ -18,7 +18,7 @@ test('welcome email is sent and logged', function () {
 
     Mail::assertQueued(WelcomeEmail::class, function ($mail) use ($user) {
         return $mail->hasTo($user->email)
-            && $mail->hasFrom('hi@finanzaspersonales.local', 'Álvaro and Víctor');
+            && $mail->hasFrom('hi@whisper.money', 'Álvaro and Víctor');
     });
 
     $this->assertDatabaseHas('user_mail_logs', [

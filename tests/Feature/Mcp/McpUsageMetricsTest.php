@@ -1,6 +1,6 @@
 <?php
 
-use App\Mcp\Servers\FinanzasPersonalesServer;
+use App\Mcp\Servers\WhisperMoneyServer;
 use App\Mcp\Tools\CreateLabel;
 use App\Mcp\Tools\ListAccounts;
 use App\Mcp\Tools\ListSpaces;
@@ -10,9 +10,9 @@ use App\Models\User;
 it('records a row per tool call, named after the tool', function () {
     $user = User::factory()->create();
 
-    FinanzasPersonalesServer::actingAs($user)->tool(ListSpaces::class)->assertOk();
-    FinanzasPersonalesServer::actingAs($user)->tool(ListSpaces::class)->assertOk();
-    FinanzasPersonalesServer::actingAs($user)->tool(ListAccounts::class)->assertOk();
+    WhisperMoneyServer::actingAs($user)->tool(ListSpaces::class)->assertOk();
+    WhisperMoneyServer::actingAs($user)->tool(ListSpaces::class)->assertOk();
+    WhisperMoneyServer::actingAs($user)->tool(ListAccounts::class)->assertOk();
 
     expect(McpToolCall::query()->where('user_id', $user->id)->pluck('tool')->countBy()->all())
         ->toBe(['list_spaces' => 2, 'list_accounts' => 1]);
@@ -22,7 +22,7 @@ it('does not record calls rejected by the plan gate', function () {
     config(['subscriptions.enabled' => true]);
     $user = User::factory()->create();
 
-    FinanzasPersonalesServer::actingAs($user)->tool(ListSpaces::class)->assertHasErrors();
+    WhisperMoneyServer::actingAs($user)->tool(ListSpaces::class)->assertHasErrors();
 
     expect(McpToolCall::query()->count())->toBe(0);
 });
@@ -31,7 +31,7 @@ it('does not record a write rejected because the token is read-only', function (
     $user = User::factory()->create();
     $user->withAccessToken($user->createToken('mcp', ['mcp:read'])->accessToken);
 
-    FinanzasPersonalesServer::actingAs($user)
+    WhisperMoneyServer::actingAs($user)
         ->tool(CreateLabel::class, ['name' => 'Trips', 'color' => 'blue'])
         ->assertHasErrors();
 

@@ -18,7 +18,7 @@ describe('leave-page', () => {
             configurable: true,
             writable: true,
             value: {
-                href: 'https://finanzaspersonales.local/onboarding',
+                href: 'https://whisper.money/onboarding',
                 reload: vi.fn(),
             },
         });

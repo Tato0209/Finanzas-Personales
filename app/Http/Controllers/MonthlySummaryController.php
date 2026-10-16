@@ -191,6 +191,6 @@ class MonthlySummaryController extends Controller
 
     private function filename(MonthlySummary $summary, MonthlySummaryCard $card, CardFormat $format, CardTheme $theme): string
     {
-        return "finanzas-personales-{$summary->period}-{$card->value}-{$format->value}-{$theme->value}.png";
+        return "whisper-money-{$summary->period}-{$card->value}-{$format->value}-{$theme->value}.png";
     }
 }

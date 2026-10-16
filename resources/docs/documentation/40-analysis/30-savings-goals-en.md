@@ -201,7 +201,7 @@ Archive it when it is bought.
 
 ### Does a savings goal move money between my accounts?
 
-No. Nothing in Finanzas Personales moves money. A goal reads the transactions you tag
+No. Nothing in Whisper Money moves money. A goal reads the transactions you tag
 and adds them up.
 
 ### Why is my goal at zero when I have linked transactions?

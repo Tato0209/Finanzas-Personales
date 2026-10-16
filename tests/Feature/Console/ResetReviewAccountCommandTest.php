@@ -8,7 +8,7 @@ use Illuminate\Console\Scheduling\Schedule;
 
 beforeEach(function () {
     config(['app.review' => [
-        'email' => 'openai-review@finanzaspersonales.local',
+        'email' => 'openai-review@whisper.money',
         'password' => 'secret-review-password',
     ]]);
 });
@@ -18,7 +18,7 @@ test('demo:reset --review fails when the reviewer password is not configured', f
 
     $this->artisan('demo:reset --review')->assertFailed();
 
-    expect(User::where('email', 'openai-review@finanzaspersonales.local')->exists())->toBeFalse();
+    expect(User::where('email', 'openai-review@whisper.money')->exists())->toBeFalse();
 });
 
 test('demo:reset --review ignores DEMO_ENABLED', function () {
@@ -34,11 +34,11 @@ test('demo:reset --review seeds the data the stored test cases ask about, ending
 
     // The production reviewer account is on the Spanish locale. Reseeded as-is,
     // its categories came out in Spanish and every English template was skipped.
-    $existing = User::factory()->create(['email' => 'openai-review@finanzaspersonales.local', 'locale' => 'es']);
+    $existing = User::factory()->create(['email' => 'openai-review@whisper.money', 'locale' => 'es']);
 
     $this->artisan('demo:reset --review')->assertSuccessful();
 
-    $user = User::where('email', 'openai-review@finanzaspersonales.local')->sole();
+    $user = User::where('email', 'openai-review@whisper.money')->sole();
 
     expect($user->id)->toBe($existing->id)
         ->and($user->locale)->toBe('en')

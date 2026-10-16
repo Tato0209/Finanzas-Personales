@@ -457,7 +457,7 @@ jobs:
       production-digest: ${{ steps.production-image.outputs.digest }}
       package-version: ${{ steps.package-version.outputs.version }}
     env:
-      SENTRY_RELEASE: finanzas-personales@${{ github.sha }}
+      SENTRY_RELEASE: whisper-money@${{ github.sha }}
     permissions:
       contents: read
       packages: write
@@ -554,7 +554,7 @@ jobs:
     needs: build-image
     if: needs.build-image.result == 'success'
     env:
-      SENTRY_RELEASE: finanzas-personales@${{ github.sha }}
+      SENTRY_RELEASE: whisper-money@${{ github.sha }}
     permissions:
       contents: read
       packages: write

@@ -1288,7 +1288,7 @@ describe('EditTransactionDialog', () => {
 
     it('opens on the account the last manual transaction went to', () => {
         vi.mocked(localStorage.getItem).mockImplementation((key: string) =>
-            key === 'finanzas_personales_last_transaction_account'
+            key === 'whisper_money_last_transaction_account'
                 ? 'account-2'
                 : null,
         );
@@ -1327,7 +1327,7 @@ describe('EditTransactionDialog', () => {
         expect(chip).toHaveAttribute('aria-pressed', 'false');
         expect(chip).toHaveTextContent('Leaves the balance alone');
         expect(localStorage.setItem).toHaveBeenCalledWith(
-            'finanzas_personales_update_balance_on_transaction',
+            'whisper_money_update_balance_on_transaction',
             'false',
         );
     });
@@ -1350,7 +1350,7 @@ describe('EditTransactionDialog', () => {
             'account-1',
         );
         expect(localStorage.setItem).toHaveBeenCalledWith(
-            'finanzas_personales_last_transaction_account',
+            'whisper_money_last_transaction_account',
             'account-1',
         );
         await waitFor(() => {

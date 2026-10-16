@@ -6,5 +6,5 @@
 
 {{ __('Best,') }}<br>
 {{ __('Álvaro & Víctor') }}<br>
-{{ __('Founders of Finanzas Personales') }}
+{{ __('Founders of Whisper Money') }}
 </x-mail::message>

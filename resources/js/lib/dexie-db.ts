@@ -12,7 +12,7 @@ export interface SyncMetadata {
     value: string;
 }
 
-type FinanzasPersonalesDB = Dexie & {
+type WhisperMoneyDB = Dexie & {
     transactions: EntityTable<Transaction, 'id'>;
     budgets: EntityTable<Budget, 'id'>;
     budget_categories: EntityTable<BudgetCategory, 'id'>;
@@ -21,10 +21,10 @@ type FinanzasPersonalesDB = Dexie & {
     sync_metadata: EntityTable<SyncMetadata, 'key'>;
 };
 
-let dbInstance: FinanzasPersonalesDB | null = null;
+let dbInstance: WhisperMoneyDB | null = null;
 
-function initializeDatabase(): FinanzasPersonalesDB {
-    const database = new Dexie('finanzas_personales') as FinanzasPersonalesDB;
+function initializeDatabase(): WhisperMoneyDB {
+    const database = new Dexie('whisper_money') as WhisperMoneyDB;
 
     database.version(5).stores({
         transactions: 'id, user_id, account_id, updated_at',
@@ -115,12 +115,12 @@ function initializeDatabase(): FinanzasPersonalesDB {
     return database;
 }
 
-export const db = new Proxy({} as FinanzasPersonalesDB, {
+export const db = new Proxy({} as WhisperMoneyDB, {
     get(_target, prop) {
         if (!dbInstance) {
             dbInstance = initializeDatabase();
         }
-        return dbInstance[prop as keyof FinanzasPersonalesDB];
+        return dbInstance[prop as keyof WhisperMoneyDB];
     },
 });
 

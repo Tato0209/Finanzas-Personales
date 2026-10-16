@@ -28,9 +28,9 @@ use Illuminate\Support\Facades\Mail;
 beforeEach(function () {
     config([
         'mail.default' => 'array',
-        'mail.from.address' => 'no-reply@finanzaspersonales.local',
-        'mail.from.name' => 'Finanzas Personales',
-        'mail.drip_from.address' => 'hi@finanzaspersonales.local',
+        'mail.from.address' => 'no-reply@whisper.money',
+        'mail.from.name' => 'Whisper Money',
+        'mail.drip_from.address' => 'hi@whisper.money',
         'mail.drip_from.name' => 'Álvaro and Víctor',
     ]);
 
@@ -94,7 +94,7 @@ test('drip mailables use the drip sender', function (string $mailableClass) {
         SubscriptionCancelledEmail::class => new SubscriptionCancelledEmail($user),
     };
 
-    expect($mailable->envelope()->from)->toEqual(new Address('hi@finanzaspersonales.local', 'Álvaro and Víctor'));
+    expect($mailable->envelope()->from)->toEqual(new Address('hi@whisper.money', 'Álvaro and Víctor'));
 })->with([
     AiConsentFollowUpEmail::class,
     WelcomeEmail::class,
@@ -110,7 +110,7 @@ test('only the paywall follow-up sets a reply-to, back to the drip sender', func
     $user = User::factory()->create();
 
     expect((new PaywallFollowUpEmail($user))->envelope()->replyTo)
-        ->toEqual([new Address('hi@finanzaspersonales.local', 'Álvaro and Víctor')]);
+        ->toEqual([new Address('hi@whisper.money', 'Álvaro and Víctor')]);
 
     expect((new WelcomeEmail($user))->envelope()->replyTo)->toBe([]);
 });
@@ -151,8 +151,8 @@ test('default sender is used for active non-drip mailables', function (string $m
 
     $from = lastSentMailMessage()->getOriginalMessage()->getFrom()[0];
 
-    expect($from->getAddress())->toBe('no-reply@finanzaspersonales.local')
-        ->and($from->getName())->toBe('Finanzas Personales');
+    expect($from->getAddress())->toBe('no-reply@whisper.money')
+        ->and($from->getName())->toBe('Whisper Money');
 })->with([
     UpdateEmail::class,
     BankTransactionsSyncedEmail::class,
@@ -169,7 +169,7 @@ test('transaction sync email envelope explicitly uses the default sender', funct
 
     $mailable = new BankTransactionsSyncedEmail($user, 3, ['Test Bank' => 3]);
 
-    expect($mailable->envelope()->from)->toEqual(new Address('no-reply@finanzaspersonales.local', 'Finanzas Personales'));
+    expect($mailable->envelope()->from)->toEqual(new Address('no-reply@whisper.money', 'Whisper Money'));
 });
 
 test('verification notification uses the default sender', function () {
@@ -179,8 +179,8 @@ test('verification notification uses the default sender', function () {
 
     $from = lastSentMailMessage()->getOriginalMessage()->getFrom()[0];
 
-    expect($from->getAddress())->toBe('no-reply@finanzaspersonales.local')
-        ->and($from->getName())->toBe('Finanzas Personales');
+    expect($from->getAddress())->toBe('no-reply@whisper.money')
+        ->and($from->getName())->toBe('Whisper Money');
 });
 
 test('mail blade signatures use alvaro before victor', function () {
@@ -217,9 +217,9 @@ test('update email translates its subject and leaves untranslated ones verbatim'
         ->assertHasSubject('Pregúntale a ChatGPT cuánto has gastado este mes');
 
     // A subject with no translation still goes out exactly as it was typed.
-    (new UpdateEmail($user, 'first-update-jan-2026', 'Update from Finanzas Personales'))
+    (new UpdateEmail($user, 'first-update-jan-2026', 'Update from Whisper Money'))
         ->locale($user->preferredLocale())
-        ->assertHasSubject('Update from Finanzas Personales');
+        ->assertHasSubject('Update from Whisper Money');
 });
 
 test('update email invites replies to a real inbox', function () {
@@ -227,7 +227,7 @@ test('update email invites replies to a real inbox', function () {
 
     $replyTo = (new UpdateEmail($user, 'first-update-jan-2026'))->envelope()->replyTo;
 
-    expect($replyTo)->toEqual([new Address('hi@finanzaspersonales.local', 'Álvaro and Víctor')]);
+    expect($replyTo)->toEqual([new Address('hi@whisper.money', 'Álvaro and Víctor')]);
 });
 
 test('enable banking cancellation email includes dashboard access messaging', function () {
@@ -238,7 +238,7 @@ test('enable banking cancellation email includes dashboard access messaging', fu
     $mailable->assertHasSubject('Your bank connections were disconnected');
     $mailable->assertSeeInHtml('Go to Dashboard');
     $mailable->assertSeeInHtml('free access');
-    $mailable->assertSeeInHtml('accounts, transactions, and balances remain in Finanzas Personales');
+    $mailable->assertSeeInHtml('accounts, transactions, and balances remain in Whisper Money');
     $mailable->assertSeeInHtml(route('dashboard'));
 });
 
@@ -248,7 +248,7 @@ test('bank outage email blames the bank and asks the user for nothing', function
     $mailable = new BankOutageEmail($user, 'Openbank');
 
     $mailable->assertHasSubject('Openbank is having a temporary problem on their side');
-    $mailable->assertSeeInHtml('The failure is on the bank side, not in Finanzas Personales');
+    $mailable->assertSeeInHtml('The failure is on the bank side, not in Whisper Money');
     $mailable->assertSeeInHtml('You do not need to do anything.');
     $mailable->assertSeeInHtml('All your data is safe.');
     $mailable->assertSeeInHtml('working with our banking provider and with the bank');

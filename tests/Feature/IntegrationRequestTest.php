@@ -171,8 +171,8 @@ test('a user cannot exceed the monthly action limit', function () {
 });
 
 test('the admin bypasses the monthly limit and their requests are auto-approved', function () {
-    config(['app.admin_email' => 'admin@finanzaspersonales.test']);
-    $admin = User::factory()->create(['email' => 'admin@finanzaspersonales.test']);
+    config(['app.admin_email' => 'admin@whisper.test']);
+    $admin = User::factory()->create(['email' => 'admin@whisper.test']);
     IntegrationRequest::factory()->count(5)->create(['user_id' => $admin->id]);
 
     $this->actingAs($admin)
@@ -463,7 +463,7 @@ test('the review command marks a request as done and drops its comment', functio
 });
 
 test('the review command still shows the author of requests whose account was deleted', function () {
-    $author = User::factory()->create(['email' => 'gone@finanzaspersonales.test']);
+    $author = User::factory()->create(['email' => 'gone@whisper.test']);
     IntegrationRequest::factory()->approved()->create(['user_id' => $author->id]);
 
     // Soft-deleting the account would otherwise null the user relation and crash
@@ -471,7 +471,7 @@ test('the review command still shows the author of requests whose account was de
     $author->delete();
 
     $this->artisan('integration-requests:review --all')
-        ->expectsOutputToContain('gone@finanzaspersonales.test')
+        ->expectsOutputToContain('gone@whisper.test')
         ->expectsQuestion('Which request do you want to update? (number)', '0')
         ->expectsOutput('That number is not on the list.')
         ->assertFailed();

@@ -131,7 +131,7 @@ return [
 
     'demo' => [
         'enabled' => env('DEMO_ENABLED', true),
-        'email' => env('DEMO_EMAIL', 'demo@finanzaspersonales.local'),
+        'email' => env('DEMO_EMAIL', 'demo@whisper.money'),
         'password' => env('DEMO_PASSWORD', 'demo'),
     ],
 
@@ -143,7 +143,7 @@ return [
      * env-driven: a deploy that never sets these still has a working account.
      */
     'press' => [
-        'email' => env('PRESS_EMAIL', 'prensa@finanzaspersonales.local'),
+        'email' => env('PRESS_EMAIL', 'prensa@whisper.money'),
         'password' => env('PRESS_PASSWORD', '123456789'),
     ],
 
@@ -154,7 +154,7 @@ return [
      * skips the account until it is set.
      */
     'review' => [
-        'email' => env('REVIEW_EMAIL', 'openai-review@finanzaspersonales.local'),
+        'email' => env('REVIEW_EMAIL', 'openai-review@whisper.money'),
         'password' => env('REVIEW_PASSWORD'),
     ],
 

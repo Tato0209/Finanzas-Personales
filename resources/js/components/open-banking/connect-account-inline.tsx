@@ -384,7 +384,7 @@ export function ConnectAccountInline({
                         icon={Lock}
                         title={__('Your password stays at your bank')}
                         description={__(
-                            'It is never typed into Finanzas Personales and never reaches us.',
+                            'It is never typed into Whisper and never reaches us.',
                         )}
                     />
                     <StepRow
@@ -419,7 +419,7 @@ export function ConnectAccountInline({
         <StepScreen
             title={__('Where do you bank?')}
             description={__(
-                'You sign in at your bank, not here. Finanzas Personales never sees your password, and can never move money.',
+                'You sign in at your bank, not here. Whisper never sees your password, and can never move money.',
             )}
             footer={
                 <>
@@ -537,7 +537,7 @@ export function ConnectAccountInline({
                 <p className="flex items-start gap-2.5 pt-4 text-[13px] leading-normal text-pretty text-muted-foreground">
                     <Shield className="mt-0.5 size-4 shrink-0" />
                     {__(
-                        'Through regulated open banking (PSD2), via a licensed provider. Revoke it from your bank or from Finanzas Personales whenever you like.',
+                        'Through regulated open banking (PSD2), via a licensed provider. Revoke it from your bank or from Whisper whenever you like.',
                     )}
                 </p>
             </div>

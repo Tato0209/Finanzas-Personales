@@ -22,7 +22,7 @@ class SendUpdateEmailCommand extends Command
     protected $signature = 'email:update
                             {view : The view name (e.g., "jan-2026-updates")}
                             {identifier? : The tracking identifier (defaults to view name)}
-                            {--subject= : Custom email subject (default: "Update from Finanzas Personales")}
+                            {--subject= : Custom email subject (default: "Update from Whisper Money")}
                             {--audience=all : Who to send to: all, unsubscribed, active-low-price, cancelling-low-price}
                             {--per-day=50000 : How many emails to queue per day (SES allows 50,000)}
                             {--exclude-demo : Exclude the shared demo and press accounts}
@@ -43,7 +43,7 @@ class SendUpdateEmailCommand extends Command
     {
         $viewName = $this->argument('view');
         $identifier = $this->argument('identifier') ?? $viewName;
-        $subject = $this->option('subject') ?? 'Update from Finanzas Personales';
+        $subject = $this->option('subject') ?? 'Update from Whisper Money';
         $perDay = max(1, (int) $this->option('per-day'));
 
         if ($this->option('force')) {

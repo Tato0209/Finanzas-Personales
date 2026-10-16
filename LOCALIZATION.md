@@ -1,6 +1,6 @@
 # Frontend Localization Guide
 
-This document describes the localization system for the Finanzas Personales React frontend and the automated tools available.
+This document describes the localization system for the Whisper Money React frontend and the automated tools available.
 
 ## Overview
 
@@ -36,7 +36,7 @@ import { __ } from '@/utils/i18n';
 export default function MyComponent() {
     return (
         <div>
-            <h1>{__('Welcome to Finanzas Personales')}</h1>
+            <h1>{__('Welcome to Whisper Money')}</h1>
             <Button>{__('Save')}</Button>
         </div>
     );
@@ -57,7 +57,7 @@ export default function MyComponent() {
 
     return (
         <div>
-            <h1>{t('Welcome to Finanzas Personales')}</h1>
+            <h1>{t('Welcome to Whisper Money')}</h1>
             <Button>{t('Save')}</Button>
         </div>
     );
@@ -85,7 +85,7 @@ This script automatically wraps hardcoded strings with the `t()` translation fun
 - Technical identifiers (class names, data-test attributes, etc.)
 - URLs, email addresses
 - Currency codes (USD, EUR, etc.)
-- Brand names (Finanzas Personales, Discord, etc.)
+- Brand names (Whisper Money, Discord, etc.)
 - Single-character strings
 - Code-like patterns
 

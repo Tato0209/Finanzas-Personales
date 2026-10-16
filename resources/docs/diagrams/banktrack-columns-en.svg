@@ -1,6 +1,6 @@
 <svg viewBox="0 0 720 350" role="img" aria-labelledby="banktrack-columns-en-title banktrack-columns-en-desc" xmlns="http://www.w3.org/2000/svg">
     <title id="banktrack-columns-en-title">How a Banktrack export is read</title>
-    <desc id="banktrack-columns-en-desc">Each Banktrack column feeds one piece of Finanzas Personales: Fecha the date, Concepto the description, Descripción the notes, Importe the amount, Banco the account, Categorías the category and its subcategory, Balance the daily balances, ID the duplicate check, and Ignorada the transfer category. Signo cambiado, the contact columns, Archivos and Facturas are not read.</desc>
+    <desc id="banktrack-columns-en-desc">Each Banktrack column feeds one piece of Whisper Money: Fecha the date, Concepto the description, Descripción the notes, Importe the amount, Banco the account, Categorías the category and its subcategory, Balance the daily balances, ID the duplicate check, and Ignorada the transfer category. Signo cambiado, the contact columns, Archivos and Facturas are not read.</desc>
     <defs>
         <marker id="banktrack-columns-en-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
             <polygon class="dg-arrowhead" points="0 0, 8 3, 0 6"/>
@@ -11,7 +11,7 @@
     </defs>
     <text class="dg-eyebrow" x="80" y="16">BANKTRACK COLUMN</text>
     <line class="dg-hairline" x1="80" y1="24" x2="280" y2="24"/>
-    <text class="dg-eyebrow" x="440" y="16">IN FINANZAS PERSONALES</text>
+    <text class="dg-eyebrow" x="440" y="16">IN WHISPER MONEY</text>
     <line class="dg-hairline" x1="440" y1="24" x2="640" y2="24"/>
     <path class="dg-edge" d="M280,51 H436" marker-end="url(#banktrack-columns-en-arrow)"/>
     <rect class="dg-mask" x="80" y="40" width="200" height="22" rx="4"/>

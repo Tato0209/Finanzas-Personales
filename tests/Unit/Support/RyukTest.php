@@ -6,5 +6,5 @@ use Tests\Support\Ryuk;
 // a label nothing carries, and every container would leak silently.
 it('url-encodes the session filter', function (): void {
     expect(Ryuk::filter('4242-a1b2c3d4'))
-        ->toBe('label=local.finanzas-personales.test-session%3D4242-a1b2c3d4');
+        ->toBe('label=money.whisper.test-session%3D4242-a1b2c3d4');
 });

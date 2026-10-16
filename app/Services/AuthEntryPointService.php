@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AuthEntryPointService
 {
-    private const COOKIE_NAME = 'finanzas_personales_returning_user';
+    private const COOKIE_NAME = 'whisper_money_returning_user';
 
     private const COOKIE_MINUTES = 60 * 24 * 365 * 5;
 

@@ -100,7 +100,7 @@ test('command dispatches jobs for all users', function () {
             return $job->user->id === $user->id
                 && $job->viewName === 'test-update'
                 && str_starts_with($job->emailIdentifier, 'test-2026_force_')
-                && $job->subject === 'Update from Finanzas Personales';
+                && $job->subject === 'Update from Whisper Money';
         });
     }
 });

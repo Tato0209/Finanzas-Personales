@@ -1,6 +1,6 @@
 <?php
 
-use App\Mcp\Servers\FinanzasPersonalesServer;
+use App\Mcp\Servers\WhisperMoneyServer;
 use Laravel\Mcp\Server\Tool;
 
 /**
@@ -45,7 +45,7 @@ $destructive = [
  */
 it('keeps every tool description within the submission form limit', function () {
     /** @var array<int, class-string<Tool>> $tools */
-    $tools = (new ReflectionClass(FinanzasPersonalesServer::class))->getDefaultProperties()['tools'];
+    $tools = (new ReflectionClass(WhisperMoneyServer::class))->getDefaultProperties()['tools'];
 
     foreach ($tools as $class) {
         $tool = new $class;
@@ -57,7 +57,7 @@ it('keeps every tool description within the submission form limit', function () 
 
 it('declares all three MCP hints on every tool', function () use ($readOnly, $destructive) {
     /** @var array<int, class-string<Tool>> $tools */
-    $tools = (new ReflectionClass(FinanzasPersonalesServer::class))->getDefaultProperties()['tools'];
+    $tools = (new ReflectionClass(WhisperMoneyServer::class))->getDefaultProperties()['tools'];
 
     expect($tools)->toHaveCount(count($readOnly) + 23);
 

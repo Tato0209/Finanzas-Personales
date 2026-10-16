@@ -1,7 +1,7 @@
 <x-mail::message>
 # {{ __('Your AI assistant is hard at work, :name', ['name' => $userName]) }}
 
-{{ __('A couple of days ago you turned on AI-powered insights in Finanzas Personales. We wanted to check in and show you what it has been doing for you behind the scenes.') }}
+{{ __('A couple of days ago you turned on AI-powered insights in Whisper Money. We wanted to check in and show you what it has been doing for you behind the scenes.') }}
 
 ## {{ __('Your transactions, categorised automatically') }}
 
@@ -19,7 +19,7 @@
 
 {{ __('Best,') }}<br>
 {{ __('Víctor & Álvaro') }}<br>
-{{ __('Founders of Finanzas Personales') }}
+{{ __('Founders of Whisper Money') }}
 
 <x-slot:subcopy>@include('mail.partials.marketing-unsubscribe')</x-slot:subcopy>
 </x-mail::message>

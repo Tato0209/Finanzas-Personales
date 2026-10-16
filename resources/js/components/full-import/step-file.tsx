@@ -88,7 +88,7 @@ export function StepFile({
             eyebrow={eyebrow}
             title={__('Where are you coming from?')}
             description={__(
-                'Upload the export from your previous app and we turn it into Finanzas Personales accounts, categories and transactions.',
+                'Upload the export from your previous app and we turn it into Whisper Money accounts, categories and transactions.',
             )}
             footer={footer}
         >
@@ -234,7 +234,7 @@ export function StepFile({
             <p className="flex items-start gap-2.5 text-[13px] text-muted-foreground">
                 <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 {__(
-                    'The file is read in your browser. We only save what you confirm in the last step, and it never leaves Finanzas Personales.',
+                    'The file is read in your browser. We only save what you confirm in the last step, and it never leaves Whisper Money.',
                 )}
             </p>
         </WizardScreen>

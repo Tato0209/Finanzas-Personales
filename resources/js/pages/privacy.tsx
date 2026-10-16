@@ -7,11 +7,11 @@ export default function Privacy() {
 
     return (
         <>
-            <Head title={__('Privacy Policy - Finanzas Personales')}>
+            <Head title={__('Privacy Policy - Whisper Money')}>
                 <meta
                     name="description"
                     content={__(
-                        'Privacy policy for Finanzas Personales. Learn how we collect, use, and protect your personal information.',
+                        'Privacy policy for Whisper Money. Learn how we collect, use, and protect your personal information.',
                     )}
                 />
 
@@ -20,13 +20,13 @@ export default function Privacy() {
 
                 <meta
                     property="og:title"
-                    content={__('Privacy Policy - Finanzas Personales')}
+                    content={__('Privacy Policy - Whisper Money')}
                 />
 
                 <meta
                     property="og:description"
                     content={__(
-                        'Privacy policy for Finanzas Personales. Learn how we collect, use, and protect your personal information.',
+                        'Privacy policy for Whisper Money. Learn how we collect, use, and protect your personal information.',
                     )}
                 />
 
@@ -58,13 +58,13 @@ export default function Privacy() {
                             </h2>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'Finanzas Personales is the data controller responsible\n                                for your personal information.',
+                                    'Whisper Money is the data controller responsible\n                                for your personal information.',
                                 )}
                             </p>
                             <div className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 <p>
                                     <strong>{__('Company Name:')}</strong>{' '}
-                                    Finanzas Personales
+                                    Whisper Money
                                 </p>
                                 <p>
                                     <strong>{__('Address:')}</strong> Calle Oca,
@@ -72,7 +72,7 @@ export default function Privacy() {
                                 </p>
                                 <p>
                                     <strong>{__('Email:')}</strong>
-                                    {__('victor@finanzaspersonales.local')}
+                                    {__('victor@whisper.money')}
                                 </p>
                             </div>
                         </section>
@@ -355,7 +355,7 @@ export default function Privacy() {
                             </ul>
                             <p className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 {__(
-                                    'To exercise any of these rights, please contact\n                                us at victor@finanzaspersonales.local. We will respond to\n                                your request within 30 days.',
+                                    'To exercise any of these rights, please contact\n                                us at victor@whisper.money. We will respond to\n                                your request within 30 days.',
                                 )}
                             </p>
                         </section>
@@ -405,10 +405,10 @@ export default function Privacy() {
                             <div className="mb-4 text-[#706f6c] dark:text-[#A1A09A]">
                                 <p>
                                     <strong>{__('Email:')}</strong>
-                                    {__('victor@finanzaspersonales.local')}
+                                    {__('victor@whisper.money')}
                                 </p>
                                 <p>
-                                    <strong>{__('Address:')}</strong> Finanzas Personales
+                                    <strong>{__('Address:')}</strong> Whisper
                                     Money, Calle Oca, Madrid - 28025, Spain
                                 </p>
                             </div>

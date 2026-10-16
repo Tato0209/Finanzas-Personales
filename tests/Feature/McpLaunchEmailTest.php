@@ -63,8 +63,8 @@ it('only promises what the connector actually does', function () {
     // see WriteTool and tests/Feature/Mcp/McpOAuthTest.php.
     $mail->assertSeeInHtml('note down 40 euros on groceries');
 
-    // Finanzas Personales has no screen to revoke an OAuth connection, so the email
+    // Whisper Money has no screen to revoke an OAuth connection, so the email
     // must not promise one.
     $mail->assertDontSeeInHtml('you can undo it whenever you want');
-    $mail->assertSeeInHtml('remove Finanzas Personales from the connected apps inside ChatGPT');
+    $mail->assertSeeInHtml('remove Whisper Money from the connected apps inside ChatGPT');
 });

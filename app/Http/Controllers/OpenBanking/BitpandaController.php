@@ -30,7 +30,7 @@ class BitpandaController extends CryptoPortfolioConnectController
 
     protected function bankLogo(): ?string
     {
-        return 'https://finanzaspersonales.local/storage/banks/logos/7Y6gl0gaFH1mStJMcUQ9VpgzX1kduyumm0dDhGlf.png';
+        return 'https://whisper.money/storage/banks/logos/7Y6gl0gaFH1mStJMcUQ9VpgzX1kduyumm0dDhGlf.png';
     }
 
     protected function fetchProviderData(array $validated): mixed

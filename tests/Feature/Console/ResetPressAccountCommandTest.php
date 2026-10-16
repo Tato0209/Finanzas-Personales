@@ -7,7 +7,7 @@ use App\Services\AutomationRuleApplier;
 
 beforeEach(function () {
     config(['app.press' => [
-        'email' => 'prensa@finanzaspersonales.local',
+        'email' => 'prensa@whisper.money',
         'password' => '123456789',
     ]]);
 });
@@ -17,7 +17,7 @@ test('demo:reset --press fails when the press account is not configured', functi
 
     $this->artisan('demo:reset --press')->assertFailed();
 
-    expect(User::where('email', 'prensa@finanzaspersonales.local')->exists())->toBeFalse();
+    expect(User::where('email', 'prensa@whisper.money')->exists())->toBeFalse();
 });
 
 test('demo:reset --press ignores DEMO_ENABLED', function () {
@@ -33,7 +33,7 @@ test('demo:reset --press seeds a Spanish account that survives a re-run', functi
 
     $this->artisan('demo:reset --press')->assertSuccessful();
 
-    $user = User::where('email', 'prensa@finanzaspersonales.local')->first();
+    $user = User::where('email', 'prensa@whisper.money')->first();
 
     expect($user)->not->toBeNull()
         ->and($user->name)->toBe('Marta Ruiz Ferrer')
@@ -98,7 +98,7 @@ test('demo:reset --press seeds a Spanish account that survives a re-run', functi
 
     $this->artisan('demo:reset --press')->assertSuccessful();
 
-    $reseeded = User::where('email', 'prensa@finanzaspersonales.local')->first();
+    $reseeded = User::where('email', 'prensa@whisper.money')->first();
 
     expect($reseeded->id)->toBe($user->id)
         ->and($reseeded->tokens()->whereKey($token->accessToken->id)->exists())->toBeTrue()
@@ -108,7 +108,7 @@ test('demo:reset --press seeds a Spanish account that survives a re-run', functi
 test('demo:reset --press seeds a history that automation rules can actually match', function () {
     $this->artisan('demo:reset --press')->assertSuccessful();
 
-    $user = User::where('email', 'prensa@finanzaspersonales.local')->first();
+    $user = User::where('email', 'prensa@whisper.money')->first();
     $savings = $user->accounts()->where('type', AccountType::Savings)->first();
 
     expect($savings->transactions()->count())->toBeGreaterThan(0);
@@ -133,7 +133,7 @@ test('demo:reset --press seeds a history that automation rules can actually matc
 test('demo:reset --press leaves no orphaned savings goal behind', function () {
     $this->artisan('demo:reset --press')->assertSuccessful();
 
-    $user = User::where('email', 'prensa@finanzaspersonales.local')->first();
+    $user = User::where('email', 'prensa@whisper.money')->first();
     $label = $user->labels()->create(['name' => 'Moto', 'color' => '#10b981']);
     $user->savingsGoals()->create([
         'label_id' => $label->id,

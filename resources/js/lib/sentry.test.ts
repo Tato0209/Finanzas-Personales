@@ -31,7 +31,7 @@ describe('isPageLeaveAbortNoise', () => {
         Object.defineProperty(window, 'location', {
             configurable: true,
             writable: true,
-            value: { href: 'https://finanzaspersonales.local/onboarding' },
+            value: { href: 'https://whisper.money/onboarding' },
         });
     });
 
@@ -60,7 +60,7 @@ describe('isPageLeaveAbortNoise', () => {
         // so a bare "Network error" is not what actually reaches Sentry.
         [
             'HttpNetworkError',
-            'Network error (https://finanzaspersonales.local/onboarding?step=create-account)',
+            'Network error (https://whisper.money/onboarding?step=create-account)',
         ],
         ['TypeError', 'Failed to fetch'],
         ['TypeError', 'Load failed'],
@@ -102,7 +102,7 @@ describe('isPageLeaveAbortNoise', () => {
             isPageLeaveAbortNoise(
                 exceptionEvent(
                     'TypeError',
-                    'Failed to fetch dynamically imported module: https://finanzaspersonales.local/build/assets/accounts-BO3xxENF.js',
+                    'Failed to fetch dynamically imported module: https://whisper.money/build/assets/accounts-BO3xxENF.js',
                 ),
             ),
         ).toBe(false);
@@ -124,7 +124,7 @@ describe('isChunkLoadErrorEvent', () => {
                 values: [
                     {
                         type: 'TypeError',
-                        value: 'Failed to fetch dynamically imported module: https://finanzaspersonales.local/build/assets/accounts-BO3xxENF.js',
+                        value: 'Failed to fetch dynamically imported module: https://whisper.money/build/assets/accounts-BO3xxENF.js',
                     },
                 ],
             },
@@ -480,13 +480,13 @@ describe('isUnattendedRequestNoise', () => {
         // Hovering the sidebar prefetches Cashflow from whatever page you are on.
         listeners.prefetching?.({
             detail: {
-                visit: { url: new URL('https://finanzaspersonales.local/cashflow') },
+                visit: { url: new URL('https://whisper.money/cashflow') },
             },
         });
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://finanzaspersonales.local/cashflow'),
+                networkError('https://whisper.money/cashflow'),
             ),
         ).toBe(true);
     });
@@ -500,7 +500,7 @@ describe('isUnattendedRequestNoise', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://finanzaspersonales.local/onboarding'),
+                    url: new URL('https://whisper.money/onboarding'),
                     prefetch: false,
                     poll: true,
                 },
@@ -509,7 +509,7 @@ describe('isUnattendedRequestNoise', () => {
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://finanzaspersonales.local/onboarding'),
+                networkError('https://whisper.money/onboarding'),
             ),
         ).toBe(true);
     });
@@ -522,7 +522,7 @@ describe('isUnattendedRequestNoise', () => {
         // suppression must not swallow.
         expect(
             isUnattendedRequestNoise(
-                networkError('https://finanzaspersonales.local/budgets'),
+                networkError('https://whisper.money/budgets'),
             ),
         ).toBe(false);
     });
@@ -533,7 +533,7 @@ describe('isUnattendedRequestNoise', () => {
 
         listeners.prefetching?.({
             detail: {
-                visit: { url: new URL('https://finanzaspersonales.local/cashflow') },
+                visit: { url: new URL('https://whisper.money/cashflow') },
             },
         });
 
@@ -541,7 +541,7 @@ describe('isUnattendedRequestNoise', () => {
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://finanzaspersonales.local/cashflow'),
+                networkError('https://whisper.money/cashflow'),
             ),
         ).toBe(false);
     });
@@ -565,7 +565,7 @@ describe('isUnattendedRequestNoise', () => {
 
         listeners.prefetching?.({
             detail: {
-                visit: { url: new URL('https://finanzaspersonales.local/cashflow') },
+                visit: { url: new URL('https://whisper.money/cashflow') },
             },
         });
 
@@ -574,7 +574,7 @@ describe('isUnattendedRequestNoise', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://finanzaspersonales.local/cashflow'),
+                    url: new URL('https://whisper.money/cashflow'),
                     prefetch: false,
                 },
             },
@@ -582,7 +582,7 @@ describe('isUnattendedRequestNoise', () => {
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://finanzaspersonales.local/cashflow'),
+                networkError('https://whisper.money/cashflow'),
             ),
         ).toBe(false);
     });
@@ -594,20 +594,20 @@ describe('isUnattendedRequestNoise', () => {
         listeners.before?.({
             detail: {
                 visit: {
-                    url: new URL('https://finanzaspersonales.local/budgets'),
+                    url: new URL('https://whisper.money/budgets'),
                     prefetch: false,
                 },
             },
         });
         listeners.prefetching?.({
             detail: {
-                visit: { url: new URL('https://finanzaspersonales.local/cashflow') },
+                visit: { url: new URL('https://whisper.money/cashflow') },
             },
         });
 
         expect(
             isUnattendedRequestNoise(
-                networkError('https://finanzaspersonales.local/cashflow'),
+                networkError('https://whisper.money/cashflow'),
             ),
         ).toBe(true);
     });

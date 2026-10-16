@@ -20,7 +20,7 @@ test('login screen can be rendered with an intended destination in session', fun
 
 test('login screen stays available for returning users with an intended destination', function () {
     $response = $this
-        ->withCookie('finanzas_personales_returning_user', '1')
+        ->withCookie('whisper_money_returning_user', '1')
         ->withSession(['url.intended' => route('dashboard')])
         ->get(route('login'));
 
@@ -38,7 +38,7 @@ test('users can authenticate using the login screen', function () {
     $this->assertAuthenticated();
     $response
         ->assertRedirect(route('dashboard', absolute: false))
-        ->assertCookie('finanzas_personales_returning_user');
+        ->assertCookie('whisper_money_returning_user');
 });
 
 test('logging in records the last logged in date', function () {

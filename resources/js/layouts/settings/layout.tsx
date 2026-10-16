@@ -45,6 +45,12 @@ const getNavItems = (
     },
     {
         type: 'nav-item' as const,
+        title: 'Account types',
+        href: '/settings/account-types',
+        icon: null,
+    },
+    {
+        type: 'nav-item' as const,
         title: 'Automation rules',
         href: automationRulesIndex(),
         icon: null,

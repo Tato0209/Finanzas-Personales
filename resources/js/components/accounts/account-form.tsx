@@ -17,12 +17,14 @@ import {
     Account,
     CurrencyOption,
     PROPERTY_TYPES,
+    accountIconByType,
     balanceTermCapitalized,
     formatAccountType,
     formatAreaUnit,
     formatPropertyType,
     supportsInvestedAmount,
     type AccountType,
+    type AccountTypeModel,
     type AreaUnit,
     type Bank,
     type CurrencyCode,
@@ -58,7 +60,7 @@ export interface LoanFormData {
 export interface AccountFormData {
     displayName: string;
     bankId: string | null;
-    type: AccountType | null;
+    type: AccountType | string | null;
     currencyCode: CurrencyCode | null;
     customBank: CustomBankData | null;
     balance: number | null;
@@ -73,13 +75,13 @@ interface AccountFormProps {
     initialValues?: {
         displayName: string;
         bank: Bank | null;
-        type: AccountType;
+        type: AccountType | string;
         currencyCode: CurrencyCode;
         loan?: LoanFormData | null;
         realEstate?: RealEstateFormData | null;
     };
-    forceAccountType?: AccountType;
-    hiddenAccountTypes?: AccountType[];
+    forceAccountType?: AccountType | string;
+    hiddenAccountTypes?: (AccountType | string)[];
     availableLoanAccounts?: Account[];
     usePrimaryCurrenciesOnly?: boolean;
     isConnected?: boolean;
@@ -123,7 +125,10 @@ export function AccountForm({
     onChange,
     errors = {},
 }: AccountFormProps) {
-    const { auth, currencies } = usePage<SharedData>().props;
+    const { auth, currencies, accountTypes: sharedAccountTypes } =
+        usePage<SharedData>().props;
+    const userAccountTypes =
+        (sharedAccountTypes as AccountTypeModel[] | undefined) || [];
     const currencyOptions = usePrimaryCurrenciesOnly
         ? currencies.profile
         : currencies.accounts;
@@ -133,9 +138,9 @@ export function AccountForm({
     const [selectedBankId, setSelectedBankId] = useState<string | null>(
         initialValues?.bank?.id ?? null,
     );
-    const [selectedType, setSelectedType] = useState<AccountType | null>(
-        initialValues?.type ?? forceAccountType ?? null,
-    );
+    const [selectedType, setSelectedType] = useState<
+        AccountType | string | null
+    >(initialValues?.type ?? forceAccountType ?? null);
     // The currency the reader already keeps their money in, rather than an
     // empty select on every new account. Only when the list on offer actually
     // holds it: a user whose currency is no longer offered picks one.
@@ -178,7 +183,8 @@ export function AccountForm({
     // What the account is worth is only half the story on the types that grow:
     // without what went in there is no gain to read anywhere.
     const showInvestedAmountField =
-        selectedType !== null && supportsInvestedAmount({ type: selectedType });
+        selectedType !== null &&
+        supportsInvestedAmount({ type: selectedType }, userAccountTypes);
     const isRealEstate = selectedType === 'real_estate';
     const isLoan = selectedType === 'loan';
     // Asked once, when the card is opened; the card's own page edits it later.
@@ -337,24 +343,73 @@ export function AccountForm({
                             />
                         </SelectTrigger>
                         <SelectContent>
-                            {ACCOUNT_TYPES.filter(
-                                (type) => !hiddenAccountTypes.includes(type),
-                            ).map((type) => (
-                                <SelectItem key={type} value={type}>
-                                    {formatAccountType(type)}
-                                </SelectItem>
-                            ))}
+                            {userAccountTypes.length > 0 ? (
+                                userAccountTypes
+                                    .filter(
+                                        (type) =>
+                                            !hiddenAccountTypes.includes(type.slug),
+                                    )
+                                    .map((type) => {
+                                        const Icon = accountIconByType(
+                                            type.slug,
+                                            userAccountTypes,
+                                        );
+                                        return (
+                                            <SelectItem
+                                                key={type.slug}
+                                                value={type.slug}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Icon className="h-4 w-4 opacity-80" />
+                                                    <span>{type.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })
+                            ) : (
+                                ACCOUNT_TYPES.filter(
+                                    (type) => !hiddenAccountTypes.includes(type),
+                                ).map((type) => (
+                                    <SelectItem key={type} value={type}>
+                                        {formatAccountType(type)}
+                                    </SelectItem>
+                                ))
+                            )}
                         </SelectContent>
                     </Select>
                 </div>
-                {(selectedType === 'investment' ||
-                    selectedType === 'retirement') && (
-                    <p className="pl-1 text-xs text-muted-foreground">
-                        {__(
-                            "This account type is for balance tracking only and\n                        doesn't support transactions.",
-                        )}
-                    </p>
-                )}
+                {(() => {
+                    const selectedModel = userAccountTypes.find(
+                        (t) => t.slug === selectedType,
+                    );
+                    if (
+                        selectedModel &&
+                        !selectedModel.has_transaction_ledger &&
+                        selectedType !== 'real_estate'
+                    ) {
+                        return (
+                            <p className="pl-1 text-xs text-muted-foreground">
+                                {__(
+                                    "This account type is for balance tracking only and\n                        doesn't support transactions.",
+                                )}
+                            </p>
+                        );
+                    }
+                    if (
+                        !selectedModel &&
+                        (selectedType === 'investment' ||
+                            selectedType === 'retirement')
+                    ) {
+                        return (
+                            <p className="pl-1 text-xs text-muted-foreground">
+                                {__(
+                                    "This account type is for balance tracking only and\n                        doesn't support transactions.",
+                                )}
+                            </p>
+                        );
+                    }
+                    return null;
+                })()}
                 {isRealEstate && (
                     <p className="pl-1 text-xs text-muted-foreground">
                         {__(

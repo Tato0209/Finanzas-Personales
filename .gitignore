@@ -39,3 +39,5 @@ yarn-error.log
 # disk only while the suite runs, so an interrupted run cannot leave it behind
 # for the next `git add` to sweep up.
 /tests/.documentation-images/
+dump.rdb
+

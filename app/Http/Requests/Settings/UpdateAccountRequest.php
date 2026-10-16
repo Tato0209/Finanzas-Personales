@@ -6,6 +6,7 @@ use App\Enums\AccountType;
 use App\Http\Requests\Concerns\ValidatesAccountDetailRules;
 use App\Http\Requests\Concerns\ValidatesUserOwnedResources;
 use App\Models\Account;
+use App\Services\AccountTypeService;
 use App\Services\CurrencyOptions;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -43,7 +44,10 @@ class UpdateAccountRequest extends FormRequest
             'type' => [
                 'required',
                 'string',
-                Rule::in(array_map(fn ($type) => $type->value, AccountType::cases())),
+                Rule::in(app(AccountTypeService::class)->validSlugsForUser(
+                    $this->user(),
+                    $this->route('account') instanceof Account ? $this->route('account')->type->value : null
+                )),
             ],
             'ownership_percentage' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'ownership_applies_to_balance' => ['sometimes', 'boolean'],

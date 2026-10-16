@@ -9,6 +9,7 @@ use App\Features\CalculateBalancesOnImport;
 use App\Features\FullImport;
 use App\Models\BankingConnection;
 use App\Models\User;
+use App\Services\AccountTypeService;
 use App\Services\Achievements\Catalog;
 use App\Services\Achievements\Challenges;
 use App\Services\CurrencyOptions;
@@ -290,6 +291,7 @@ class HandleInertiaRequests extends Middleware
             'labels' => fn () => $user->labels()
                 ->orderBy('name')
                 ->get(),
+            'accountTypes' => fn () => app(AccountTypeService::class)->forUser($user),
         ];
     }
 

@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Casts\AccountTypeCast;
 use App\Enums\AccountType;
 use App\Enums\TransactionSource;
 use App\Models\Concerns\BelongsToSpace;
 use App\Services\BudgetTransactionService;
+use App\Support\CustomAccountType;
 use Carbon\Carbon;
 use Database\Factories\AccountFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * @property AccountType $type
+ * @property AccountType|CustomAccountType $type
  * @property ?Carbon $archived_at
  * @property ?Carbon $transactions_paginate_before
  */
@@ -86,7 +88,7 @@ class Account extends Model
     protected function casts(): array
     {
         return [
-            'type' => AccountType::class,
+            'type' => AccountTypeCast::class,
             'linked_at' => 'datetime',
             'transactions_paginate_before' => 'date',
             'position' => 'integer',

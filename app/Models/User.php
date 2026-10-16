@@ -392,6 +392,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(Label::class);
     }
 
+    /** @return HasMany<AccountType, $this> */
+    public function accountTypes(): HasMany
+    {
+        return $this->hasMany(AccountType::class);
+    }
+
     /** @return HasMany<UserMailLog, $this> */
     public function mailLogs(): HasMany
     {

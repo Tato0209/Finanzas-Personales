@@ -2,13 +2,20 @@ import { __ } from '@/utils/i18n';
 import {
     BadgeQuestionMarkIcon,
     Banknote,
+    Briefcase,
     Building2,
+    CircleDollarSign,
+    Coins,
     CreditCard,
     FolderKanban,
+    Gem,
     Home,
+    Landmark,
     LineChart,
     LucideIcon,
     PiggyBank,
+    Receipt,
+    ShieldCheck,
     TrendingUp,
     Wallet,
 } from 'lucide-react';
@@ -27,6 +34,19 @@ export const ACCOUNT_TYPES = [
 ] as const;
 
 export type AccountType = (typeof ACCOUNT_TYPES)[number];
+
+export interface AccountTypeModel {
+    id: UUID;
+    name: string;
+    slug: string;
+    icon: string;
+    color: string | null;
+    has_transaction_ledger: boolean;
+    supports_invested_amount: boolean;
+    is_system_default?: boolean;
+    position?: number;
+    accounts_count?: number;
+}
 
 export interface SalaryCategoryBreakdown {
     category_id: string | null;
@@ -71,7 +91,7 @@ export interface Account {
     id: UUID;
     name: string;
     bank: Bank | null;
-    type: AccountType;
+    type: AccountType | string;
     currency_code: CurrencyCode;
     banking_connection_id: UUID | null;
     external_account_id: string | null;
@@ -241,8 +261,36 @@ export function formatAreaUnit(unit: AreaUnit): string {
     return unitMap[unit] || unit;
 }
 
-export function formatAccountType(type: AccountType): string {
-    const typeMap: Record<AccountType, string> = {
+export const ACCOUNT_TYPE_ICON_MAP: Record<string, LucideIcon> = {
+    wallet: Wallet,
+    banknote: Banknote,
+    'piggy-bank': PiggyBank,
+    'line-chart': LineChart,
+    'credit-card': CreditCard,
+    'building-2': Building2,
+    home: Home,
+    'trending-up': TrendingUp,
+    'folder-kanban': FolderKanban,
+    coins: Coins,
+    landmark: Landmark,
+    receipt: Receipt,
+    gem: Gem,
+    'circle-dollar-sign': CircleDollarSign,
+    'shield-check': ShieldCheck,
+    briefcase: Briefcase,
+};
+
+export function formatAccountType(
+    type: AccountType | string,
+    customTypes?: AccountTypeModel[],
+): string {
+    if (customTypes && customTypes.length > 0) {
+        const found = customTypes.find((t) => t.slug === type);
+        if (found) {
+            return found.name;
+        }
+    }
+    const typeMap: Record<string, string> = {
         checking: __('Checking'),
         credit_card: __('Credit Card'),
         investment: __('Investment'),
@@ -256,18 +304,27 @@ export function formatAccountType(type: AccountType): string {
     return typeMap[type] || type;
 }
 
-const NON_TRANSACTIONAL_ACCOUNT_TYPES: AccountType[] = [
+const NON_TRANSACTIONAL_ACCOUNT_TYPES: string[] = [
     'investment',
     'loan',
     'real_estate',
     'retirement',
 ];
 
-export function isTransactionalAccount(account: Account): boolean {
+export function isTransactionalAccount(
+    account: Pick<Account, 'type'>,
+    customTypes?: AccountTypeModel[],
+): boolean {
+    if (customTypes && customTypes.length > 0) {
+        const found = customTypes.find((t) => t.slug === account.type);
+        if (found) {
+            return found.has_transaction_ledger;
+        }
+    }
     return !NON_TRANSACTIONAL_ACCOUNT_TYPES.includes(account.type);
 }
 
-const INVESTED_AMOUNT_ACCOUNT_TYPES: AccountType[] = [
+const INVESTED_AMOUNT_ACCOUNT_TYPES: string[] = [
     'investment',
     'retirement',
     'savings',
@@ -275,7 +332,14 @@ const INVESTED_AMOUNT_ACCOUNT_TYPES: AccountType[] = [
 
 export function supportsInvestedAmount(
     account: Pick<Account, 'type'>,
+    customTypes?: AccountTypeModel[],
 ): boolean {
+    if (customTypes && customTypes.length > 0) {
+        const found = customTypes.find((t) => t.slug === account.type);
+        if (found) {
+            return found.supports_invested_amount;
+        }
+    }
     return INVESTED_AMOUNT_ACCOUNT_TYPES.includes(account.type);
 }
 
@@ -296,8 +360,17 @@ export function savingsContributionAmount(transaction: {
         : -transaction.amount;
 }
 
-export function accountIconByType(type: AccountType): LucideIcon {
-    const typeMap: Record<AccountType, LucideIcon> = {
+export function accountIconByType(
+    type: AccountType | string,
+    customTypes?: AccountTypeModel[],
+): LucideIcon {
+    if (customTypes && customTypes.length > 0) {
+        const found = customTypes.find((t) => t.slug === type);
+        if (found && found.icon && ACCOUNT_TYPE_ICON_MAP[found.icon]) {
+            return ACCOUNT_TYPE_ICON_MAP[found.icon];
+        }
+    }
+    const typeMap: Record<string, LucideIcon> = {
         checking: Wallet,
         credit_card: CreditCard,
         investment: LineChart,
@@ -307,6 +380,10 @@ export function accountIconByType(type: AccountType): LucideIcon {
         savings: PiggyBank,
         salary: Banknote,
         others: FolderKanban,
+        coins: Coins,
+        landmark: Landmark,
+        receipt: Receipt,
+        gem: Gem,
     };
 
     return typeMap[type] ?? BadgeQuestionMarkIcon;

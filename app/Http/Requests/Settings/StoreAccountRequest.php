@@ -5,6 +5,7 @@ namespace App\Http\Requests\Settings;
 use App\Enums\AccountType;
 use App\Http\Requests\Concerns\ValidatesAccountDetailRules;
 use App\Http\Requests\Concerns\ValidatesUserOwnedResources;
+use App\Services\AccountTypeService;
 use App\Services\CurrencyOptions;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -46,7 +47,7 @@ class StoreAccountRequest extends FormRequest
             'type' => [
                 'required',
                 'string',
-                Rule::in(array_map(fn ($type) => $type->value, AccountType::cases())),
+                Rule::in(app(AccountTypeService::class)->validSlugsForUser($this->user())),
             ],
             'balance' => ['nullable', 'integer'],
             'invested_amount' => ['nullable', 'integer'],

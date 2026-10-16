@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\OpenBanking\ConnectionController;
 use App\Http\Controllers\Settings\AccountController;
+use App\Http\Controllers\Settings\AccountTypeController;
 use App\Http\Controllers\Settings\AutomationRuleApplicationController;
 use App\Http\Controllers\Settings\AutomationRuleController;
 use App\Http\Controllers\Settings\BankController;
@@ -47,6 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::post('settings/accounts', [AccountController::class, 'store'])->name('accounts.store');
     Route::patch('settings/accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
     Route::delete('settings/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
+
+    Route::get('settings/account-types', [AccountTypeController::class, 'index'])->name('account-types.index');
+    Route::post('settings/account-types', [AccountTypeController::class, 'store'])->name('account-types.store');
+    Route::patch('settings/account-types/{accountType}', [AccountTypeController::class, 'update'])->name('account-types.update');
+    Route::delete('settings/account-types/{accountType}', [AccountTypeController::class, 'destroy'])->name('account-types.destroy');
 
     Route::get('settings/notifications', [NotificationPreferenceController::class, 'index'])
         ->name('notifications.index');

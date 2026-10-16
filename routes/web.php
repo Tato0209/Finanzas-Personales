@@ -55,7 +55,38 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    $popularBanks = Cache::remember('popular-banks', now()->addDay(), function () {
+        return Bank::query()
+            ->whereNull('user_id')
+            ->whereNotNull('logo')
+            ->where('logo', '!=', '')
+            ->withCount('accounts')
+            ->withExists([
+                'accounts as has_spanish_accounts' => fn ($query) => $query->whereHas(
+                    'bankingConnection',
+                    fn ($bankingConnectionQuery) => $bankingConnectionQuery->where('aspsp_country', 'ES')
+                ),
+            ])
+            ->orderByDesc('accounts_count')
+            ->orderByDesc('has_spanish_accounts')
+            ->orderBy('name')
+            ->limit(300)
+            ->get(['name', 'logo'])
+            ->map(fn (Bank $bank): array => [
+                'name' => $bank->name,
+                'logo' => $bank->logo,
+            ])
+            ->values()
+            ->toArray();
+    });
+
+    return Inertia::render('welcome', [
+        'canRegister' => config('auth.registration_enabled'),
+        'popularBanks' => $popularBanks,
+        'comparisonLinks' => ComparisonPages::index(app()->getLocale()),
+        'integrationsLink' => IntegrationsPage::link(app()->getLocale()),
+        'language' => app()->getLocale(),
+    ]);
 })->name('home');
 
 Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');

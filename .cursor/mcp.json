@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "php",
+            "args": [
+                "artisan",
+                "boost:mcp"
+            ]
+        },
+        "sentry": {
+            "url": "https://mcp.sentry.dev/mcp"
+        }
+    }
+}

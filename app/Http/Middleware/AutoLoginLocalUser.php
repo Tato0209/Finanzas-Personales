@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 class AutoLoginLocalUser
@@ -21,7 +22,7 @@ class AutoLoginLocalUser
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (app()->environment('testing')) {
+        if (app()->environment('testing') || defined('PHPUNIT_COMPOSER_INSTALL') || class_exists(TestCase::class, false)) {
             return $next($request);
         }
 

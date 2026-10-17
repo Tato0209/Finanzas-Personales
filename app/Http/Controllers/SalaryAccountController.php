@@ -15,7 +15,9 @@ class SalaryAccountController extends Controller
     public function store(Request $request, Account $account): RedirectResponse
     {
         abort_unless($account->user_id === $request->user()->id, 403);
-        abort_unless($account->type === AccountType::Salary, 400, 'Account is not a salary account');
+        $isSalary = $account->type === AccountType::Salary
+            || in_array($account->type->value, ['salary', 'salario'], true);
+        abort_unless($isSalary, 400, 'Account is not a salary account');
 
         $validated = $request->validate([
             'month' => ['required', 'string', 'regex:/^\d{4}-\d{2}$/'],

@@ -216,7 +216,9 @@ export default function AccountShow({
     const isConnected = !!account.banking_connection_id;
     const isLoan = account.type === 'loan';
     const isRealEstate = account.type === 'real_estate';
-    const isSalary = account.type === 'salary';
+    const isSalary =
+        account.type === 'salary' ||
+        account.type === 'salario';
     const isInvestment = account.type === 'investment';
     const canUpdateBalance = isInvestment || isRealEstate || isLoan;
     const realEstateDetail = account.real_estate_detail;
@@ -416,6 +418,7 @@ export default function AccountShow({
                         account={account}
                         currencyCode={account.currency_code}
                         statement={account.salary_statement ?? null}
+                        transactions={transactions}
                     />
                 ) : (
                     <AccountBalanceChart

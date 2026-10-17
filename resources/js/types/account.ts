@@ -58,10 +58,20 @@ export interface SalaryCategoryBreakdown {
     count: number;
 }
 
+export interface SalaryStatementStats {
+    top_category: SalaryCategoryBreakdown | null;
+    category_count: number;
+    average_expense: number;
+    average_daily_spend: number;
+    daily_budget_remaining: number;
+    days_remaining: number;
+}
+
 export interface SalaryStatement {
     month: string;
     month_name: string;
     is_current_month: boolean;
+    is_all_time?: boolean;
     salary_amount: number;
     has_salary_set: boolean;
     total_spent: number;
@@ -69,8 +79,15 @@ export interface SalaryStatement {
     savings_rate: number;
     spent_percentage: number;
     categories_breakdown: SalaryCategoryBreakdown[];
+    income_categories_breakdown?: SalaryCategoryBreakdown[];
+    all_time_categories_breakdown?: SalaryCategoryBreakdown[];
+    all_time_total_spent?: number;
+    all_time_total_income?: number;
     available_months: string[];
     transaction_count: number;
+    expense_count?: number;
+    income_count?: number;
+    stats?: SalaryStatementStats;
 }
 
 export type CurrencyCode = string;

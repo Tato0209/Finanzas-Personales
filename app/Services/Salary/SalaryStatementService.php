@@ -21,25 +21,34 @@ class SalaryStatementService
      */
     public function presentFor(Account $account, User $user, ?string $requestedMonth = null): array
     {
-        if ($account->type !== AccountType::Salary) {
+        $isSalary = $account->type === AccountType::Salary
+            || in_array($account->type->value, ['salary', 'salario'], true);
+
+        if (! $isSalary) {
             return [];
         }
 
         $now = Carbon::now();
+        $isAllTime = $requestedMonth === 'all';
         $selectedMonth = $requestedMonth && preg_match('/^\d{4}-\d{2}$/', $requestedMonth)
             ? $requestedMonth
             : $now->format('Y-m');
 
-        $startOfMonth = Carbon::parse($selectedMonth.'-01')->startOfMonth();
+        $startOfMonth = Carbon::parse(($isAllTime ? $now->format('Y-m') : $selectedMonth).'-01')->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         // 1. Fetch all transactions for this account in this month
-        $transactions = $account->transactions()
+        $query = $account->transactions()
             ->with(['category', 'labels'])
-            ->whereBetween('transaction_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
             ->orderBy('transaction_date', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
+            ->orderBy('id', 'desc');
+
+        if (! $isAllTime) {
+            $query->whereBetween('transaction_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
+        }
+
+        /** @var Collection<int, Transaction> $transactions */
+        $transactions = $query->get();
 
         $incomeTransactions = $transactions->filter(fn (Transaction $t) => $t->amount > 0);
         $expenseTransactions = $transactions->filter(fn (Transaction $t) => $t->amount < 0);
@@ -53,30 +62,29 @@ class SalaryStatementService
         $spentPercentage = $salaryAmount > 0 ? min(100, (int) round(($totalSpent / $salaryAmount) * 100)) : 0;
 
         // 2. Category breakdown for expenses
-        $categoriesBreakdown = $expenseTransactions
-            ->groupBy('category_id')
-            ->map(function (Collection $group) use ($totalSpent) {
-                /** @var Transaction $first */
-                $first = $group->first();
-                $category = $first->category;
-                $catTotal = (int) abs($group->sum('amount'));
-                $percentage = $totalSpent > 0 ? round(($catTotal / $totalSpent) * 100, 1) : 0;
+        $categoriesBreakdown = $this->buildCategoryBreakdown($expenseTransactions, $totalSpent);
 
-                return [
-                    'category_id' => $category?->id,
-                    'name' => $category->name ?? 'Sin categoría',
-                    'icon' => $category->icon ?? 'help-circle',
-                    'color' => $category->color ?? '#94a3b8',
-                    'total' => $catTotal,
-                    'percentage' => $percentage,
-                    'count' => $group->count(),
-                ];
-            })
-            ->sortByDesc('total')
-            ->values()
-            ->all();
+        // 3. Category breakdown for incomes
+        $incomeCategoriesBreakdown = $this->buildCategoryBreakdown($incomeTransactions, $salaryAmount);
 
-        // 3. Available months with transactions for this account
+        // 4. All-time calculations for quick switching
+        /** @var Collection<int, Transaction> $allTransactions */
+        $allTransactions = $account->transactions()->with(['category'])->get();
+        $allExpenses = $allTransactions->filter(fn (Transaction $t) => $t->amount < 0);
+        $allIncomes = $allTransactions->filter(fn (Transaction $t) => $t->amount > 0);
+        $allTimeTotalSpent = (int) abs($allExpenses->sum('amount'));
+        $allTimeTotalIncome = (int) $allIncomes->sum('amount');
+        $allTimeCategoriesBreakdown = $this->buildCategoryBreakdown($allExpenses, $allTimeTotalSpent);
+
+        // 5. Month stats
+        $daysInMonth = (int) $startOfMonth->daysInMonth;
+        $currentDay = $now->isSameMonth($startOfMonth) ? min((int) $now->day, $daysInMonth) : ($now->isAfter($endOfMonth) ? $daysInMonth : 1);
+        $remainingDays = $now->isSameMonth($startOfMonth) ? max(1, $daysInMonth - (int) $now->day) : 1;
+        $averageDailySpend = $currentDay > 0 ? (int) round($totalSpent / $currentDay) : 0;
+        $dailyBudgetRemaining = $remainingBalance > 0 ? (int) round($remainingBalance / $remainingDays) : 0;
+
+        // 6. Available months with transactions for this account
+        /** @var list<string> $availableMonths */
         $availableMonths = $account->transactions()
             ->selectRaw("DISTINCT DATE_FORMAT(transaction_date, '%Y-%m') as ym")
             ->pluck('ym')
@@ -89,9 +97,10 @@ class SalaryStatementService
 
         return [
             'salary_statement' => [
-                'month' => $selectedMonth,
-                'month_name' => $startOfMonth->translatedFormat('F Y'),
-                'is_current_month' => $selectedMonth === $now->format('Y-m'),
+                'month' => $isAllTime ? 'all' : $selectedMonth,
+                'month_name' => $isAllTime ? 'Todo el historial' : $startOfMonth->translatedFormat('F Y'),
+                'is_current_month' => ! $isAllTime && $selectedMonth === $now->format('Y-m'),
+                'is_all_time' => $isAllTime,
                 'salary_amount' => $salaryAmount,
                 'has_salary_set' => $hasSalarySet,
                 'total_spent' => $totalSpent,
@@ -99,10 +108,57 @@ class SalaryStatementService
                 'savings_rate' => $savingsRate,
                 'spent_percentage' => $spentPercentage,
                 'categories_breakdown' => $categoriesBreakdown,
+                'income_categories_breakdown' => $incomeCategoriesBreakdown,
+                'all_time_categories_breakdown' => $allTimeCategoriesBreakdown,
+                'all_time_total_spent' => $allTimeTotalSpent,
+                'all_time_total_income' => $allTimeTotalIncome,
                 'available_months' => $availableMonths,
                 'transaction_count' => $transactions->count(),
+                'expense_count' => $expenseTransactions->count(),
+                'income_count' => $incomeTransactions->count(),
+                'stats' => [
+                    'top_category' => $categoriesBreakdown[0] ?? null,
+                    'category_count' => count($categoriesBreakdown),
+                    'average_expense' => $expenseTransactions->count() > 0 ? (int) round($totalSpent / $expenseTransactions->count()) : 0,
+                    'average_daily_spend' => $averageDailySpend,
+                    'daily_budget_remaining' => $dailyBudgetRemaining,
+                    'days_remaining' => $remainingDays,
+                ],
             ],
         ];
+    }
+
+    /**
+     * Build category breakdown list for given transactions.
+     *
+     * @param  Collection<int, Transaction>  $transactions
+     * @return list<array{category_id: ?string, name: string, icon: string, color: string, total: int, percentage: float, count: int}>
+     */
+    private function buildCategoryBreakdown(Collection $transactions, int $totalAmount): array
+    {
+        /** @var list<array{category_id: ?string, name: string, icon: string, color: string, total: int, percentage: float, count: int}> */
+        return $transactions
+            ->groupBy(fn (Transaction $t) => $t->category_id ?? '__none__')
+            ->map(function (Collection $group) use ($totalAmount) {
+                /** @var Transaction $first */
+                $first = $group->first();
+                $category = $first->category;
+                $catTotal = (int) abs($group->sum('amount'));
+                $percentage = $totalAmount > 0 ? round(($catTotal / $totalAmount) * 100, 1) : 0.0;
+
+                return [
+                    'category_id' => $category?->id,
+                    'name' => $category->name ?? 'Sin categoría',
+                    'icon' => $category->icon ?? 'HelpCircle',
+                    'color' => $category->color ?? 'stone',
+                    'total' => $catTotal,
+                    'percentage' => $percentage,
+                    'count' => $group->count(),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values()
+            ->all();
     }
 
     /**

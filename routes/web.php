@@ -38,6 +38,7 @@ use App\Http\Controllers\RealEstateDetailController;
 use App\Http\Controllers\ReEvaluateTransactionRulesController;
 use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\RobotsController;
+use App\Http\Controllers\SalaryAccountCategoryBudgetController;
 use App\Http\Controllers\SalaryAccountController;
 use App\Http\Controllers\SavingsGoalController;
 use App\Http\Controllers\SitemapController;
@@ -269,6 +270,7 @@ Route::middleware(['auth', 'verified', 'onboarded', 'subscribed'])->group(functi
     Route::patch('accounts/{account}/credit-card-detail', [CreditCardDetailController::class, 'update'])->name('accounts.credit-card-detail.update');
     Route::delete('accounts/{account}/credit-card-detail', [CreditCardDetailController::class, 'destroy'])->name('accounts.credit-card-detail.destroy');
     Route::post('accounts/{account}/salary', [SalaryAccountController::class, 'store'])->name('accounts.salary.store');
+    Route::post('accounts/{account}/category-budgets', [SalaryAccountCategoryBudgetController::class, 'store'])->name('accounts.category-budgets.store');
     Route::post('accounts/{account}/contributions', [InvestmentContributionController::class, 'store'])->name('accounts.contributions.store');
     Route::put('accounts/{account}/contributions/{contribution}', [InvestmentContributionController::class, 'update'])->name('accounts.contributions.update');
     Route::delete('accounts/{account}/contributions/{contribution}', [InvestmentContributionController::class, 'destroy'])->name('accounts.contributions.destroy');

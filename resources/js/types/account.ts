@@ -67,6 +67,46 @@ export interface SalaryStatementStats {
     days_remaining: number;
 }
 
+export interface SalaryBudgetCategory {
+    category_id: string | null;
+    name: string;
+    icon: string;
+    color: string;
+    group_50_30_20: 'needs' | 'wants' | 'savings';
+    allocated_amount: number;
+    spent_amount: number;
+    remaining_amount: number;
+    spent_percentage: number;
+    is_over_budget: boolean;
+    transaction_count: number;
+}
+
+export interface Summary503020Item {
+    key: 'needs' | 'wants' | 'savings';
+    name: string;
+    target_amount: number;
+    target_percentage: number;
+    allocated_amount: number;
+    spent_amount: number;
+    remaining_amount: number;
+    spent_percentage: number;
+}
+
+export interface Summary503020 {
+    needs: Summary503020Item;
+    wants: Summary503020Item;
+    savings: Summary503020Item;
+}
+
+export interface UserCategoryOption {
+    id: string;
+    name: string;
+    icon: string;
+    color: string;
+    group_50_30_20: 'needs' | 'wants' | 'savings';
+    allocated_amount: number;
+}
+
 export interface SalaryStatement {
     month: string;
     month_name: string;
@@ -78,6 +118,11 @@ export interface SalaryStatement {
     remaining_balance: number;
     savings_rate: number;
     spent_percentage: number;
+    total_allocated?: number;
+    unallocated_salary?: number;
+    budget_categories?: SalaryBudgetCategory[];
+    summary_50_30_20?: Summary503020;
+    user_categories_options?: UserCategoryOption[];
     categories_breakdown: SalaryCategoryBreakdown[];
     income_categories_breakdown?: SalaryCategoryBreakdown[];
     all_time_categories_breakdown?: SalaryCategoryBreakdown[];

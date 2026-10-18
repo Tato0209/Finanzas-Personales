@@ -21,8 +21,9 @@ import {
 import type {
     Account,
     CurrencyCode,
-    SalaryCategoryBreakdown,
+    SalaryBudgetCategory,
     SalaryStatement,
+    UserCategoryOption,
 } from '@/types/account';
 import {
     getCategoryColorClasses,
@@ -39,30 +40,25 @@ import {
     ArrowUpRight,
     Banknote,
     Calendar,
+    CheckCircle2,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
     ChevronUp,
     FileSpreadsheet,
-    Layers,
+    HelpCircle,
     Pencil,
-    PieChart as PieChartIcon,
     PiggyBank,
     Printer,
+    Sliders,
     Sparkles,
+    Target,
     TrendingDown,
     TrendingUp,
     Wallet,
     type LucideIcon,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import {
-    Cell,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip as RechartsTooltip,
-} from 'recharts';
 
 const CATEGORY_HEX_COLORS: Record<string, string> = {
     amber: '#f59e0b',
@@ -87,26 +83,8 @@ const CATEGORY_HEX_COLORS: Record<string, string> = {
     yellow: '#eab308',
 };
 
-const PALETTE_FALLBACK = [
-    '#3b82f6',
-    '#10b981',
-    '#f59e0b',
-    '#ef4444',
-    '#8b5cf6',
-    '#ec4899',
-    '#06b6d4',
-    '#84cc16',
-    '#f97316',
-    '#6366f1',
-    '#14b8a6',
-    '#eab308',
-];
-
-function getCategoryHex(colorName: string, index = 0): string {
-    return (
-        CATEGORY_HEX_COLORS[colorName] ||
-        PALETTE_FALLBACK[index % PALETTE_FALLBACK.length]
-    );
+function getCategoryHex(colorName: string): string {
+    return CATEGORY_HEX_COLORS[colorName] || '#64748b';
 }
 
 function resolveLucideIcon(iconName: string): LucideIcon {
@@ -138,7 +116,7 @@ interface SalaryStatementCardProps {
     transactions?: Transaction[];
 }
 
-type DashboardViewMode = 'expenses' | 'incomes' | 'all_time';
+type BudgetTabMode = 'categories' | 'rule_50_30_20';
 
 export function SalaryStatementCard({
     account,
@@ -148,12 +126,19 @@ export function SalaryStatementCard({
 }: SalaryStatementCardProps) {
     const [salaryDialogOpen, setSalaryDialogOpen] = useState(false);
     const [statementModalOpen, setStatementModalOpen] = useState(false);
+    const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
+    const [singleCategoryBudgetOpen, setSingleCategoryBudgetOpen] = useState<SalaryBudgetCategory | null>(null);
+    const [singleBudgetAmount, setSingleBudgetAmount] = useState<number>(0);
+
     const [newSalaryAmount, setNewSalaryAmount] = useState<number>(
         statement?.salary_amount || 0,
     );
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [viewMode, setViewMode] = useState<DashboardViewMode>('expenses');
+    const [tabMode, setTabMode] = useState<BudgetTabMode>('categories');
     const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+
+    // Editable category allocations in modal
+    const [editingBudgets, setEditingBudgets] = useState<Record<string, { amount: number; group: 'needs' | 'wants' | 'savings' }>>({});
 
     if (!statement) {
         return null;
@@ -189,6 +174,111 @@ export function SalaryStatementCard({
         );
     };
 
+    const handleOpenBudgetDialog = () => {
+        const initial: Record<string, { amount: number; group: 'needs' | 'wants' | 'savings' }> = {};
+        const options: UserCategoryOption[] = statement.user_categories_options || [];
+
+        options.forEach((opt) => {
+            initial[opt.id] = {
+                amount: opt.allocated_amount || 0,
+                group: opt.group_50_30_20,
+            };
+        });
+
+        // Also merge any existing budget categories
+        (statement.budget_categories || []).forEach((bc) => {
+            if (bc.category_id) {
+                initial[bc.category_id] = {
+                    amount: bc.allocated_amount || 0,
+                    group: bc.group_50_30_20,
+                };
+            }
+        });
+
+        setEditingBudgets(initial);
+        setBudgetDialogOpen(true);
+    };
+
+    const handleApply503020Preset = () => {
+        setIsSubmitting(true);
+        router.post(
+            `/accounts/${account.id}/category-budgets`,
+            {
+                month: statement.month,
+                preset: '50_30_20',
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setBudgetDialogOpen(false);
+                    setIsSubmitting(false);
+                },
+                onError: () => {
+                    setIsSubmitting(false);
+                },
+            },
+        );
+    };
+
+    const handleSaveAllBudgets = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        const budgetsArray = Object.entries(editingBudgets).map(([catId, data]) => ({
+            category_id: catId,
+            allocated_amount: data.amount,
+            group_50_30_20: data.group,
+        }));
+
+        router.post(
+            `/accounts/${account.id}/category-budgets`,
+            {
+                month: statement.month,
+                budgets: budgetsArray,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setBudgetDialogOpen(false);
+                    setIsSubmitting(false);
+                },
+                onError: () => {
+                    setIsSubmitting(false);
+                },
+            },
+        );
+    };
+
+    const handleSaveSingleCategoryBudget = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!singleCategoryBudgetOpen?.category_id) return;
+
+        setIsSubmitting(true);
+        router.post(
+            `/accounts/${account.id}/category-budgets`,
+            {
+                month: statement.month,
+                budgets: [
+                    {
+                        category_id: singleCategoryBudgetOpen.category_id,
+                        allocated_amount: singleBudgetAmount,
+                        group_50_30_20: singleCategoryBudgetOpen.group_50_30_20,
+                    },
+                ],
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSingleCategoryBudgetOpen(null);
+                    setIsSubmitting(false);
+                },
+                onError: () => {
+                    setIsSubmitting(false);
+                },
+            },
+        );
+    };
+
     const months = statement.available_months || [statement.month];
     const currentIndex = months.indexOf(statement.month);
     const hasPrevious = currentIndex < months.length - 1;
@@ -207,42 +297,15 @@ export function SalaryStatementCard({
     };
 
     const isDeficit = statement.remaining_balance < 0;
+    const budgetCategories = statement.budget_categories || [];
+    const summary503020 = statement.summary_50_30_20;
+    const totalAllocated = statement.total_allocated ?? 0;
+    const unallocatedSalary = statement.unallocated_salary ?? Math.max(0, statement.salary_amount - totalAllocated);
 
-    // Active categories based on view mode
-    const activeCategories: SalaryCategoryBreakdown[] = useMemo(() => {
-        if (viewMode === 'incomes') {
-            return statement.income_categories_breakdown || [];
-        }
-        if (viewMode === 'all_time') {
-            return statement.all_time_categories_breakdown || statement.categories_breakdown || [];
-        }
-        return statement.categories_breakdown || [];
-    }, [viewMode, statement]);
-
-    // Active total amount for the current view mode
-    const activeTotal = useMemo(() => {
-        if (viewMode === 'incomes') {
-            return statement.salary_amount;
-        }
-        if (viewMode === 'all_time') {
-            return statement.all_time_total_spent ?? statement.total_spent;
-        }
-        return statement.total_spent;
-    }, [viewMode, statement]);
-
-    // Donut chart dataset
-    const chartData = useMemo(() => {
-        return activeCategories.map((cat, idx) => ({
-            id: cat.category_id ?? `cat-${idx}`,
-            name: cat.name,
-            value: cat.total,
-            color: getCategoryHex(cat.color, idx),
-            colorName: cat.color,
-            percentage: cat.percentage,
-            count: cat.count,
-            icon: cat.icon,
-        }));
-    }, [activeCategories]);
+    // Sum of editing budgets in modal
+    const editingTotalAllocated = useMemo(() => {
+        return Object.values(editingBudgets).reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    }, [editingBudgets]);
 
     // Filter transactions for an expanded category
     const categoryTransactions = useMemo(() => {
@@ -260,7 +323,6 @@ export function SalaryStatementCard({
                 return false;
             }
 
-            // If not all-time mode and valid month, filter by month
             if (statement.month !== 'all' && statement.month) {
                 return t.transaction_date.startsWith(statement.month);
             }
@@ -269,8 +331,7 @@ export function SalaryStatementCard({
         });
     }, [expandedCategory, transactions, statement.month]);
 
-    const stats = statement.stats;
-    const topCategory = stats?.top_category ?? activeCategories[0] ?? null;
+    const hasAnyBudgetsSet = budgetCategories.some((c) => c.allocated_amount > 0);
 
     return (
         <Card className="border-primary/20 bg-card/60 shadow-sm backdrop-blur-sm">
@@ -281,17 +342,17 @@ export function SalaryStatementCard({
                     </div>
                     <div>
                         <CardTitle className="text-lg font-semibold tracking-tight">
-                            {__('Control y Dashboard de Salario')}
+                            {__('Control de Presupuesto y Salario')}
                         </CardTitle>
                         <p className="text-xs text-muted-foreground">
                             {__(
-                                'Ciclo mensual independiente con seguimiento de gastos por categoría',
+                                'Define cuánto gastar por categoría y controla tu dinero disponible en tiempo real',
                             )}
                         </p>
                     </div>
                 </div>
 
-                {/* Selector de Mes */}
+                {/* Controles de Período y Botón de Presupuesto */}
                 <div className="flex flex-wrap items-center gap-2">
                     <Button
                         variant="outline"
@@ -342,6 +403,16 @@ export function SalaryStatementCard({
                     </Button>
 
                     <Button
+                        variant="default"
+                        size="sm"
+                        className="h-8 gap-1.5 text-xs font-semibold"
+                        onClick={handleOpenBudgetDialog}
+                    >
+                        <Sliders className="h-3.5 w-3.5" />
+                        {__('Ajustar Presupuestos')}
+                    </Button>
+
+                    <Button
                         variant="outline"
                         size="sm"
                         className="h-8 gap-1.5 text-xs"
@@ -368,7 +439,7 @@ export function SalaryStatementCard({
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                     {__(
-                                        'Este mes comienza en 0. Ingresa tu salario percibido para controlar tus gastos.',
+                                        'Ingresa tu salario percibido para presupuestar tus categorías y controlar tus gastos.',
                                     )}
                                 </p>
                             </div>
@@ -387,9 +458,9 @@ export function SalaryStatementCard({
                     </div>
                 ) : (
                     <>
-                        {/* 4 Métricas clave del mes */}
+                        {/* 4 Métricas clave: Salario, Presupuestado, Gastado Real, Disponible Real */}
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                            {/* Salario Asignado */}
+                            {/* 1. Salario Ingresado */}
                             <div className="rounded-xl border bg-background/50 p-3">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-medium text-muted-foreground">
@@ -400,9 +471,7 @@ export function SalaryStatementCard({
                                         size="icon"
                                         className="h-6 w-6 text-muted-foreground hover:text-foreground"
                                         onClick={() => {
-                                            setNewSalaryAmount(
-                                                statement.salary_amount,
-                                            );
+                                            setNewSalaryAmount(statement.salary_amount);
                                             setSalaryDialogOpen(true);
                                         }}
                                         title={__('Editar salario del mes')}
@@ -418,16 +487,37 @@ export function SalaryStatementCard({
                                 </div>
                                 <span className="text-[10px] text-muted-foreground">
                                     {statement.month === 'all'
-                                        ? __('Ingresos acumulados')
+                                        ? __('Ingresos totales')
                                         : `${__('Base de')} ${statement.month_name}`}
                                 </span>
                             </div>
 
-                            {/* Gastos del Mes */}
+                            {/* 2. Total Presupuestado */}
                             <div className="rounded-xl border bg-background/50 p-3">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-medium text-muted-foreground">
-                                        {__('Gastos del Mes')}
+                                        {__('Presupuesto Asignado')}
+                                    </span>
+                                    <Target className="h-3.5 w-3.5 text-primary" />
+                                </div>
+                                <div className="mt-1 flex items-baseline gap-1 text-lg font-bold text-primary">
+                                    <AmountDisplay
+                                        amountInCents={totalAllocated}
+                                        currencyCode={currencyCode}
+                                    />
+                                </div>
+                                <span className="text-[10px] text-muted-foreground">
+                                    {unallocatedSalary > 0
+                                        ? `${__('Por asignar')}: ${currencyCode} ${(unallocatedSalary / 100).toFixed(2)}`
+                                        : __('100% de salario asignado')}
+                                </span>
+                            </div>
+
+                            {/* 3. Gastos Reales del Mes */}
+                            <div className="rounded-xl border bg-background/50 p-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        {__('Gastos Reales')}
                                     </span>
                                     <ArrowDownRight className="h-3.5 w-3.5 text-rose-500" />
                                 </div>
@@ -438,12 +528,11 @@ export function SalaryStatementCard({
                                     />
                                 </div>
                                 <span className="text-[10px] text-muted-foreground">
-                                    {statement.spent_percentage}%{' '}
-                                    {__('del salario consumido')}
+                                    {statement.spent_percentage}% {__('del salario consumido')}
                                 </span>
                             </div>
 
-                            {/* Remanente Disponible */}
+                            {/* 4. Restante Disponible en Cuenta */}
                             <div
                                 className={`rounded-xl border p-3 ${
                                     isDeficit
@@ -453,7 +542,7 @@ export function SalaryStatementCard({
                             >
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-medium text-muted-foreground">
-                                        {__('Restante Disponible')}
+                                        {__('Disponible Real')}
                                     </span>
                                     {isDeficit ? (
                                         <Badge
@@ -474,43 +563,23 @@ export function SalaryStatementCard({
                                     }`}
                                 >
                                     <AmountDisplay
-                                        amountInCents={
-                                            statement.remaining_balance
-                                        }
+                                        amountInCents={statement.remaining_balance}
                                         currencyCode={currencyCode}
                                     />
                                 </div>
                                 <span className="text-[10px] text-muted-foreground">
                                     {isDeficit
                                         ? __('Sobregasto este mes')
-                                        : __(
-                                              'Disponible para gastar o ahorrar',
-                                          )}
-                                </span>
-                            </div>
-
-                            {/* Tasa de Ahorro */}
-                            <div className="rounded-xl border bg-background/50 p-3">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-muted-foreground">
-                                        {__('Tasa de Ahorro')}
-                                    </span>
-                                    <ArrowUpRight className="h-3.5 w-3.5 text-emerald-500" />
-                                </div>
-                                <div className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                                    {statement.savings_rate}%
-                                </div>
-                                <span className="text-[10px] text-muted-foreground">
-                                    {__('del salario retenido')}
+                                        : __('Saldo actual disponible')}
                                 </span>
                             </div>
                         </div>
 
-                        {/* Barra de Progreso del Salario Gastado */}
+                        {/* Barra de Progreso del Salario */}
                         <div className="space-y-1.5">
                             <div className="flex justify-between text-xs font-medium">
                                 <span className="text-muted-foreground">
-                                    {__('Progreso del ciclo')}
+                                    {__('Consumo global del ciclo')}
                                 </span>
                                 <span
                                     className={
@@ -519,11 +588,10 @@ export function SalaryStatementCard({
                                             : 'text-muted-foreground'
                                     }
                                 >
-                                    {statement.spent_percentage}%{' '}
-                                    {__('gastado')}
+                                    {statement.spent_percentage}% {__('gastado')}
                                 </span>
                             </div>
-                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary/80">
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-secondary/80">
                                 <div
                                     className={`h-full transition-all duration-500 ${
                                         isDeficit
@@ -542,301 +610,345 @@ export function SalaryStatementCard({
                 )}
 
                 {/* ============================================================== */}
-                {/* DASHBOARD DE CATEGORÍAS (Categorías por Tipo y Monto) */}
+                {/* CONTROL Y PLANIFICADOR DE PRESUPUESTO POR CATEGORÍA */}
                 {/* ============================================================== */}
                 <div className="rounded-2xl border border-border/80 bg-background/60 p-4 shadow-sm backdrop-blur-md sm:p-5">
-                    {/* Header del Dashboard de Categorías */}
+                    {/* Encabezado del Planificador con Tabs */}
                     <div className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between border-b">
-                        <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                <PieChartIcon className="h-4 w-4" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
-                                    {__('Dashboard de Gastos por Categoría')}
-                                    <Badge variant="outline" className="text-[10px] font-normal py-0 h-4">
-                                        {statement.month_name}
-                                    </Badge>
-                                </h3>
-                                <p className="text-[11px] text-muted-foreground">
-                                    {__('Visualiza el monto total y porcentaje consumido por cada tipo de categoría')}
-                                </p>
-                            </div>
+                        <div>
+                            <h3 className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
+                                {__('Presupuesto por Categoría')}
+                                <Badge variant="outline" className="text-[10px] font-normal py-0 h-4">
+                                    {statement.month_name}
+                                </Badge>
+                            </h3>
+                            <p className="text-[11px] text-muted-foreground">
+                                {__('Compara lo que planificaste gastar contra lo que realmente has consumido')}
+                            </p>
                         </div>
 
-                        {/* Botones de alternancia de vista */}
+                        {/* Selector de modo: Categorías individuales vs Regla 50/30/20 */}
                         <div className="flex items-center rounded-lg border bg-muted/40 p-1 text-xs">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setViewMode('expenses');
-                                    setExpandedCategory(null);
-                                }}
-                                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-all ${
-                                    viewMode === 'expenses'
+                                onClick={() => setTabMode('categories')}
+                                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-all ${
+                                    tabMode === 'categories'
                                         ? 'bg-background text-foreground shadow-xs'
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                <ArrowDownRight className="h-3 w-3 text-rose-500" />
-                                <span>{__('Gastos')}</span>
-                                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.2 text-[10px] text-muted-foreground">
-                                    {statement.categories_breakdown?.length || 0}
-                                </span>
+                                <Wallet className="h-3.5 w-3.5 text-primary" />
+                                <span>{__('Por Categorías')}</span>
                             </button>
 
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setViewMode('incomes');
-                                    setExpandedCategory(null);
-                                }}
-                                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-all ${
-                                    viewMode === 'incomes'
+                                onClick={() => setTabMode('rule_50_30_20')}
+                                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-all ${
+                                    tabMode === 'rule_50_30_20'
                                         ? 'bg-background text-foreground shadow-xs'
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                                <span>{__('Ingresos')}</span>
-                                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.2 text-[10px] text-muted-foreground">
-                                    {statement.income_categories_breakdown?.length || 0}
-                                </span>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setViewMode('all_time');
-                                    setExpandedCategory(null);
-                                }}
-                                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-all ${
-                                    viewMode === 'all_time'
-                                        ? 'bg-background text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                <Layers className="h-3 w-3 text-primary" />
-                                <span>{__('Histórico')}</span>
+                                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                                <span>{__('Regla 50 / 30 / 20')}</span>
                             </button>
                         </div>
                     </div>
 
-                    {/* Fila de Tarjetas KPI / Insights de Categorías */}
-                    <div className="grid grid-cols-2 gap-2.5 pt-4 sm:grid-cols-4">
-                        {/* Mayor Gasto */}
-                        <div className="rounded-xl border bg-card/80 p-2.5">
-                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
-                                {viewMode === 'incomes' ? __('Principal Ingreso') : __('Categoría Principal')}
-                            </span>
-                            <div className="mt-1 flex items-center justify-between gap-1">
-                                <span className="truncate text-xs font-semibold text-foreground">
-                                    {topCategory ? topCategory.name : __('Ninguna')}
-                                </span>
-                                {topCategory && (
-                                    <Badge variant="secondary" className="h-4 px-1 text-[9px]">
-                                        {topCategory.percentage}%
-                                    </Badge>
-                                )}
-                            </div>
-                            {topCategory && (
-                                <div className="mt-0.5 text-xs font-bold text-primary">
-                                    <AmountDisplay
-                                        amountInCents={topCategory.total}
-                                        currencyCode={currencyCode}
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Categorías con Movimiento */}
-                        <div className="rounded-xl border bg-card/80 p-2.5">
-                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
-                                {__('Categorías Activas')}
-                            </span>
-                            <div className="mt-1 text-base font-bold text-foreground">
-                                {activeCategories.length}
-                            </div>
-                            <span className="text-[10px] text-muted-foreground">
-                                {activeCategories.reduce((acc, c) => acc + c.count, 0)} {__('transacciones')}
-                            </span>
-                        </div>
-
-                        {/* Gasto Promedio */}
-                        <div className="rounded-xl border bg-card/80 p-2.5">
-                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
-                                {viewMode === 'incomes' ? __('Ingreso Promedio') : __('Gasto Promedio')}
-                            </span>
-                            <div className="mt-1 text-base font-bold text-foreground">
-                                <AmountDisplay
-                                    amountInCents={
-                                        activeCategories.reduce((acc, c) => acc + c.count, 0) > 0
-                                            ? Math.round(activeTotal / activeCategories.reduce((acc, c) => acc + c.count, 0))
-                                            : 0
-                                    }
-                                    currencyCode={currencyCode}
-                                />
-                            </div>
-                            <span className="text-[10px] text-muted-foreground">
-                                {__('por movimiento')}
-                            </span>
-                        </div>
-
-                        {/* Presupuesto Diario Disponible */}
-                        <div className="rounded-xl border bg-card/80 p-2.5">
-                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block">
-                                {__('Presupuesto Diario')}
-                            </span>
-                            <div className="mt-1 text-base font-bold text-emerald-600 dark:text-emerald-400">
-                                <AmountDisplay
-                                    amountInCents={stats?.daily_budget_remaining ?? 0}
-                                    currencyCode={currencyCode}
-                                />
-                            </div>
-                            <span className="text-[10px] text-muted-foreground">
-                                {stats?.days_remaining ?? 1} {__('días restantes')}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Sección Principal: Donut Chart + Desglose Interactivo */}
-                    {activeCategories.length === 0 ? (
-                        <div className="my-6 flex flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                <PieChartIcon className="h-6 w-6" />
-                            </div>
-                            <h4 className="mt-3 text-sm font-semibold text-foreground">
-                                {__('Sin movimientos en este período')}
-                            </h4>
-                            <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-                                {__(
-                                    'No se registran transacciones para la vista seleccionada. Agrega tus gastos o ingresos para visualizar el desglose.',
-                                )}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
-                            {/* Gráfico Donut de Distribución */}
-                            <div className="flex flex-col items-center justify-center rounded-xl border bg-card/40 p-4 lg:col-span-5">
-                                <div className="text-center">
-                                    <span className="text-xs font-semibold text-foreground">
-                                        {__('Distribución de')} {viewMode === 'incomes' ? __('Ingresos') : __('Gastos')}
-                                    </span>
-                                    <p className="text-[10px] text-muted-foreground">
-                                        {__('Pasa el cursor para ver el monto')}
+                    {/* VISTA 1: REGLA 50 / 30 / 20 */}
+                    {tabMode === 'rule_50_30_20' && summary503020 && (
+                        <div className="mt-4 space-y-4">
+                            {/* Banner explicativo con botón de preset */}
+                            <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:flex-row">
+                                <div className="space-y-0.5">
+                                    <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                        <Sparkles className="h-4 w-4 text-amber-500" />
+                                        {__('Distribución Recomendada 50/30/20')}
+                                    </h4>
+                                    <p className="text-[11px] text-muted-foreground">
+                                        {__('50% Necesidades esenciales, 30% Deseos y ocio, 20% Ahorro e inversión')}
                                     </p>
                                 </div>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleApply503020Preset}
+                                    disabled={isSubmitting}
+                                    className="shrink-0 text-xs gap-1.5"
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                                    {__('Aplicar 50/30/20 a mis categorías')}
+                                </Button>
+                            </div>
 
-                                <div className="relative mt-2 h-[220px] w-full max-w-[280px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <RechartsTooltip
-                                                content={({ active, payload }) => {
-                                                    if (!active || !payload?.length) {
-                                                        return null;
-                                                    }
-                                                    const data = payload[0].payload;
-                                                    const IconComponent = resolveLucideIcon(data.icon);
-                                                    return (
-                                                        <div className="rounded-lg border bg-popover/95 px-3 py-2 text-xs shadow-md backdrop-blur-sm">
-                                                            <div className="flex items-center gap-2">
-                                                                <div
-                                                                    className="h-2.5 w-2.5 rounded-full"
-                                                                    style={{ backgroundColor: data.color }}
-                                                                />
-                                                                <IconComponent className="h-3.5 w-3.5 text-muted-foreground" />
-                                                                <span className="font-semibold text-foreground">
-                                                                    {data.name}
-                                                                </span>
-                                                            </div>
-                                                            <div className="mt-1 flex items-center justify-between gap-3 text-muted-foreground">
-                                                                <span>
-                                                                    <AmountDisplay
-                                                                        amountInCents={data.value}
-                                                                        currencyCode={currencyCode}
-                                                                    />
-                                                                </span>
-                                                                <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-                                                                    {data.percentage}%
-                                                                </Badge>
-                                                            </div>
-                                                            <div className="mt-0.5 text-[10px] text-muted-foreground">
-                                                                {data.count} {data.count === 1 ? __('gasto') : __('gastos')}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                }}
-                                            />
-                                            <Pie
-                                                data={chartData}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={88}
-                                                paddingAngle={2}
-                                                dataKey="value"
+                            {/* 3 Tarjetas de la regla 50/30/20 */}
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                                {/* 50% Necesidades */}
+                                <div className="rounded-xl border bg-card/90 p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200">
+                                                <Wallet className="h-3.5 w-3.5" />
+                                            </div>
+                                            <div>
+                                                <span className="text-xs font-bold text-foreground">
+                                                    {__('Necesidades (50%)')}
+                                                </span>
+                                                <span className="block text-[10px] text-muted-foreground">
+                                                    {__('Vivienda, comida, servicios, salud')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-muted-foreground">{__('Gastado')}:</span>
+                                            <span className="font-semibold text-rose-600 dark:text-rose-400">
+                                                <AmountDisplay
+                                                    amountInCents={summary503020.needs.spent_amount}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-muted-foreground">{__('Meta (50% de sueldo)')}:</span>
+                                            <span className="font-semibold text-foreground">
+                                                <AmountDisplay
+                                                    amountInCents={summary503020.needs.target_amount}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-xs pt-1 border-t">
+                                            <span className="text-muted-foreground">{__('Disponible')}:</span>
+                                            <span
+                                                className={`font-bold ${
+                                                    summary503020.needs.remaining_amount < 0
+                                                        ? 'text-rose-600 dark:text-rose-400'
+                                                        : 'text-emerald-600 dark:text-emerald-400'
+                                                }`}
                                             >
-                                                {chartData.map((entry, index) => (
-                                                    <Cell
-                                                        key={`cell-${entry.id}-${index}`}
-                                                        fill={entry.color}
-                                                        stroke="var(--background)"
-                                                        strokeWidth={2}
-                                                    />
-                                                ))}
-                                            </Pie>
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                                <AmountDisplay
+                                                    amountInCents={summary503020.needs.remaining_amount}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                    {/* Centro del Donut */}
-                                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                            {viewMode === 'incomes' ? __('Total Ingresos') : __('Total Gastos')}
-                                        </span>
-                                        <span className="text-base font-bold tracking-tight text-foreground">
-                                            <AmountDisplay
-                                                amountInCents={activeTotal}
-                                                currencyCode={currencyCode}
-                                            />
-                                        </span>
-                                        <span className="text-[10px] text-muted-foreground">
-                                            {activeCategories.length} {activeCategories.length === 1 ? __('categoría') : __('categorías')}
-                                        </span>
+                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/80">
+                                        <div
+                                            className={`h-full rounded-full transition-all ${
+                                                summary503020.needs.spent_percentage > 100
+                                                    ? 'bg-rose-500'
+                                                    : 'bg-blue-500'
+                                            }`}
+                                            style={{
+                                                width: `${Math.min(100, summary503020.needs.spent_percentage)}%`,
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* 30% Deseos */}
+                                <div className="rounded-xl border bg-card/90 p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-200">
+                                                <Sparkles className="h-3.5 w-3.5" />
+                                            </div>
+                                            <div>
+                                                <span className="text-xs font-bold text-foreground">
+                                                    {__('Deseos (30%)')}
+                                                </span>
+                                                <span className="block text-[10px] text-muted-foreground">
+                                                    {__('Ocio, restaurantes, compras, viajes')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-muted-foreground">{__('Gastado')}:</span>
+                                            <span className="font-semibold text-rose-600 dark:text-rose-400">
+                                                <AmountDisplay
+                                                    amountInCents={summary503020.wants.spent_amount}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-muted-foreground">{__('Meta (30% de sueldo)')}:</span>
+                                            <span className="font-semibold text-foreground">
+                                                <AmountDisplay
+                                                    amountInCents={summary503020.wants.target_amount}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-xs pt-1 border-t">
+                                            <span className="text-muted-foreground">{__('Disponible')}:</span>
+                                            <span
+                                                className={`font-bold ${
+                                                    summary503020.wants.remaining_amount < 0
+                                                        ? 'text-rose-600 dark:text-rose-400'
+                                                        : 'text-emerald-600 dark:text-emerald-400'
+                                                }`}
+                                            >
+                                                <AmountDisplay
+                                                    amountInCents={summary503020.wants.remaining_amount}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/80">
+                                        <div
+                                            className={`h-full rounded-full transition-all ${
+                                                summary503020.wants.spent_percentage > 100
+                                                    ? 'bg-rose-500'
+                                                    : 'bg-purple-500'
+                                            }`}
+                                            style={{
+                                                width: `${Math.min(100, summary503020.wants.spent_percentage)}%`,
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* 20% Ahorro / Inversión */}
+                                <div className="rounded-xl border bg-card/90 p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200">
+                                                <PiggyBank className="h-3.5 w-3.5" />
+                                            </div>
+                                            <div>
+                                                <span className="text-xs font-bold text-foreground">
+                                                    {__('Ahorro / Inversión (20%)')}
+                                                </span>
+                                                <span className="block text-[10px] text-muted-foreground">
+                                                    {__('Fondo de emergencia, aportes, deudas')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-muted-foreground">{__('Destinado')}:</span>
+                                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                                <AmountDisplay
+                                                    amountInCents={summary503020.savings.spent_amount}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-muted-foreground">{__('Meta (20% de sueldo)')}:</span>
+                                            <span className="font-semibold text-foreground">
+                                                <AmountDisplay
+                                                    amountInCents={summary503020.savings.target_amount}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-xs pt-1 border-t">
+                                            <span className="text-muted-foreground">{__('Por alcanzar')}:</span>
+                                            <span className="font-bold text-primary">
+                                                <AmountDisplay
+                                                    amountInCents={Math.max(0, summary503020.savings.remaining_amount)}
+                                                    currencyCode={currencyCode}
+                                                />
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/80">
+                                        <div
+                                            className="h-full rounded-full bg-emerald-500 transition-all"
+                                            style={{
+                                                width: `${Math.min(100, summary503020.savings.spent_percentage)}%`,
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    )}
 
-                            {/* Lista Detallada de Categorías con Montos y Desglose */}
-                            <div className="space-y-2.5 lg:col-span-7">
-                                <div className="flex items-center justify-between text-xs font-medium text-muted-foreground px-1">
-                                    <span>{__('Categoría / Movimientos')}</span>
-                                    <span>{__('Monto / Participación')}</span>
+                    {/* VISTA 2: POR CATEGORÍAS (LISTA DE LÍMITES Y DISPONIBLE) */}
+                    {tabMode === 'categories' && (
+                        <div className="mt-4 space-y-3">
+                            {/* Banner amigable si aún no hay presupuestos asignados */}
+                            {!hasAnyBudgetsSet && (
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3.5">
+                                    <div className="flex items-center gap-2.5">
+                                        <Target className="h-4 w-4 text-primary shrink-0" />
+                                        <p className="text-xs text-muted-foreground">
+                                            {__('Aún no has definido metas para tus categorías en este mes. Define tus límites o aplica la regla 50/30/20.')}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={handleApply503020Preset}
+                                            className="h-7 text-xs gap-1"
+                                        >
+                                            <Sparkles className="h-3 w-3 text-amber-500" />
+                                            {__('Auto 50/30/20')}
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            onClick={handleOpenBudgetDialog}
+                                            className="h-7 text-xs gap-1"
+                                        >
+                                            <Sliders className="h-3 w-3" />
+                                            {__('Asignar Metas')}
+                                        </Button>
+                                    </div>
                                 </div>
+                            )}
 
-                                <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
-                                    {activeCategories.map((cat, idx) => {
+                            {budgetCategories.length === 0 ? (
+                                <p className="text-center py-6 text-xs text-muted-foreground">
+                                    {__('No hay transacciones registradas en este período.')}
+                                </p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {budgetCategories.map((cat, idx) => {
                                         const isExpanded = expandedCategory === (cat.category_id ?? '__none__');
                                         const Icon = resolveLucideIcon(cat.icon);
-                                        const hexColor = getCategoryHex(cat.color, idx);
+                                        const hexColor = getCategoryHex(cat.color);
                                         const colorClasses = getCategoryColorClasses(
                                             (cat.color || 'stone') as CategoryColor,
                                         );
 
+                                        const hasBudget = cat.allocated_amount > 0;
+                                        const isOver = cat.is_over_budget;
+                                        const pct = cat.spent_percentage;
+
                                         return (
                                             <div
                                                 key={cat.category_id ?? `cat-${idx}`}
-                                                className="group rounded-xl border bg-card/80 p-3 transition-all hover:border-primary/40 hover:bg-card hover:shadow-xs"
+                                                className="group rounded-xl border bg-card/80 p-3 transition-all hover:border-primary/40 hover:bg-card"
                                             >
-                                                {/* Encabezado de la Fila de Categoría */}
-                                                <div
-                                                    className="flex cursor-pointer items-center justify-between gap-3"
-                                                    onClick={() =>
-                                                        setExpandedCategory(
-                                                            isExpanded ? null : (cat.category_id ?? '__none__'),
-                                                        )
-                                                    }
-                                                >
-                                                    <div className="flex min-w-0 items-center gap-3">
+                                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                    {/* Lado Izquierdo: Icono + Nombre + Grupo 50/30/20 */}
+                                                    <div
+                                                        className="flex min-w-0 items-center gap-3 cursor-pointer flex-1"
+                                                        onClick={() =>
+                                                            setExpandedCategory(
+                                                                isExpanded ? null : (cat.category_id ?? '__none__'),
+                                                            )
+                                                        }
+                                                    >
                                                         <div
                                                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${colorClasses.bg} ${colorClasses.text}`}
                                                         >
@@ -848,31 +960,120 @@ export function SalaryStatementCard({
                                                                     {cat.name}
                                                                 </span>
                                                                 <Badge
-                                                                    variant="secondary"
-                                                                    className="h-4 px-1 text-[10px] font-normal"
+                                                                    variant="outline"
+                                                                    className="h-4 px-1.5 text-[9px] uppercase font-normal text-muted-foreground"
                                                                 >
-                                                                    {cat.percentage}%
+                                                                    {cat.group_50_30_20 === 'needs'
+                                                                        ? __('Necesidad')
+                                                                        : cat.group_50_30_20 === 'wants'
+                                                                          ? __('Deseo')
+                                                                          : __('Ahorro')}
                                                                 </Badge>
                                                             </div>
                                                             <span className="text-[10px] text-muted-foreground">
-                                                                {cat.count}{' '}
-                                                                {cat.count === 1
+                                                                {cat.transaction_count}{' '}
+                                                                {cat.transaction_count === 1
                                                                     ? __('movimiento')
                                                                     : __('movimientos')}
                                                             </span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex shrink-0 items-center gap-2">
+                                                    {/* Lado Derecho: Gastado / Presupuesto + Badge Disponible */}
+                                                    <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
                                                         <div className="text-right">
-                                                            <span className="text-xs font-bold text-foreground">
-                                                                <AmountDisplay
-                                                                    amountInCents={cat.total}
-                                                                    currencyCode={currencyCode}
-                                                                />
-                                                            </span>
+                                                            <div className="flex items-baseline gap-1 text-xs">
+                                                                <span className="font-bold text-foreground">
+                                                                    <AmountDisplay
+                                                                        amountInCents={cat.spent_amount}
+                                                                        currencyCode={currencyCode}
+                                                                    />
+                                                                </span>
+                                                                <span className="text-muted-foreground">
+                                                                    /
+                                                                </span>
+                                                                <span className="text-muted-foreground">
+                                                                    {hasBudget ? (
+                                                                        <AmountDisplay
+                                                                            amountInCents={cat.allocated_amount}
+                                                                            currencyCode={currencyCode}
+                                                                        />
+                                                                    ) : (
+                                                                        __('Sin límite')
+                                                                    )}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-muted-foreground group-hover:text-foreground">
+
+                                                        {/* Badge de Disponibilidad */}
+                                                        {hasBudget ? (
+                                                            <Badge
+                                                                variant={isOver ? 'destructive' : pct > 85 ? 'secondary' : 'outline'}
+                                                                className={`h-6 text-[10px] font-semibold px-2 flex items-center gap-1 ${
+                                                                    isOver
+                                                                        ? ''
+                                                                        : pct > 85
+                                                                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 border-amber-300'
+                                                                          : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-300'
+                                                                }`}
+                                                            >
+                                                                {isOver ? (
+                                                                    <>
+                                                                        <AlertCircle className="h-3 w-3" />
+                                                                        {__('Sobregiro')}:{' '}
+                                                                        <AmountDisplay
+                                                                            amountInCents={Math.abs(cat.remaining_amount)}
+                                                                            currencyCode={currencyCode}
+                                                                        />
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <CheckCircle2 className="h-3 w-3" />
+                                                                        {__('Quedan')}:{' '}
+                                                                        <AmountDisplay
+                                                                            amountInCents={cat.remaining_amount}
+                                                                            currencyCode={currencyCode}
+                                                                        />
+                                                                    </>
+                                                                )}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-6 text-[10px] text-muted-foreground hover:text-foreground"
+                                                                onClick={() => {
+                                                                    setSingleCategoryBudgetOpen(cat);
+                                                                    setSingleBudgetAmount(cat.allocated_amount || 0);
+                                                                }}
+                                                            >
+                                                                + {__('Fijar meta')}
+                                                            </Button>
+                                                        )}
+
+                                                        {/* Botón de edición rápida */}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                                            onClick={() => {
+                                                                setSingleCategoryBudgetOpen(cat);
+                                                                setSingleBudgetAmount(cat.allocated_amount || 0);
+                                                            }}
+                                                            title={__('Editar límite de esta categoría')}
+                                                        >
+                                                            <Pencil className="h-3 w-3" />
+                                                        </Button>
+
+                                                        {/* Chevron expandir transacciones */}
+                                                        <div
+                                                            className="text-muted-foreground cursor-pointer"
+                                                            onClick={() =>
+                                                                setExpandedCategory(
+                                                                    isExpanded ? null : (cat.category_id ?? '__none__'),
+                                                                )
+                                                            }
+                                                        >
                                                             {isExpanded ? (
                                                                 <ChevronUp className="h-3.5 w-3.5" />
                                                             ) : (
@@ -882,18 +1083,28 @@ export function SalaryStatementCard({
                                                     </div>
                                                 </div>
 
-                                                {/* Barra de progreso de la Categoría */}
+                                                {/* Barra de progreso de la categoría */}
                                                 <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary/80">
                                                     <div
-                                                        className="h-full rounded-full transition-all duration-300"
+                                                        className={`h-full rounded-full transition-all duration-300 ${
+                                                            isOver
+                                                                ? 'bg-rose-500'
+                                                                : pct > 85
+                                                                  ? 'bg-amber-500'
+                                                                  : ''
+                                                        }`}
                                                         style={{
-                                                            width: `${Math.min(100, cat.percentage)}%`,
-                                                            backgroundColor: hexColor,
+                                                            width: hasBudget ? `${Math.min(100, pct)}%` : '100%',
+                                                            backgroundColor: isOver
+                                                                ? undefined
+                                                                : pct > 85
+                                                                  ? undefined
+                                                                  : hexColor,
                                                         }}
                                                     />
                                                 </div>
 
-                                                {/* Detalle expandible con las transacciones de esta categoría */}
+                                                {/* Transacciones desplegables */}
                                                 {isExpanded && (
                                                     <div className="mt-3 border-t pt-2.5">
                                                         <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
@@ -901,7 +1112,7 @@ export function SalaryStatementCard({
                                                         </span>
                                                         {categoryTransactions.length === 0 ? (
                                                             <p className="text-[11px] text-muted-foreground italic">
-                                                                {__('No se cargaron transacciones detalladas para esta categoría.')}
+                                                                {__('No hay transacciones registradas para este período.')}
                                                             </p>
                                                         ) : (
                                                             <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
@@ -940,13 +1151,13 @@ export function SalaryStatementCard({
                                         );
                                     })}
                                 </div>
-                            </div>
+                            )}
                         </div>
                     )}
                 </div>
             </CardContent>
 
-            {/* Modal para Registrar / Editar Salario */}
+            {/* Modal: Editar Salario del Mes */}
             <Dialog open={salaryDialogOpen} onOpenChange={setSalaryDialogOpen}>
                 <DialogContent className="sm:max-w-md">
                     <form onSubmit={handleSaveSalary}>
@@ -957,7 +1168,7 @@ export function SalaryStatementCard({
                             </DialogTitle>
                             <DialogDescription>
                                 {__(
-                                    'Define cuánto ingresaste o sacaste de salario para este mes. El control de gastos de este ciclo se calculará en base a este monto.',
+                                    'Define cuánto ingresaste o percibiste de salario para este mes. El presupuesto y control de gastos se calcularán en base a este monto.',
                                 )}
                             </DialogDescription>
                         </DialogHeader>
@@ -969,24 +1180,14 @@ export function SalaryStatementCard({
                                     className="text-xs font-medium text-foreground"
                                 >
                                     {__('Monto del Salario')} (
-                                    {(
-                                        currencyCode ||
-                                        account.currency_code ||
-                                        'USD'
-                                    ).toUpperCase()}
+                                    {(currencyCode || account.currency_code || 'USD').toUpperCase()}
                                     )
                                 </label>
                                 <AmountInput
                                     id="monthly-salary-input"
                                     value={newSalaryAmount}
-                                    currencyCode={
-                                        currencyCode ||
-                                        account.currency_code ||
-                                        'USD'
-                                    }
-                                    onChange={(val) =>
-                                        setNewSalaryAmount(val || 0)
-                                    }
+                                    currencyCode={currencyCode || account.currency_code || 'USD'}
+                                    onChange={(val) => setNewSalaryAmount(val || 0)}
                                     className="text-lg font-semibold"
                                     autoFocus
                                 />
@@ -1003,16 +1204,219 @@ export function SalaryStatementCard({
                                 {__('Cancelar')}
                             </Button>
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting
-                                    ? __('Guardando...')
-                                    : __('Guardar Salario')}
+                                {isSubmitting ? __('Guardando...') : __('Guardar Salario')}
                             </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
 
-            {/* Modal de Extracto Mensual Completo */}
+            {/* Modal: Ajustar Presupuesto de una sola categoría */}
+            <Dialog
+                open={!!singleCategoryBudgetOpen}
+                onOpenChange={(open) => !open && setSingleCategoryBudgetOpen(null)}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <form onSubmit={handleSaveSingleCategoryBudget}>
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Target className="h-5 w-5 text-primary" />
+                                {__('Meta para')} {singleCategoryBudgetOpen?.name}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {__(
+                                    'Fija el límite máximo mensual que planeas destinar a esta categoría.',
+                                )}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="my-6 space-y-4">
+                            <div className="space-y-2">
+                                <label
+                                    htmlFor="single-budget-input"
+                                    className="text-xs font-medium text-foreground"
+                                >
+                                    {__('Límite Mensual')} (
+                                    {(currencyCode || account.currency_code || 'USD').toUpperCase()}
+                                    )
+                                </label>
+                                <AmountInput
+                                    id="single-budget-input"
+                                    value={singleBudgetAmount}
+                                    currencyCode={currencyCode || account.currency_code || 'USD'}
+                                    onChange={(val) => setSingleBudgetAmount(val || 0)}
+                                    className="text-lg font-semibold"
+                                    autoFocus
+                                />
+                            </div>
+                        </div>
+
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setSingleCategoryBudgetOpen(null)}
+                                disabled={isSubmitting}
+                            >
+                                {__('Cancelar')}
+                            </Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? __('Guardando...') : __('Guardar Meta')}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal: Ajustar Todos los Presupuestos Mensuales */}
+            <Dialog open={budgetDialogOpen} onOpenChange={setBudgetDialogOpen}>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+                    <form onSubmit={handleSaveAllBudgets}>
+                        <DialogHeader>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Sliders className="h-5 w-5 text-primary" />
+                                    <DialogTitle>
+                                        {__('Ajustar Presupuesto Mensual')} ({statement.month_name})
+                                    </DialogTitle>
+                                </div>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleApply503020Preset}
+                                    className="text-xs gap-1"
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                                    {__('Auto 50/30/20')}
+                                </Button>
+                            </div>
+                            <DialogDescription>
+                                {__(
+                                    'Asigna cuánto deseas gastar como máximo en cada categoría. El sistema te avisará en tiempo real cuánto te queda disponible.',
+                                )}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {/* Barra de progreso de asignación del salario */}
+                        <div className="my-4 rounded-xl border bg-muted/30 p-3 space-y-2">
+                            <div className="flex justify-between text-xs">
+                                <span className="font-medium text-muted-foreground">{__('Salario del mes')}:</span>
+                                <span className="font-bold text-foreground">
+                                    <AmountDisplay
+                                        amountInCents={statement.salary_amount}
+                                        currencyCode={currencyCode}
+                                    />
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="font-medium text-muted-foreground">{__('Total Presupuestado')}:</span>
+                                <span className="font-bold text-primary">
+                                    <AmountDisplay
+                                        amountInCents={editingTotalAllocated}
+                                        currencyCode={currencyCode}
+                                    />
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-xs border-t pt-1">
+                                <span className="font-medium text-muted-foreground">{__('Por Asignar')}:</span>
+                                <span
+                                    className={`font-bold ${
+                                        statement.salary_amount - editingTotalAllocated < 0
+                                            ? 'text-rose-600 dark:text-rose-400'
+                                            : 'text-emerald-600 dark:text-emerald-400'
+                                    }`}
+                                >
+                                    <AmountDisplay
+                                        amountInCents={statement.salary_amount - editingTotalAllocated}
+                                        currencyCode={currencyCode}
+                                    />
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Lista de categorías para asignar montos */}
+                        <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                            {(statement.user_categories_options || []).map((cat) => {
+                                const Icon = resolveLucideIcon(cat.icon);
+                                const currentData = editingBudgets[cat.id] || {
+                                    amount: cat.allocated_amount || 0,
+                                    group: cat.group_50_30_20,
+                                };
+
+                                return (
+                                    <div
+                                        key={cat.id}
+                                        className="flex items-center justify-between gap-3 rounded-lg border bg-card p-2.5"
+                                    >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                                                <Icon className="h-3.5 w-3.5" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <span className="truncate text-xs font-semibold text-foreground block">
+                                                    {cat.name}
+                                                </span>
+                                                <select
+                                                    value={currentData.group}
+                                                    onChange={(e) => {
+                                                        const newGroup = e.target.value as 'needs' | 'wants' | 'savings';
+                                                        setEditingBudgets((prev) => ({
+                                                            ...prev,
+                                                            [cat.id]: {
+                                                                ...prev[cat.id],
+                                                                group: newGroup,
+                                                            },
+                                                        }));
+                                                    }}
+                                                    className="mt-0.5 rounded border bg-transparent text-[10px] text-muted-foreground px-1 py-0.5"
+                                                >
+                                                    <option value="needs">{__('Necesidad (50%)')}</option>
+                                                    <option value="wants">{__('Deseo (30%)')}</option>
+                                                    <option value="savings">{__('Ahorro (20%)')}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="w-[140px] shrink-0">
+                                            <AmountInput
+                                                value={currentData.amount}
+                                                currencyCode={currencyCode || 'USD'}
+                                                onChange={(val) => {
+                                                    setEditingBudgets((prev) => ({
+                                                        ...prev,
+                                                        [cat.id]: {
+                                                            amount: val || 0,
+                                                            group: prev[cat.id]?.group || cat.group_50_30_20,
+                                                        },
+                                                    }));
+                                                }}
+                                                className="h-8 text-xs font-semibold text-right"
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <DialogFooter className="mt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setBudgetDialogOpen(false)}
+                                disabled={isSubmitting}
+                            >
+                                {__('Cancelar')}
+                            </Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? __('Guardando...') : __('Guardar Presupuestos')}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal: Extracto Mensual Completo */}
             <SalaryMonthlyStatementModal
                 open={statementModalOpen}
                 onOpenChange={setStatementModalOpen}
@@ -1155,7 +1559,7 @@ function SalaryMonthlyStatementModal({
                                                 <div
                                                     className="h-2.5 w-2.5 rounded-full"
                                                     style={{
-                                                        backgroundColor: getCategoryHex(cat.color, idx),
+                                                        backgroundColor: getCategoryHex(cat.color),
                                                     }}
                                                 />
                                                 <span className="font-medium text-foreground">
@@ -1193,7 +1597,7 @@ function SalaryMonthlyStatementModal({
                                                 className="h-full rounded-full transition-all"
                                                 style={{
                                                     width: `${cat.percentage}%`,
-                                                    backgroundColor: getCategoryHex(cat.color, idx),
+                                                    backgroundColor: getCategoryHex(cat.color),
                                                 }}
                                             />
                                         </div>

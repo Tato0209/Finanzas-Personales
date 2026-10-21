@@ -50,9 +50,11 @@ import {
     Pencil,
     PiggyBank,
     Printer,
+    RotateCcw,
     Sliders,
     Sparkles,
     Target,
+    Trash2,
     TrendingDown,
     TrendingUp,
     Wallet,
@@ -138,6 +140,7 @@ export function SalaryStatementCard({
     const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
     // Editable category allocations in modal
+    const [initialBudgets, setInitialBudgets] = useState<Record<string, { amount: number; group: 'needs' | 'wants' | 'savings' }>>({});
     const [editingBudgets, setEditingBudgets] = useState<Record<string, { amount: number; group: 'needs' | 'wants' | 'savings' }>>({});
 
     if (!statement) {
@@ -195,8 +198,96 @@ export function SalaryStatementCard({
             }
         });
 
+        setInitialBudgets(initial);
         setEditingBudgets(initial);
         setBudgetDialogOpen(true);
+    };
+
+    /**
+     * Calcula la regla 50/30/20 localmente en el formulario para que el usuario
+     * pueda revisar, ajustar o cancelar antes de guardar en la base de datos.
+     */
+    const handleApply503020InModal = () => {
+        const salary = statement.salary_amount || 0;
+        if (salary <= 0) return;
+
+        const needsBudget = Math.round(salary * 0.50);
+        const wantsBudget = Math.round(salary * 0.30);
+        const savingsBudget = Math.round(salary * 0.20);
+
+        const currentEntries = Object.entries(editingBudgets);
+        const needs = currentEntries.filter(([_, d]) => d.group === 'needs');
+        const wants = currentEntries.filter(([_, d]) => d.group === 'wants');
+        const savings = currentEntries.filter(([_, d]) => d.group === 'savings');
+
+        const updated: Record<string, { amount: number; group: 'needs' | 'wants' | 'savings' }> = { ...editingBudgets };
+
+        if (needs.length > 0) {
+            const perNeed = Math.round(needsBudget / needs.length);
+            needs.forEach(([id, d]) => {
+                updated[id] = { ...d, amount: perNeed };
+            });
+        }
+        if (wants.length > 0) {
+            const perWant = Math.round(wantsBudget / wants.length);
+            wants.forEach(([id, d]) => {
+                updated[id] = { ...d, amount: perWant };
+            });
+        }
+        if (savings.length > 0) {
+            const perSaving = Math.round(savingsBudget / savings.length);
+            savings.forEach(([id, d]) => {
+                updated[id] = { ...d, amount: perSaving };
+            });
+        }
+
+        setEditingBudgets(updated);
+    };
+
+    /**
+     * Restablece los montos del modal a como estaban cuando se abrió.
+     */
+    const handleResetToInitial = () => {
+        setEditingBudgets(initialBudgets);
+    };
+
+    /**
+     * Pone todos los montos del modal en 0.
+     */
+    const handleZeroAllBudgets = () => {
+        const zeroed: Record<string, { amount: number; group: 'needs' | 'wants' | 'savings' }> = {};
+        Object.entries(editingBudgets).forEach(([id, d]) => {
+            zeroed[id] = { ...d, amount: 0 };
+        });
+        setEditingBudgets(zeroed);
+    };
+
+    /**
+     * Elimina todos los presupuestos asignados para el mes en la base de datos (preset: 'clear').
+     */
+    const handleClearBudgets = () => {
+        if (!confirm(__('¿Estás seguro de que deseas eliminar todas las metas de presupuesto de este mes? Volverás a tener 0 presupuestos asignados como al inicio.'))) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        router.post(
+            `/accounts/${account.id}/category-budgets`,
+            {
+                month: statement.month,
+                preset: 'clear',
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setBudgetDialogOpen(false);
+                    setIsSubmitting(false);
+                },
+                onError: () => {
+                    setIsSubmitting(false);
+                },
+            },
+        );
     };
 
     const handleApply503020Preset = () => {
@@ -627,33 +718,61 @@ export function SalaryStatementCard({
                             </p>
                         </div>
 
-                        {/* Selector de modo: Categorías individuales vs Regla 50/30/20 */}
-                        <div className="flex items-center rounded-lg border bg-muted/40 p-1 text-xs">
-                            <button
-                                type="button"
-                                onClick={() => setTabMode('categories')}
-                                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-all ${
-                                    tabMode === 'categories'
-                                        ? 'bg-background text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                <Wallet className="h-3.5 w-3.5 text-primary" />
-                                <span>{__('Por Categorías')}</span>
-                            </button>
+                        {/* Selector de modo y acciones de presupuesto */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center rounded-lg border bg-muted/40 p-1 text-xs">
+                                <button
+                                    type="button"
+                                    onClick={() => setTabMode('categories')}
+                                    className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-all ${
+                                        tabMode === 'categories'
+                                            ? 'bg-background text-foreground shadow-xs'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    <Wallet className="h-3.5 w-3.5 text-primary" />
+                                    <span>{__('Por Categorías')}</span>
+                                </button>
 
-                            <button
+                                <button
+                                    type="button"
+                                    onClick={() => setTabMode('rule_50_30_20')}
+                                    className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-all ${
+                                        tabMode === 'rule_50_30_20'
+                                            ? 'bg-background text-foreground shadow-xs'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                                    <span>{__('Regla 50 / 30 / 20')}</span>
+                                </button>
+                            </div>
+
+                            <Button
                                 type="button"
-                                onClick={() => setTabMode('rule_50_30_20')}
-                                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-all ${
-                                    tabMode === 'rule_50_30_20'
-                                        ? 'bg-background text-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
+                                size="sm"
+                                variant="outline"
+                                onClick={handleOpenBudgetDialog}
+                                className="h-7 text-xs gap-1"
                             >
-                                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                                <span>{__('Regla 50 / 30 / 20')}</span>
-                            </button>
+                                <Sliders className="h-3 w-3 text-primary" />
+                                <span>{__('Ajustar Metas')}</span>
+                            </Button>
+
+                            {hasAnyBudgetsSet && (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={handleClearBudgets}
+                                    disabled={isSubmitting}
+                                    className="h-7 text-xs gap-1 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                                    title={__('Borra todas las metas asignadas y vuelve al estado inicial de 0 presupuestos')}
+                                >
+                                    <RotateCcw className="h-3 w-3" />
+                                    <span>{__('Restablecer')}</span>
+                                </Button>
+                            )}
                         </div>
                     </div>
 
@@ -1273,23 +1392,47 @@ export function SalaryStatementCard({
                 <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                     <form onSubmit={handleSaveAllBudgets}>
                         <DialogHeader>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                     <Sliders className="h-5 w-5 text-primary" />
                                     <DialogTitle>
                                         {__('Ajustar Presupuesto Mensual')} ({statement.month_name})
                                     </DialogTitle>
                                 </div>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={handleApply503020Preset}
-                                    className="text-xs gap-1"
-                                >
-                                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                                    {__('Auto 50/30/20')}
-                                </Button>
+                                <div className="flex items-center gap-1.5">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={handleApply503020InModal}
+                                        className="text-xs gap-1"
+                                        title={__('Calcula automáticamente el 50% en necesidades, 30% en deseos y 20% en ahorro')}
+                                    >
+                                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                                        {__('Auto 50/30/20')}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={handleResetToInitial}
+                                        className="text-xs gap-1 text-muted-foreground hover:text-foreground"
+                                        title={__('Restablece los montos a como estaban antes de hacer cambios')}
+                                    >
+                                        <RotateCcw className="h-3.5 w-3.5" />
+                                        {__('Deshacer')}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={handleZeroAllBudgets}
+                                        className="text-xs text-muted-foreground hover:text-foreground"
+                                        title={__('Pone todos los montos en 0')}
+                                    >
+                                        {__('Poner a 0')}
+                                    </Button>
+                                </div>
                             </div>
                             <DialogDescription>
                                 {__(
@@ -1399,18 +1542,32 @@ export function SalaryStatementCard({
                             })}
                         </div>
 
-                        <DialogFooter className="mt-4">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setBudgetDialogOpen(false)}
-                                disabled={isSubmitting}
-                            >
-                                {__('Cancelar')}
-                            </Button>
-                            <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? __('Guardando...') : __('Guardar Presupuestos')}
-                            </Button>
+                        <DialogFooter className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            {hasAnyBudgetsSet && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 self-start sm:self-auto gap-1"
+                                    onClick={handleClearBudgets}
+                                    disabled={isSubmitting}
+                                >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    {__('Borrar todos los presupuestos')}
+                                </Button>
+                            )}
+                            <div className="flex items-center justify-end gap-2 ml-auto">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setBudgetDialogOpen(false)}
+                                    disabled={isSubmitting}
+                                >
+                                    {__('Cancelar')}
+                                </Button>
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? __('Guardando...') : __('Guardar Presupuestos')}
+                                </Button>
+                            </div>
                         </DialogFooter>
                     </form>
                 </DialogContent>

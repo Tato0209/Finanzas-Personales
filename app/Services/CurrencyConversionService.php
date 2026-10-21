@@ -19,13 +19,13 @@ class CurrencyConversionService
 
     private const HTTP_CONNECT_TIMEOUT_SECONDS = 3;
 
-    private const HTTP_TIMEOUT_SECONDS = 5;
+    private const HTTP_TIMEOUT_SECONDS = 15;
 
     private const CACHE_TTL_HISTORICAL_SECONDS = 60 * 60 * 24 * 30;
 
     private const CACHE_TTL_LATEST_SECONDS = 60 * 60 * 6;
 
-    private const CACHE_TTL_UNAVAILABLE_SECONDS = 60 * 10;
+    private const CACHE_TTL_UNAVAILABLE_SECONDS = 30;
 
     /** @var array<string, array<string, float>> Keyed by "{currency}:{date}" */
     private array $rateCache = [];
@@ -49,17 +49,22 @@ class CurrencyConversionService
 
         $rates = $this->getRatesForCurrency($target, $date);
 
-        if (! isset($rates[$source]) || $rates[$source] == 0) {
-            Log::debug('Currency rate not found', [
-                'source' => $source,
-                'target' => $target,
-                'date' => $date,
-            ]);
-
-            return 0.0;
+        if (isset($rates[$source]) && (float) $rates[$source] > 0) {
+            return $quantity / (float) $rates[$source];
         }
 
-        return $quantity / $rates[$source];
+        $sourceRates = $this->getRatesForCurrency($source, $date);
+        if (isset($sourceRates[$target]) && (float) $sourceRates[$target] > 0) {
+            return $quantity * (float) $sourceRates[$target];
+        }
+
+        Log::debug('Currency rate not found', [
+            'source' => $source,
+            'target' => $target,
+            'date' => $date,
+        ]);
+
+        return 0.0;
     }
 
     /**
@@ -213,11 +218,20 @@ class CurrencyConversionService
             return [$date];
         }
 
+        $today = Carbon::today();
         $parsedDate = Carbon::createFromFormat('Y-m-d', $date);
 
-        return collect(range(0, self::HISTORICAL_LOOKBACK_DAYS))
+        if ($parsedDate->gt($today)) {
+            $parsedDate = $today;
+        }
+
+        $dates = collect(range(0, self::HISTORICAL_LOOKBACK_DAYS))
             ->map(fn (int $days): string => $parsedDate->copy()->subDays($days)->toDateString())
             ->all();
+
+        $dates[] = 'latest';
+
+        return array_values(array_unique($dates));
     }
 
     /**

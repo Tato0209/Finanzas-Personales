@@ -37,15 +37,14 @@ class ExchangeRateService
             return $amountInMinorUnits;
         }
 
-        $rates = $this->getRates($target, $date);
-
         // Source and target can hold a different number of decimals (COP 0,
         // EUR 2, BTC 8), so the rate is applied in major units and the result
         // rescaled to the target. Applying it to the stored integers directly
         // would be off by a power of ten between any two unequal scales.
         $majorUnits = Money::toMajor($amountInMinorUnits, $source);
+        $convertedMajor = $this->convertMajorUnits($majorUnits, $source, $target, $date);
 
-        if (! isset($rates[$source]) || $rates[$source] == 0) {
+        if ($convertedMajor === null) {
             Log::warning('Exchange rate not found, returning unconverted amount', [
                 'source' => $source,
                 'target' => $target,
@@ -57,7 +56,7 @@ class ExchangeRateService
             return Money::toMinor($majorUnits, $target);
         }
 
-        return Money::toMinor($majorUnits / $rates[$source], $target);
+        return Money::toMinor($convertedMajor, $target);
     }
 
     /**
@@ -76,11 +75,87 @@ class ExchangeRateService
             return $amountInMinorUnits;
         }
 
-        if (empty($this->getRates($target, $date)[strtolower($source)])) {
+        $majorUnits = Money::toMajor($amountInMinorUnits, $source);
+        $convertedMajor = $this->convertMajorUnits($majorUnits, $source, $target, $date);
+
+        if ($convertedMajor === null) {
             return null;
         }
 
-        return $this->convert($source, $target, $amountInMinorUnits, $date);
+        return Money::toMinor($convertedMajor, $target);
+    }
+
+    /**
+     * Convert an amount in major units using a 4-tier resolution strategy:
+     * 1. Target base rates (1 target = R source -> amount / R)
+     * 2. Source base rates (1 source = R target -> amount * R)
+     * 3. Triangulation via USD (1 USD = R_target, 1 USD = R_source -> amount * (R_target / R_source))
+     * 4. Triangulation via EUR (1 EUR = R_target, 1 EUR = R_source -> amount * (R_target / R_source))
+     */
+    public function convertMajorUnits(float $majorUnits, string $source, string $target, string $date): ?float
+    {
+        $source = strtolower($source);
+        $target = strtolower($target);
+
+        if ($source === $target) {
+            return $majorUnits;
+        }
+
+        // 1. Direct via target base: target rates map contains source
+        $targetRates = $this->getRates($target, $date);
+        if (isset($targetRates[$source]) && (float) $targetRates[$source] > 0) {
+            return $majorUnits / (float) $targetRates[$source];
+        }
+
+        // 2. Inverse via source base: try if target rates was unavailable, or check cached source rates
+        if (empty($targetRates) || $this->hasCachedRates($source, $date)) {
+            $sourceRates = $this->getRates($source, $date);
+            if (isset($sourceRates[$target]) && (float) $sourceRates[$target] > 0) {
+                return $majorUnits * (float) $sourceRates[$target];
+            }
+        }
+
+        // 3. Triangulation via USD
+        if ($source !== 'usd' && $target !== 'usd' && (empty($targetRates) || $this->hasCachedRates('usd', $date))) {
+            $usdRates = $this->getRates('usd', $date);
+            if (
+                isset($usdRates[$source], $usdRates[$target]) &&
+                (float) $usdRates[$source] > 0 &&
+                (float) $usdRates[$target] > 0
+            ) {
+                return $majorUnits * ((float) $usdRates[$target] / (float) $usdRates[$source]);
+            }
+        }
+
+        // 4. Triangulation via EUR
+        if ($source !== 'eur' && $target !== 'eur' && (empty($targetRates) || $this->hasCachedRates('eur', $date))) {
+            $eurRates = $this->getRates('eur', $date);
+            if (
+                isset($eurRates[$source], $eurRates[$target]) &&
+                (float) $eurRates[$source] > 0 &&
+                (float) $eurRates[$target] > 0
+            ) {
+                return $majorUnits * ((float) $eurRates[$target] / (float) $eurRates[$source]);
+            }
+        }
+
+        return null;
+    }
+
+    private function hasCachedRates(string $currency, string $date): bool
+    {
+        $currency = strtolower($currency);
+        $date = $this->normalizeDate($date);
+        $cacheKey = $this->cacheKey($currency, $date);
+
+        if (array_key_exists($cacheKey, $this->ratesCache)) {
+            return ! empty($this->ratesCache[$cacheKey]);
+        }
+
+        return ExchangeRate::query()
+            ->where('base_currency', $currency)
+            ->where('date', '<=', $date)
+            ->exists();
     }
 
     /**
@@ -122,6 +197,23 @@ class ExchangeRateService
                     'rates' => json_encode($rates, JSON_THROW_ON_ERROR),
                 ],
             ], uniqueBy: ['base_currency', 'date'], update: ['rates']);
+        } else {
+            $latestInDb = ExchangeRate::query()
+                ->where('base_currency', $baseCurrency)
+                ->where('date', '<=', $date)
+                ->orderByDesc('date')
+                ->first();
+
+            if (! $latestInDb) {
+                $latestInDb = ExchangeRate::query()
+                    ->where('base_currency', $baseCurrency)
+                    ->orderByDesc('date')
+                    ->first();
+            }
+
+            if ($latestInDb) {
+                return $this->ratesCache[$cacheKey] = $latestInDb->rates;
+            }
         }
 
         return $this->ratesCache[$cacheKey] = $rates;

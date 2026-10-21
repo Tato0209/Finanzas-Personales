@@ -298,3 +298,58 @@ test('convert falls back to the target scale when no rate is found', function ()
     // the result as EUR minor units, so 100000 whole pesos become 100000.00.
     expect($service->convert('COP', 'EUR', 100000, '2026-01-15'))->toBe(10_000_000);
 });
+
+test('convert resolves rate inversely when only source base is available', function () {
+    Http::fake();
+
+    ExchangeRate::factory()->create([
+        'base_currency' => 'usd',
+        'date' => '2026-01-15',
+        'rates' => [
+            'pen' => 3.5,
+        ],
+    ]);
+
+    $service = app(ExchangeRateService::class);
+    // 100 USD ($100.00 = 10000 cents) at 3.5 PEN per USD = 350.00 PEN (35000 cents)
+    $result = $service->convert('USD', 'PEN', 10000, '2026-01-15');
+
+    expect($result)->toBe(35000);
+});
+
+test('convert triangulates via USD when direct pair is missing', function () {
+    Http::fake();
+
+    ExchangeRate::factory()->create([
+        'base_currency' => 'usd',
+        'date' => '2026-01-15',
+        'rates' => [
+            'pen' => 3.4,
+            'eur' => 0.85,
+        ],
+    ]);
+
+    $service = app(ExchangeRateService::class);
+    // 85 EUR (8500 cents) -> 100 USD -> 340 PEN (34000 cents)
+    $result = $service->convert('EUR', 'PEN', 8500, '2026-01-15');
+
+    expect($result)->toBe(34000);
+});
+
+test('getRates falls back to latest existing rate in database when API fails', function () {
+    Http::fake(['*' => Http::response([], 404)]);
+
+    ExchangeRate::factory()->create([
+        'base_currency' => 'usd',
+        'date' => '2026-01-10',
+        'rates' => [
+            'pen' => 3.45,
+        ],
+    ]);
+
+    $service = app(ExchangeRateService::class);
+    $rates = $service->getRates('USD', '2026-01-15');
+
+    expect($rates)->toHaveKey('pen');
+    expect($rates['pen'])->toBe(3.45);
+});
